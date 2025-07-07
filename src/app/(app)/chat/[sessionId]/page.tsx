@@ -1,6 +1,6 @@
-import { Suspense } from "react";
+import { Suspense } from 'react';
 
-import { Chat } from "@/components/chat-simple";
+import { Chat } from '@/components/chat-simple';
 
 interface ChatPageProps {
   params: Promise<{

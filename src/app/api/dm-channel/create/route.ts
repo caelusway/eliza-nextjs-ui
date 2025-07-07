@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-const ELIZA_SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
+const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 
 interface CreateDMChannelRequest {
   userId: string;
@@ -25,10 +24,7 @@ export async function POST(request: NextRequest) {
     const { userId, agentId, channelId, title } = body;
 
     if (!userId || !agentId) {
-      return NextResponse.json(
-        { error: "userId and agentId are required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'userId and agentId are required' }, { status: 400 });
     }
 
     // Generate channel ID if not provided
@@ -52,27 +48,27 @@ export async function POST(request: NextRequest) {
     const createChannelResponse = await fetch(
       `${ELIZA_SERVER_URL}/api/messaging/central-channels`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           id: finalChannelId,
           name: channelName,
-          server_id: "00000000-0000-0000-0000-000000000000", // Required server ID
+          server_id: '00000000-0000-0000-0000-000000000000', // Required server ID
           participantCentralUserIds: [userId, agentId],
-          type: "DM", // Channel type
+          type: 'DM', // Channel type
           metadata: metadata,
         }),
-      },
+      }
     );
 
     if (!createChannelResponse.ok) {
       const errorText = await createChannelResponse.text();
-      console.error("[DM Channel API] Failed to create channel:", errorText);
+      console.error('[DM Channel API] Failed to create channel:', errorText);
       return NextResponse.json(
-        { error: "Failed to create DM channel", details: errorText },
-        { status: 500 },
+        { error: 'Failed to create DM channel', details: errorText },
+        { status: 500 }
       );
     }
 
@@ -82,22 +78,19 @@ export async function POST(request: NextRequest) {
     const addAgentResponse = await fetch(
       `${ELIZA_SERVER_URL}/api/messaging/central-channels/${finalChannelId}/agents`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           agentId: agentId,
         }),
-      },
+      }
     );
 
     if (!addAgentResponse.ok) {
       const errorText = await addAgentResponse.text();
-      console.warn(
-        "[DM Channel API] Failed to add agent to channel:",
-        errorText,
-      );
+      console.warn('[DM Channel API] Failed to add agent to channel:', errorText);
       // Continue anyway - agent might already be a participant
     }
 
@@ -106,20 +99,20 @@ export async function POST(request: NextRequest) {
       channel: {
         id: finalChannelId,
         name: channelName,
-        type: "DM",
+        type: 'DM',
         metadata: metadata,
         participants: [userId, agentId],
         ...channelData,
       },
     });
   } catch (error) {
-    console.error("[DM Channel API] Error creating DM channel:", error);
+    console.error('[DM Channel API] Error creating DM channel:', error);
     return NextResponse.json(
       {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

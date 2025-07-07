@@ -1,13 +1,13 @@
-import type { ChatMessage } from "@/types/chat-message";
-import { assert } from "@/utils/assert";
+import type { ChatMessage } from '@/types/chat-message';
+import { assert } from '@/utils/assert';
 
 // Use Next.js API proxy to avoid CORS issues
-const API_PREFIX = "/api/eliza";
+const API_PREFIX = '/api/eliza';
 
 // Optional API key for authentication
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
-console.log("API_PREFIX", API_PREFIX);
+console.log('API_PREFIX', API_PREFIX);
 
 // ElizaOS API Response Types
 interface ElizaAPIResponse<T = any> {
@@ -47,7 +47,7 @@ interface Agent {
   name: string;
   bio?: string;
   settings?: Record<string, any>;
-  status?: "active" | "inactive";
+  status?: 'active' | 'inactive';
   [key: string]: any;
 }
 
@@ -55,7 +55,7 @@ interface Agent {
 interface Room {
   id: string;
   name: string;
-  type: "dm" | "group" | "channel";
+  type: 'dm' | 'group' | 'channel';
   agentId: string;
   worldId?: string;
   serverId?: string;
@@ -91,31 +91,28 @@ interface MessageSubmission {
 /**
  * Enhanced fetch wrapper with API key authentication
  */
-const fetcher = async (
-  url: string,
-  options: RequestInit = {},
-): Promise<any> => {
-  const fullUrl = API_PREFIX + (url.startsWith("/") ? url : `/${url}`);
+const fetcher = async (url: string, options: RequestInit = {}): Promise<any> => {
+  const fullUrl = API_PREFIX + (url.startsWith('/') ? url : `/${url}`);
 
   // Prepare headers with optional API key
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
 
   if (API_KEY) {
-    headers["X-API-KEY"] = API_KEY;
+    headers['X-API-KEY'] = API_KEY;
   }
 
   const requestOptions: RequestInit = {
     ...options,
     headers,
-    mode: "cors", // Explicitly set CORS mode
-    credentials: "omit", // Don't send credentials for CORS
+    mode: 'cors', // Explicitly set CORS mode
+    credentials: 'omit', // Don't send credentials for CORS
   };
 
-  console.log(`[API Client] Fetching: ${options.method || "GET"} ${fullUrl}`);
+  console.log(`[API Client] Fetching: ${options.method || 'GET'} ${fullUrl}`);
 
   try {
     const response = await fetch(fullUrl, requestOptions);
@@ -127,24 +124,22 @@ const fetcher = async (
       } catch {
         errorData = await response.text();
       }
-      console.error("[API Client] Fetch error:", {
+      console.error('[API Client] Fetch error:', {
         status: response.status,
         statusText: response.statusText,
         data: errorData,
       });
-      throw new Error(
-        `API request failed: ${response.status} ${response.statusText}`,
-      );
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
     // Check content type before parsing
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
       return await response.json();
     }
     return await response.text();
   } catch (error) {
-    console.error("[API Client] Network or parsing error:", error);
+    console.error('[API Client] Network or parsing error:', error);
     throw error;
   }
 };
@@ -156,10 +151,10 @@ const fetcher = async (
  */
 export const getAgents = async (): Promise<Agent[]> => {
   try {
-    const response: ElizaAPIResponse<Agent[]> = await fetcher("/agents");
+    const response: ElizaAPIResponse<Agent[]> = await fetcher('/agents');
     return response.data || [];
   } catch (error) {
-    console.error("[API Client] Error fetching agents:", error);
+    console.error('[API Client] Error fetching agents:', error);
     return [];
   }
 };
@@ -169,12 +164,10 @@ export const getAgents = async (): Promise<Agent[]> => {
  */
 export const getAgent = async (agentId: string): Promise<Agent | null> => {
   try {
-    const response: ElizaAPIResponse<Agent> = await fetcher(
-      `/agents/${agentId}`,
-    );
+    const response: ElizaAPIResponse<Agent> = await fetcher(`/agents/${agentId}`);
     return response.data || null;
   } catch (error) {
-    console.error("[API Client] Error fetching agent:", error);
+    console.error('[API Client] Error fetching agent:', error);
     return null;
   }
 };
@@ -186,37 +179,25 @@ export const getAgent = async (agentId: string): Promise<Agent | null> => {
  */
 export const getAgentMemories = async (
   agentId: string,
-  limit: number = 50,
+  limit: number = 50
 ): Promise<ChatMessage[]> => {
-  assert(
-    agentId && typeof agentId === "string",
-    "[getAgentMemories] Invalid agentId",
-  );
+  assert(agentId && typeof agentId === 'string', '[getAgentMemories] Invalid agentId');
 
   try {
     const url = `/memory/${agentId}/memories?limit=${limit}`;
-    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> =
-      await fetcher(url);
+    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> = await fetcher(url);
 
     if (!response.success || !Array.isArray(response.data?.memories)) {
-      console.error(
-        "[getAgentMemories] Failed to get valid memories from API.",
-        response,
-      );
+      console.error('[getAgentMemories] Failed to get valid memories from API.', response);
       return [];
     }
 
     const memories: BackendMemory[] = response.data.memories;
-    console.log(
-      `[getAgentMemories] Received ${memories.length} memories from API.`,
-    );
+    console.log(`[getAgentMemories] Received ${memories.length} memories from API.`);
 
     return transformMemoriesToChatMessages(memories);
   } catch (error) {
-    console.error(
-      "[getAgentMemories] Error fetching or processing memories:",
-      error,
-    );
+    console.error('[getAgentMemories] Error fetching or processing memories:', error);
     return [];
   }
 };
@@ -227,41 +208,26 @@ export const getAgentMemories = async (
 export const getRoomMemories = async (
   agentId: string,
   roomId: string,
-  limit: number = 50,
+  limit: number = 50
 ): Promise<ChatMessage[]> => {
-  assert(
-    agentId && typeof agentId === "string",
-    "[getRoomMemories] Invalid agentId",
-  );
-  assert(
-    roomId && typeof roomId === "string",
-    "[getRoomMemories] Invalid roomId",
-  );
+  assert(agentId && typeof agentId === 'string', '[getRoomMemories] Invalid agentId');
+  assert(roomId && typeof roomId === 'string', '[getRoomMemories] Invalid roomId');
 
   try {
     const url = `/memory/${agentId}/rooms/${roomId}/memories?limit=${limit}`;
-    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> =
-      await fetcher(url);
+    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> = await fetcher(url);
 
     if (!response.success || !Array.isArray(response.data?.memories)) {
-      console.error(
-        "[getRoomMemories] Failed to get valid memories from API.",
-        response,
-      );
+      console.error('[getRoomMemories] Failed to get valid memories from API.', response);
       return [];
     }
 
     const memories: BackendMemory[] = response.data.memories;
-    console.log(
-      `[getRoomMemories] Received ${memories.length} memories for room ${roomId}.`,
-    );
+    console.log(`[getRoomMemories] Received ${memories.length} memories for room ${roomId}.`);
 
     return transformMemoriesToChatMessages(memories);
   } catch (error) {
-    console.error(
-      "[getRoomMemories] Error fetching or processing memories:",
-      error,
-    );
+    console.error('[getRoomMemories] Error fetching or processing memories:', error);
     return [];
   }
 };
@@ -269,34 +235,26 @@ export const getRoomMemories = async (
 /**
  * Transform backend memories to frontend chat messages
  */
-function transformMemoriesToChatMessages(
-  memories: BackendMemory[],
-): ChatMessage[] {
+function transformMemoriesToChatMessages(memories: BackendMemory[]): ChatMessage[] {
   return memories
     .map((mem) => {
       const isUser = mem.entityId !== mem.agentId;
       const message: ChatMessage = {
         id: mem.id,
-        name: isUser
-          ? mem.metadata?.entityName || "User"
-          : mem.metadata?.entityName || "Agent",
-        text:
-          mem.content?.text ||
-          (mem.content?.thought ? `*${mem.content.thought}*` : ""),
+        name: isUser ? mem.metadata?.entityName || 'User' : mem.metadata?.entityName || 'Agent',
+        text: mem.content?.text || (mem.content?.thought ? `*${mem.content.thought}*` : ''),
         senderId: mem.entityId,
         roomId: mem.roomId,
         createdAt: mem.createdAt || Date.now(),
         isLoading: false,
-        source: mem.content?.source || "API",
+        source: mem.content?.source || 'API',
         thought: mem.content?.thought,
-        actions: Array.isArray(mem.content?.actions)
-          ? mem.content.actions
-          : undefined,
+        actions: Array.isArray(mem.content?.actions) ? mem.content.actions : undefined,
       };
 
       assert(
-        typeof message.name === "string" && message.text !== undefined,
-        `[transformMemoriesToChatMessages] Invalid transformed message: ${JSON.stringify(message)}`,
+        typeof message.name === 'string' && message.text !== undefined,
+        `[transformMemoriesToChatMessages] Invalid transformed message: ${JSON.stringify(message)}`
       );
 
       return message;
@@ -309,18 +267,16 @@ function transformMemoriesToChatMessages(
 /**
  * Submit a message via the messaging system
  */
-export const submitMessage = async (
-  payload: MessageSubmission,
-): Promise<boolean> => {
+export const submitMessage = async (payload: MessageSubmission): Promise<boolean> => {
   try {
-    const response: ElizaAPIResponse = await fetcher("/messaging/submit", {
-      method: "POST",
+    const response: ElizaAPIResponse = await fetcher('/messaging/submit', {
+      method: 'POST',
       body: JSON.stringify(payload),
     });
 
     return response.success || false;
   } catch (error) {
-    console.error("[API Client] Error submitting message:", error);
+    console.error('[API Client] Error submitting message:', error);
     return false;
   }
 };
@@ -330,11 +286,11 @@ export const submitMessage = async (
  */
 export const getChannelMessages = async (
   channelId: string,
-  limit: number = 50,
+  limit: number = 50
 ): Promise<ChatMessage[]> => {
   try {
     const response: ElizaAPIResponse<{ messages: any[] }> = await fetcher(
-      `/messaging/central-channels/${channelId}/messages?limit=${limit}`,
+      `/messaging/central-channels/${channelId}/messages?limit=${limit}`
     );
 
     if (!response.success || !Array.isArray(response.data?.messages)) {
@@ -348,17 +304,16 @@ export const getChannelMessages = async (
     return response.data.messages
       .map((msg) => {
         // More accurate agent detection using agent ID
-        const isAgentMessage =
-          msg.senderId === AGENT_ID || msg.authorId === AGENT_ID;
+        const isAgentMessage = msg.senderId === AGENT_ID || msg.authorId === AGENT_ID;
 
         return {
           id: msg.id,
-          name: isAgentMessage ? "Agent" : "User",
-          text: msg.content || msg.text || "",
-          senderId: msg.senderId || msg.authorId || "",
+          name: isAgentMessage ? 'Agent' : 'User',
+          text: msg.content || msg.text || '',
+          senderId: msg.senderId || msg.authorId || '',
           roomId: channelId,
           createdAt: new Date(msg.createdAt).getTime(),
-          source: msg.source || "API",
+          source: msg.source || 'API',
           thought: msg.metadata?.thought,
           actions: msg.metadata?.actions,
           isLoading: false,
@@ -366,7 +321,7 @@ export const getChannelMessages = async (
       })
       .sort((a, b) => a.createdAt - b.createdAt); // Ensure chronological order
   } catch (error) {
-    console.error("[API Client] Error fetching channel messages:", error);
+    console.error('[API Client] Error fetching channel messages:', error);
     return [];
   }
 };
@@ -378,24 +333,24 @@ export const sendChannelMessage = async (
   channelId: string,
   content: string,
   userId: string,
-  agentId?: string,
+  agentId?: string
 ): Promise<boolean> => {
   try {
     const response: ElizaAPIResponse = await fetcher(
       `/messaging/central-channels/${channelId}/messages`,
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({
           content,
           userId,
           agentId,
         }),
-      },
+      }
     );
 
     return response.success || false;
   } catch (error) {
-    console.error("[API Client] Error sending channel message:", error);
+    console.error('[API Client] Error sending channel message:', error);
     return false;
   }
 };
@@ -407,12 +362,10 @@ export const sendChannelMessage = async (
  */
 export const getAgentRooms = async (agentId: string): Promise<Room[]> => {
   try {
-    const response: ElizaAPIResponse<Room[]> = await fetcher(
-      `/memory/${agentId}/rooms`,
-    );
+    const response: ElizaAPIResponse<Room[]> = await fetcher(`/memory/${agentId}/rooms`);
     return response.data || [];
   } catch (error) {
-    console.error("[API Client] Error fetching agent rooms:", error);
+    console.error('[API Client] Error fetching agent rooms:', error);
     return [];
   }
 };
@@ -422,20 +375,17 @@ export const getAgentRooms = async (agentId: string): Promise<Room[]> => {
  */
 export const createRoom = async (
   agentId: string,
-  roomData: Partial<Room>,
+  roomData: Partial<Room>
 ): Promise<Room | null> => {
   try {
-    const response: ElizaAPIResponse<Room> = await fetcher(
-      `/memory/${agentId}/rooms`,
-      {
-        method: "POST",
-        body: JSON.stringify(roomData),
-      },
-    );
+    const response: ElizaAPIResponse<Room> = await fetcher(`/memory/${agentId}/rooms`, {
+      method: 'POST',
+      body: JSON.stringify(roomData),
+    });
 
     return response.data || null;
   } catch (error) {
-    console.error("[API Client] Error creating room:", error);
+    console.error('[API Client] Error creating room:', error);
     return null;
   }
 };
@@ -447,12 +397,12 @@ export const createRoom = async (
  */
 export const pingServer = async (): Promise<boolean> => {
   try {
-    const response = await fetcher("/server/ping");
-    console.log("[API Client] Ping response:", response);
+    const response = await fetcher('/server/ping');
+    console.log('[API Client] Ping response:', response);
     // ElizaOS returns {pong: true, timestamp: number} for successful ping
     return response.pong === true || response.success === true;
   } catch (error) {
-    console.error("[API Client] Server ping failed:", error);
+    console.error('[API Client] Server ping failed:', error);
     return false;
   }
 };
@@ -462,10 +412,10 @@ export const pingServer = async (): Promise<boolean> => {
  */
 export const getServerStatus = async (): Promise<any> => {
   try {
-    const response: ElizaAPIResponse = await fetcher("/server/status");
+    const response: ElizaAPIResponse = await fetcher('/server/status');
     return response.data || null;
   } catch (error) {
-    console.error("[API Client] Error fetching server status:", error);
+    console.error('[API Client] Error fetching server status:', error);
     return null;
   }
 };
@@ -475,7 +425,7 @@ export const getServerStatus = async (): Promise<any> => {
 interface DMChannel {
   id: string;
   name: string;
-  type: "DM";
+  type: 'DM';
   metadata: {
     isDm: true;
     user1: string;
@@ -495,12 +445,12 @@ export const createDMChannel = async (
   userId: string,
   agentId: string,
   channelId?: string,
-  title?: string,
+  title?: string
 ): Promise<DMChannel | null> => {
   try {
-    const response = await fetch("/api/dm-channel/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/dm-channel/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId,
         agentId,
@@ -511,14 +461,14 @@ export const createDMChannel = async (
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("[API Client] Failed to create DM channel:", errorData);
+      console.error('[API Client] Failed to create DM channel:', errorData);
       return null;
     }
 
     const data = await response.json();
     return data.success ? data.channel : null;
   } catch (error) {
-    console.error("[API Client] Error creating DM channel:", error);
+    console.error('[API Client] Error creating DM channel:', error);
     return null;
   }
 };
@@ -529,12 +479,12 @@ export const createDMChannel = async (
 export const getOrCreateDMChannel = async (
   userId: string,
   agentId: string,
-  sessionId?: string,
+  sessionId?: string
 ): Promise<{ channel: DMChannel; isNew: boolean } | null> => {
   try {
-    const response = await fetch("/api/dm-channel/get-or-create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/dm-channel/get-or-create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId,
         agentId,
@@ -544,17 +494,14 @@ export const getOrCreateDMChannel = async (
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(
-        "[API Client] Failed to get or create DM channel:",
-        errorData,
-      );
+      console.error('[API Client] Failed to get or create DM channel:', errorData);
       return null;
     }
 
     const data = await response.json();
     return data.success ? { channel: data.channel, isNew: data.isNew } : null;
   } catch (error) {
-    console.error("[API Client] Error getting or creating DM channel:", error);
+    console.error('[API Client] Error getting or creating DM channel:', error);
     return null;
   }
 };
@@ -562,29 +509,26 @@ export const getOrCreateDMChannel = async (
 /**
  * List DM channels for a user and agent
  */
-export const listDMChannels = async (
-  userId: string,
-  agentId: string,
-): Promise<DMChannel[]> => {
+export const listDMChannels = async (userId: string, agentId: string): Promise<DMChannel[]> => {
   try {
     const response = await fetch(
       `/api/dm-channel/list?userId=${encodeURIComponent(userId)}&agentId=${encodeURIComponent(agentId)}`,
       {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      },
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("[API Client] Failed to list DM channels:", errorData);
+      console.error('[API Client] Failed to list DM channels:', errorData);
       return [];
     }
 
     const data = await response.json();
     return data.success ? data.channels : [];
   } catch (error) {
-    console.error("[API Client] Error listing DM channels:", error);
+    console.error('[API Client] Error listing DM channels:', error);
     return [];
   }
 };

@@ -10,7 +10,7 @@ import {
   type Memory,
   type Provider,
   type UUID,
-} from "@elizaos/core";
+} from '@elizaos/core';
 
 // Move getRecentInteractions outside the provider
 /**
@@ -34,17 +34,14 @@ const getRecentInteractions = async (
   runtime: IAgentRuntime,
   sourceEntityId: UUID,
   targetEntityId: UUID,
-  excludeRoomId: UUID,
+  excludeRoomId: UUID
 ): Promise<Memory[]> => {
   // Find all rooms where sourceEntityId and targetEntityId are participants
-  const rooms = await runtime.getRoomsForParticipants([
-    sourceEntityId,
-    targetEntityId,
-  ]);
+  const rooms = await runtime.getRoomsForParticipants([sourceEntityId, targetEntityId]);
 
   // Check the existing memories in the database
   return runtime.getMemoriesByRoomIds({
-    tableName: "messages",
+    tableName: 'messages',
     // filter out the current room id from rooms
     roomIds: rooms.filter((room) => room !== excludeRoomId),
     limit: 20,
@@ -63,36 +60,29 @@ const getRecentInteractions = async (
  * @returns {object} An object containing data, values, and text sections.
  */
 export const recentMessagesProvider: Provider = {
-  name: "RECENT_MESSAGES",
-  description: "Recent messages, interactions and other memories",
+  name: 'RECENT_MESSAGES',
+  description: 'Recent messages, interactions and other memories',
   position: 100,
   get: async (runtime: IAgentRuntime, message: Memory) => {
     const { roomId } = message;
     const conversationLength = runtime.getConversationLength();
 
     // Parallelize initial data fetching operations including recentInteractions
-    const [entitiesData, room, recentMessagesData, recentInteractionsData] =
-      await Promise.all([
-        getEntityDetails({ runtime, roomId }),
-        runtime.getRoom(roomId),
-        runtime.getMemories({
-          tableName: "messages",
-          roomId,
-          count: conversationLength,
-          unique: false,
-        }),
-        message.entityId !== runtime.agentId
-          ? getRecentInteractions(
-              runtime,
-              message.entityId,
-              runtime.agentId,
-              roomId,
-            )
-          : Promise.resolve([]),
-      ]);
+    const [entitiesData, room, recentMessagesData, recentInteractionsData] = await Promise.all([
+      getEntityDetails({ runtime, roomId }),
+      runtime.getRoom(roomId),
+      runtime.getMemories({
+        tableName: 'messages',
+        roomId,
+        count: conversationLength,
+        unique: false,
+      }),
+      message.entityId !== runtime.agentId
+        ? getRecentInteractions(runtime, message.entityId, runtime.agentId, roomId)
+        : Promise.resolve([]),
+    ]);
 
-    const isPostFormat =
-      room?.type === ChannelType.FEED || room?.type === ChannelType.THREAD;
+    const isPostFormat = room?.type === ChannelType.FEED || room?.type === ChannelType.THREAD;
 
     // Format recent messages and posts in parallel
     const [formattedRecentMessages, formattedRecentPosts] = await Promise.all([
@@ -110,27 +100,27 @@ export const recentMessagesProvider: Provider = {
     // Create formatted text with headers
     const recentPosts =
       formattedRecentPosts && formattedRecentPosts.length > 0
-        ? addHeader("# Posts in Thread", formattedRecentPosts)
-        : "";
+        ? addHeader('# Posts in Thread', formattedRecentPosts)
+        : '';
 
     const metaData = message.metadata as CustomMetadata;
-    const senderName = metaData?.entityName || "unknown";
+    const senderName = metaData?.entityName || 'unknown';
     const receivedMessageContent = message.content.text;
 
     const receivedMessageHeader = addHeader(
-      "# Received Message",
-      `${senderName}: ${receivedMessageContent}`,
+      '# Received Message',
+      `${senderName}: ${receivedMessageContent}`
     );
 
     const focusHeader = addHeader(
-      "# ⚡ Focus your response",
-      `You are replying to the above message from **${senderName}**. Keep your answer relevant to that message. Do not repeat earlier replies unless the sender asks again.`,
+      '# ⚡ Focus your response',
+      `You are replying to the above message from **${senderName}**. Keep your answer relevant to that message. Do not repeat earlier replies unless the sender asks again.`
     );
 
     const recentMessages =
       formattedRecentMessages && formattedRecentMessages.length > 0
-        ? addHeader("# Conversation Messages", formattedRecentMessages)
-        : "";
+        ? addHeader('# Conversation Messages', formattedRecentMessages)
+        : '';
 
     // Preload all necessary entities for both types of interactions
     const interactionEntityMap = new Map<UUID, Entity>();
@@ -142,7 +132,7 @@ export const recentMessagesProvider: Provider = {
         ...new Set(
           recentInteractionsData
             .map((message) => message.entityId)
-            .filter((id) => id !== runtime.agentId),
+            .filter((id) => id !== runtime.agentId)
         ),
       ];
 
@@ -160,14 +150,12 @@ export const recentMessagesProvider: Provider = {
 
       // Get the remaining entities that weren't already loaded
       // Use Set difference for efficient filtering
-      const remainingEntityIds = uniqueEntityIds.filter(
-        (id) => !entitiesDataIdSet.has(id),
-      );
+      const remainingEntityIds = uniqueEntityIds.filter((id) => !entitiesDataIdSet.has(id));
 
       // Only fetch the entities we don't already have
       if (remainingEntityIds.length > 0) {
         const entities = await Promise.all(
-          remainingEntityIds.map((entityId) => runtime.getEntityById(entityId)),
+          remainingEntityIds.map((entityId) => runtime.getEntityById(entityId))
         );
 
         entities.forEach((entity, index) => {
@@ -180,7 +168,7 @@ export const recentMessagesProvider: Provider = {
 
     // Format recent message interactions
     const getRecentMessageInteractions = async (
-      recentInteractionsData: Memory[],
+      recentInteractionsData: Memory[]
     ): Promise<string> => {
       // Format messages using the pre-fetched entities
       const formattedInteractions = recentInteractionsData.map((message) => {
@@ -190,21 +178,19 @@ export const recentMessagesProvider: Provider = {
         if (isSelf) {
           sender = runtime.character.name;
         } else {
-          sender =
-            interactionEntityMap.get(message.entityId)?.metadata?.username ||
-            "unknown";
+          sender = interactionEntityMap.get(message.entityId)?.metadata?.username || 'unknown';
         }
 
         return `${sender}: ${message.content.text}`;
       });
 
-      return formattedInteractions.join("\n");
+      return formattedInteractions.join('\n');
     };
 
     // Format recent post interactions
     const getRecentPostInteractions = async (
       recentInteractionsData: Memory[],
-      entities: Entity[],
+      entities: Entity[]
     ): Promise<string> => {
       // Combine pre-loaded entities with any other entities
       const combinedEntities = [...entities];
@@ -227,11 +213,10 @@ export const recentMessagesProvider: Provider = {
     };
 
     // Process both types of interactions in parallel
-    const [recentMessageInteractions, recentPostInteractions] =
-      await Promise.all([
-        getRecentMessageInteractions(recentInteractionsData),
-        getRecentPostInteractions(recentInteractionsData, entitiesData),
-      ]);
+    const [recentMessageInteractions, recentPostInteractions] = await Promise.all([
+      getRecentMessageInteractions(recentInteractionsData),
+      getRecentPostInteractions(recentInteractionsData, entitiesData),
+    ]);
 
     const data = {
       recentMessages: recentMessagesData,
@@ -243,19 +228,13 @@ export const recentMessagesProvider: Provider = {
       recentMessages,
       recentMessageInteractions,
       recentPostInteractions,
-      recentInteractions: isPostFormat
-        ? recentPostInteractions
-        : recentMessageInteractions,
+      recentInteractions: isPostFormat ? recentPostInteractions : recentMessageInteractions,
     };
 
     // Combine all text sections
-    const text = [
-      isPostFormat
-        ? recentPosts
-        : recentMessages + receivedMessageHeader + focusHeader,
-    ]
+    const text = [isPostFormat ? recentPosts : recentMessages + receivedMessageHeader + focusHeader]
       .filter(Boolean)
-      .join("\n\n");
+      .join('\n\n');
 
     return {
       data,

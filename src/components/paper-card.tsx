@@ -1,17 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import clsx from "clsx";
+import { useState } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 
-import { Paper } from "@/types/chat-message";
-import {
-  Dialog,
-  DialogTitle,
-  DialogBody,
-  DialogActions,
-} from "@/components/dialog";
-import { Button } from "@/components/button";
+import { Paper } from '@/types/chat-message';
+import { Dialog, DialogTitle, DialogBody, DialogActions } from '@/components/dialog';
+import { Button } from '@/components/button';
 
 interface PaperCardProps {
   paper: Paper;
@@ -20,13 +15,13 @@ interface PaperCardProps {
 
 const truncateTitle = (title: string, maxLength: number = 60) => {
   if (title.length <= maxLength) return title;
-  return title.substring(0, maxLength).trim() + "...";
+  return title.substring(0, maxLength).trim() + '...';
 };
 
 const isValidURL = (doi: string): boolean => {
   try {
     // Check if it's already a full URL
-    if (doi.startsWith("http://") || doi.startsWith("https://")) {
+    if (doi.startsWith('http://') || doi.startsWith('https://')) {
       new URL(doi);
       return true;
     }
@@ -41,7 +36,7 @@ const isValidURL = (doi: string): boolean => {
 };
 
 const getDOIUrl = (doi: string): string => {
-  if (doi.startsWith("http://") || doi.startsWith("https://")) {
+  if (doi.startsWith('http://') || doi.startsWith('https://')) {
     return doi;
   }
   // Convert DOI to URL
@@ -52,17 +47,17 @@ export function PaperCard({ paper, className }: PaperCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const canViewPaper = isValidURL(paper.doi);
-  const paperUrl = canViewPaper ? getDOIUrl(paper.doi) : "";
+  const paperUrl = canViewPaper ? getDOIUrl(paper.doi) : '';
 
   return (
     <>
       <button
         onClick={() => setIsDialogOpen(true)}
         className={clsx(
-          "w-full text-left p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer",
-          "hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800",
-          "transition-colors duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900",
+          'w-full text-left p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer',
+          'hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800',
+          'transition-colors duration-200',
+          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900',
           className
         )}
       >
@@ -70,9 +65,7 @@ export function PaperCard({ paper, className }: PaperCardProps) {
           {truncateTitle(paper.title)}
         </h4>
         {paper.doi && (
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">
-            DOI: {paper.doi}
-          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">DOI: {paper.doi}</p>
         )}
       </button>
 
@@ -136,9 +129,7 @@ export function PaperCard({ paper, className }: PaperCardProps) {
               {canViewPaper ? (
                 <Button
                   color="blue"
-                  onClick={() =>
-                    window.open(paperUrl, "_blank", "noopener,noreferrer")
-                  }
+                  onClick={() => window.open(paperUrl, '_blank', 'noopener,noreferrer')}
                 >
                   View Paper
                 </Button>

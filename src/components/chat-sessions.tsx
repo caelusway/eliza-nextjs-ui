@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -61,21 +61,17 @@ export const ChatSessions = ({
       setError(null);
 
       try {
-        const response = await fetch(
-          `/api/chat-sessions?userId=${encodeURIComponent(userId)}`,
-        );
+        const response = await fetch(`/api/chat-sessions?userId=${encodeURIComponent(userId)}`);
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || "Failed to fetch chat sessions");
+          throw new Error(data.error || 'Failed to fetch chat sessions');
         }
 
         setSessions(data.data?.sessions || []);
       } catch (err) {
-        console.error("[ChatSessions] Error:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load chat sessions",
-        );
+        console.error('[ChatSessions] Error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load chat sessions');
       } finally {
         setLoading(false);
       }
@@ -97,7 +93,7 @@ export const ChatSessions = ({
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return "Just now";
+    if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -113,9 +109,7 @@ export const ChatSessions = ({
       <div className="flex items-center justify-center py-8">
         <div className="flex items-center gap-2">
           <LoadingSpinner />
-          <span className="text-zinc-600 dark:text-zinc-400">
-            Loading chat sessions...
-          </span>
+          <span className="text-zinc-600 dark:text-zinc-400">Loading chat sessions...</span>
         </div>
       </div>
     );
@@ -135,9 +129,7 @@ export const ChatSessions = ({
     return (
       <div className="text-center py-8">
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          {showSwitcher
-            ? "No other chat sessions found"
-            : "No previous chat sessions"}
+          {showSwitcher ? 'No other chat sessions found' : 'No previous chat sessions'}
         </p>
       </div>
     );
@@ -150,9 +142,7 @@ export const ChatSessions = ({
   if (showSwitcher && filteredSessions.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          No other chat sessions found
-        </p>
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm">No other chat sessions found</p>
       </div>
     );
   }
@@ -185,14 +175,14 @@ export const ChatSessions = ({
                 </h4>
                 {session.preview && (
                   <p className="text-zinc-600 dark:text-zinc-400 text-xs mt-1 line-clamp-2">
-                    {session.isFromAgent ? "🤖 " : ""}
+                    {session.isFromAgent ? '🤖 ' : ''}
                     {session.preview}
                   </p>
                 )}
                 <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500 dark:text-zinc-400">
                   <span>
                     {session.messageCount} message
-                    {session.messageCount !== 1 ? "s" : ""}
+                    {session.messageCount !== 1 ? 's' : ''}
                   </span>
                   <span>•</span>
                   <span>{formatTimeAgo(session.lastActivity)}</span>

@@ -5,6 +5,7 @@ This file contains project-specific configuration and preferences for Claude Cod
 ---
 
 ## PROJECT INFORMATION
+
 - **Project Name:** Eliza Next.js Starter
 - **Working Directory:** `/Users/{user}/Documents/GitHub/eliza-nextjs-starter`
 - **Git Repository:** Yes
@@ -21,6 +22,7 @@ This is a production-ready Next.js application for integrating with ElizaOS agen
 2. **ElizaOS Agent Package**: Buildable agent with custom plugins
 
 ### Key Features
+
 - Real-time agent communication via Socket.IO
 - CORS-friendly API proxy pattern for browser-to-ElizaOS communication
 - Agent participation management with automatic registration
@@ -33,6 +35,7 @@ This is a production-ready Next.js application for integrating with ElizaOS agen
 ## TECH STACK
 
 ### Core Technologies
+
 - **Framework:** Next.js 15.3.1 with App Router
 - **React:** 19.1.0 with React DOM
 - **TypeScript:** v5 with strict configuration
@@ -40,18 +43,21 @@ This is a production-ready Next.js application for integrating with ElizaOS agen
 - **Node.js:** 18+ required
 
 ### Styling & UI
+
 - **CSS Framework:** Tailwind CSS v4.0.0-beta
 - **Icons:** Lucide React, Heroicons
 - **Components:** Custom design system with Headless UI
 - **Themes:** Dark/light mode with next-themes
 
 ### ElizaOS Integration
+
 - **Core:** @elizaos/core v1.0.9
 - **Plugins:** Anthropic, Groq, OpenAI, SQL plugins
 - **Communication:** Socket.IO client for real-time messaging
 - **CLI:** @elizaos/cli v1.0.9
 
 ### Build & Development
+
 - **Builder:** tsup v8.4.0 for agent building
 - **Testing:** Vitest v2.1.5 with coverage
 - **Linting:** ESLint with Next.js config
@@ -62,17 +68,20 @@ This is a production-ready Next.js application for integrating with ElizaOS agen
 ## CRITICAL RULES
 
 ### Package Management
+
 - **ALWAYS USE `bun` FOR ALL PACKAGE MANAGEMENT AND SCRIPT EXECUTION**
 - **NEVER USE `npm` OR `pnpm`** unless explicitly required by project constraints
 - **IF A COMMAND DOESN't WORK:** Read `package.json` to find correct script names
 
 ### Development Workflow
+
 - **DUAL BUILD SYSTEM:** Project builds both Next.js app and ElizaOS agent
 - **PORT CONFIGURATION:** Next.js runs on port 4000, ElizaOS server on port 3000
 - **ENVIRONMENT SETUP:** Always check `.env` file for proper configuration
 - **CONCURRENT DEVELOPMENT:** Use `bun run dev:with-agent` for full stack development
 
 ### ElizaOS Integration
+
 - **AGENT PARTICIPATION:** Agents must be added to channels for message processing
 - **CORS HANDLING:** All ElizaOS API calls must go through `/api/eliza/[...path]` proxy
 - **SOCKET CONNECTION:** Direct Socket.IO connection to ElizaOS server (not proxied)
@@ -80,6 +89,7 @@ This is a production-ready Next.js application for integrating with ElizaOS agen
 - **CHANNEL MANAGEMENT:** Use centralized bus pattern (`00000000-0000-0000-0000-000000000000`)
 
 ### Code Quality
+
 - **TYPESCRIPT:** Maintain strict typing for all new code
 - **ERROR HANDLING:** Implement comprehensive error boundaries and recovery
 - **LOGGING:** Use consistent console logging patterns with prefixes
@@ -115,6 +125,7 @@ bun run test:watch            # Run tests in watch mode
 ## PROJECT STRUCTURE
 
 ### Key Directories
+
 ```
 src/
 ├── app/                      # Next.js App Router
@@ -139,6 +150,7 @@ src/
 ```
 
 ### Critical Files
+
 - **`src/agent.ts`**: ElizaOS agent configuration and character definition
 - **`src/lib/socketio-manager.ts`**: Real-time messaging implementation
 - **`src/lib/api-client.ts`**: ElizaOS API integration with CORS handling
@@ -150,6 +162,7 @@ src/
 ## ENVIRONMENT CONFIGURATION
 
 ### Required Variables
+
 ```env
 # Next.js Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:4000
@@ -166,6 +179,7 @@ NEXT_PUBLIC_API_KEY=your-api-key-if-needed
 ```
 
 ### Optional Variables
+
 ```env
 # Debug Mode (shows debug panel with connection details)
 NEXT_PUBLIC_DEBUG=true
@@ -177,7 +191,9 @@ REPO_BRANCH=v2-develop
 ```
 
 ### ElizaOS Server Requirements
+
 Ensure your ElizaOS instance has required API keys:
+
 ```env
 GROQ_API_KEY=your-groq-api-key
 OPENAI_API_KEY=your-openai-api-key
@@ -189,6 +205,7 @@ ANTHROPIC_API_KEY=your-anthropic-api-key
 ## ARCHITECTURAL PATTERNS
 
 ### ElizaOS Integration Flow
+
 ```
 [Next.js Client] → [API Proxy] → [ElizaOS Server] → [Message Bus] → [Agent Runtime]
        ↑                                                                    ↓
@@ -198,15 +215,17 @@ ANTHROPIC_API_KEY=your-anthropic-api-key
 ### Key Implementation Patterns
 
 #### 1. Agent Participation Setup (CRITICAL)
+
 ```typescript
 // Add agent to centralized channel for message processing
 await fetch('/api/eliza/messaging/central-channels/00000000-0000-0000-0000-000000000000/agents', {
   method: 'POST',
-  body: JSON.stringify({ agentId: 'your-agent-id' })
+  body: JSON.stringify({ agentId: 'your-agent-id' }),
 });
 ```
 
 #### 2. Message Broadcasting (Real-time)
+
 ```typescript
 // Listen for messages from central bus
 socket.on('messageBroadcast', (data) => {
@@ -218,6 +237,7 @@ socket.on('messageBroadcast', (data) => {
 ```
 
 #### 3. API Proxy Pattern (CORS Solution)
+
 ```typescript
 // All ElizaOS API calls go through Next.js proxy
 const response = await fetch('/api/eliza/server/ping'); // Proxied
@@ -225,6 +245,7 @@ const response = await fetch('/api/eliza/server/ping'); // Proxied
 ```
 
 ### Session Management
+
 - **DM Channels**: Organizational containers for conversation persistence
 - **User Entities**: Persistent UUIDs stored in localStorage
 - **Session History**: Dual-source loading (channel messages + room memories)
@@ -235,6 +256,7 @@ const response = await fetch('/api/eliza/server/ping'); // Proxied
 ## DEVELOPMENT GUIDELINES
 
 ### Code Style & Structure
+
 - **TypeScript**: Use strict typing for all new code
 - **Functional Programming**: Prefer functional patterns over classes
 - **Error Boundaries**: Implement comprehensive error handling
@@ -242,6 +264,7 @@ const response = await fetch('/api/eliza/server/ping'); // Proxied
 - **Components**: Follow existing design system patterns
 
 ### Naming Conventions
+
 - **Components**: PascalCase (`ChatMessage.tsx`)
 - **Hooks**: camelCase starting with `use` (`useLocalStorage.ts`)
 - **Types**: PascalCase interfaces (`ChatMessage`, `SocketIOManager`)
@@ -249,6 +272,7 @@ const response = await fetch('/api/eliza/server/ping'); // Proxied
 - **API Routes**: kebab-case directories (`chat-session`, `dm-channel`)
 
 ### File Organization
+
 - **Components**: One component per file with co-located types
 - **Utilities**: Shared utilities in `src/lib/`
 - **Types**: Centralized in `src/types/` for complex types
@@ -259,26 +283,31 @@ const response = await fetch('/api/eliza/server/ping'); // Proxied
 ## COMMON ISSUES & SOLUTIONS
 
 ### 1. "Agent not responding"
+
 **Cause**: Agent not added to channel
 **Solution**: Check browser console for agent participation setup logs
 **Debug**: Enable `NEXT_PUBLIC_DEBUG=true` to see connection states
 
 ### 2. "CORS errors when calling ElizaOS"
+
 **Cause**: Direct browser-to-ElizaOS requests blocked
 **Solution**: All requests automatically proxied via `/api/eliza/*`
 **Never**: Make direct requests to ElizaOS server from browser
 
 ### 3. "Message duplication in UI"
+
 **Cause**: Poor message filtering
 **Solution**: App filters own messages by `senderId`
 **Check**: Ensure `userEntity` is properly set and persisted
 
 ### 4. "Socket connection failed"
+
 **Cause**: ElizaOS server not running or wrong URL
 **Solution**: Verify `NEXT_PUBLIC_SERVER_URL` and server status
 **Debug**: Check network tab for Socket.IO connection attempts
 
 ### 5. "Build failures"
+
 **Cause**: Missing environment variables or dependency issues
 **Solution**: Check `.env` file and run `bun install`
 **Agent Build**: Ensure ElizaOS dependencies are properly externalized
@@ -288,12 +317,14 @@ const response = await fetch('/api/eliza/server/ping'); // Proxied
 ## TESTING STRATEGY
 
 ### Test Structure
+
 - **Unit Tests**: Core utilities and components
 - **Integration Tests**: ElizaOS API integration
 - **E2E Tests**: Full chat flow testing
 - **Coverage**: Aim for >80% coverage on critical paths
 
 ### Running Tests
+
 ```bash
 bun run test              # Run all tests
 bun run test:coverage     # Generate coverage report
@@ -301,6 +332,7 @@ bun run test:watch        # Watch mode for development
 ```
 
 ### Testing Patterns
+
 - **Mock ElizaOS**: Use test doubles for ElizaOS server
 - **Socket.IO Testing**: Mock Socket.IO events and connections
 - **Component Testing**: Test UI components in isolation
@@ -311,6 +343,7 @@ bun run test:watch        # Watch mode for development
 ## DEPLOYMENT CONSIDERATIONS
 
 ### Production Environment
+
 ```env
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 NEXT_PUBLIC_SERVER_URL=https://your-elizaos-server.com
@@ -320,12 +353,14 @@ NEXT_PUBLIC_NODE_ENV="production"
 ```
 
 ### Build Process
+
 1. **Agent Build**: `tsup` compiles agent to `dist/agent.js`
 2. **Next.js Build**: Standard Next.js production build
 3. **Asset Optimization**: Images, CSS, and JS optimization
 4. **Environment Validation**: Check all required env vars
 
 ### Performance Considerations
+
 - **Socket.IO**: Single connection with proper cleanup
 - **Message History**: Pagination for large conversations
 - **Real-time Updates**: Efficient message filtering
@@ -336,12 +371,14 @@ NEXT_PUBLIC_NODE_ENV="production"
 ## DOCUMENTATION
 
 ### Key Documentation Files
+
 - **`README.md`**: Complete setup and usage guide
 - **`docs/eliza-messaging-system.md`**: Comprehensive ElizaOS integration guide
 - **`package.json`**: All available scripts and dependencies
 - **`.env.example`**: Environment variable template (if exists)
 
 ### Additional Resources
+
 - **ElizaOS Documentation**: https://github.com/elizaos/eliza
 - **Next.js Documentation**: https://nextjs.org/docs
 - **Socket.IO Documentation**: https://socket.io/docs/
@@ -351,12 +388,14 @@ NEXT_PUBLIC_NODE_ENV="production"
 ## MAINTENANCE TASKS
 
 ### Regular Updates
+
 - **Dependencies**: Update ElizaOS packages regularly for latest features
 - **Security**: Monitor for security updates in dependencies
 - **Performance**: Profile Socket.IO and API performance
 - **Documentation**: Keep implementation docs in sync with code changes
 
 ### Monitoring
+
 - **ElizaOS Server Health**: Regular ping checks
 - **Socket.IO Connections**: Monitor connection stability
 - **Error Rates**: Track API and Socket.IO errors
@@ -367,6 +406,7 @@ NEXT_PUBLIC_NODE_ENV="production"
 ## GETTING HELP
 
 ### Troubleshooting Steps
+
 1. **Check Environment**: Verify `.env` configuration
 2. **ElizaOS Server**: Ensure server is running and accessible
 3. **Browser Console**: Check for connection and API errors
@@ -374,6 +414,7 @@ NEXT_PUBLIC_NODE_ENV="production"
 5. **Debug Mode**: Enable `NEXT_PUBLIC_DEBUG=true` for detailed info
 
 ### Support Resources
+
 - **Project Issues**: GitHub Issues for this repository
 - **ElizaOS Support**: https://github.com/elizaos/eliza/issues
 - **Next.js Support**: https://github.com/vercel/next.js/discussions

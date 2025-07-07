@@ -105,7 +105,7 @@ Visit [http://localhost:4000](http://localhost:4000)
 // 1. Add agent to channel (critical for message processing)
 await fetch('/api/eliza/messaging/central-channels/00000000-0000-0000-0000-000000000000/agents', {
   method: 'POST',
-  body: JSON.stringify({ agentId: 'your-agent-id' })
+  body: JSON.stringify({ agentId: 'your-agent-id' }),
 });
 
 // 2. Handle centralized channel messages
@@ -141,18 +141,22 @@ The app provides CORS-friendly proxy endpoints:
 ## 🚨 Common Issues & Solutions
 
 ### 1. "Agent not responding"
+
 **Cause**: Agent not added to channel
 **Solution**: Check browser console for agent participation setup logs
 
 ### 2. "CORS errors"
+
 **Cause**: Direct browser-to-ElizaOS requests blocked
 **Solution**: All requests automatically proxied via `/api/eliza/*`
 
 ### 3. "Message duplication"
+
 **Cause**: Poor message filtering
 **Solution**: App filters own messages by `senderId`
 
 ### 4. "Connection failed"
+
 **Cause**: ElizaOS server not running or wrong URL
 **Solution**: Verify `NEXT_PUBLIC_SERVER_URL` and server status
 

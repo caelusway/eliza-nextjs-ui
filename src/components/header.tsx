@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import clsx from "clsx";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
-import { Dialog } from "@/components/dialog";
-import { DiscordIcon, XIcon } from "@/components/icons";
-import { Logo } from "@/components/logo";
+import { Dialog } from '@/components/dialog';
+import { DiscordIcon, XIcon } from '@/components/icons';
+import { Logo } from '@/components/logo';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -20,10 +20,10 @@ export function Header() {
       <Link
         href="/explore"
         className={clsx(
-          "text-sm font-medium",
+          'text-sm font-medium',
           mobile
-            ? "-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900"
-            : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white",
+            ? '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900'
+            : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
         )}
         onClick={() => setMobileMenuOpen(false)}
       >
@@ -34,10 +34,10 @@ export function Header() {
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
-          "text-sm font-medium flex items-center",
+          'text-sm font-medium flex items-center',
           mobile
-            ? "-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900"
-            : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white",
+            ? '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900'
+            : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white'
         )}
         onClick={() => setMobileMenuOpen(false)}
       >
@@ -48,10 +48,10 @@ export function Header() {
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
-          "text-sm font-medium flex items-center",
+          'text-sm font-medium flex items-center',
           mobile
-            ? "-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900"
-            : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white",
+            ? '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900'
+            : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white'
         )}
         onClick={() => setMobileMenuOpen(false)}
       >
@@ -62,10 +62,10 @@ export function Header() {
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
-          "text-sm font-medium flex items-center",
+          'text-sm font-medium flex items-center',
           mobile
-            ? "-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900"
-            : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white",
+            ? '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900'
+            : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white'
         )}
         onClick={() => setMobileMenuOpen(false)}
       >
@@ -98,11 +98,7 @@ export function Header() {
       >
         <div className="px-6 py-6 h-full">
           <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="-m-1.5 p-1.5"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <Link href="/" className="-m-1.5 p-1.5" onClick={() => setMobileMenuOpen(false)}>
               <Logo width={32} height={32} />
             </Link>
             <button
