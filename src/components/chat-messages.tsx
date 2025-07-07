@@ -4,30 +4,23 @@ import { useEffect, useRef } from "react";
 
 import { ChatMessage } from "@/components/chat-message";
 import { USER_NAME } from "@/constants";
-import { Citation } from "@/types/chat";
 import { ChatMessage as ChatMessageType } from "@/types/chat-message";
 import { assert } from "@/utils/assert";
 
 interface ChatMessagesProps {
   messages: ChatMessageType[];
-  citationsMap: Record<number, Citation[]>;
   followUpPromptsMap: Record<number, string[]>;
   onFollowUpClick: (prompt: string) => void;
 }
 
 export function ChatMessages({
   messages,
-  citationsMap,
   followUpPromptsMap,
   onFollowUpClick,
 }: ChatMessagesProps) {
   assert(
     Array.isArray(messages),
     `[ChatMessages] 'messages' prop is not an array: ${typeof messages}`,
-  );
-  assert(
-    typeof citationsMap === "object" && citationsMap !== null,
-    `[ChatMessages] 'citationsMap' prop is not an object: ${typeof citationsMap}`,
   );
   assert(
     typeof followUpPromptsMap === "object" && followUpPromptsMap !== null,
@@ -119,7 +112,6 @@ export function ChatMessages({
 
   console.log({
     messages,
-    citationsMap,
     followUpPromptsMap,
   });
 
@@ -156,9 +148,6 @@ export function ChatMessages({
             <ChatMessage
               message={message}
               i={i}
-              citations={
-                message.name !== USER_NAME ? citationsMap[i] : undefined
-              }
               followUpPrompts={
                 message.name !== USER_NAME
                   ? followUpPromptsMap[assistantIndex]

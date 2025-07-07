@@ -700,7 +700,6 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
             <>
               <ChatMessages
                 messages={messages}
-                citationsMap={{}}
                 followUpPromptsMap={{}}
                 onFollowUpClick={(prompt) => {
                   // Handle follow-up prompts by setting as new input
