@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@/types/chat-message';
+import type { ChatMessage, Paper } from '@/types/chat-message';
 import { assert } from '@/utils/assert';
 
 // Use Next.js API proxy to avoid CORS issues
@@ -29,6 +29,7 @@ interface BackendMemory {
     thought?: string;
     actions?: string[];
     attachments?: any[];
+    papers?: Paper[];
     [key: string]: any;
   };
   metadata?: {
@@ -250,6 +251,7 @@ function transformMemoriesToChatMessages(memories: BackendMemory[]): ChatMessage
         source: mem.content?.source || 'API',
         thought: mem.content?.thought,
         actions: Array.isArray(mem.content?.actions) ? mem.content.actions : undefined,
+        papers: mem.content?.papers || mem.metadata?.papers,
       };
 
       assert(
@@ -317,6 +319,7 @@ export const getChannelMessages = async (
           thought: msg.metadata?.thought,
           actions: msg.metadata?.actions,
           isLoading: false,
+          papers: msg?.papers || [],
         };
       })
       .sort((a, b) => a.createdAt - b.createdAt); // Ensure chronological order
