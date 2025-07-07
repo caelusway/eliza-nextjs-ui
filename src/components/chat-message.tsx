@@ -1,12 +1,15 @@
 import {
   ArrowRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { memo } from "react";
+import { memo, useState } from "react";
 import Image from "next/image";
 
 import { CodeBlock } from "@/components/code-block";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
+import { PaperCard } from "@/components/paper-card";
 import { ChatMessage as ChatMessageType } from "@/types/chat-message";
 import { assert } from "@/utils/assert";
 
@@ -27,33 +30,34 @@ export const ChatMessage = memo(function ChatMessage({
   followUpPrompts,
   onFollowUpClick,
 }: ChatMessageProps) {
+  const [showAllPapers, setShowAllPapers] = useState(false);
 
   assert(
     message && typeof message === "object",
-    `[ChatMessage Render] Invalid 'message' prop: ${typeof message}`
+    `[ChatMessage Render] Invalid 'message' prop: ${typeof message}`,
   );
   if (!message) return null;
   assert(
     typeof message.name === "string",
-    `[ChatMessage Render] Invalid message.name: ${typeof message.name}`
+    `[ChatMessage Render] Invalid message.name: ${typeof message.name}`,
   );
   assert(
     typeof message.text === "string" ||
       message.text === null ||
       message.text === undefined,
-    `[ChatMessage Render] Invalid message.text: ${typeof message.text}`
+    `[ChatMessage Render] Invalid message.text: ${typeof message.text}`,
   );
   assert(
     typeof i === "number",
-    `[ChatMessage Render] Invalid 'i' prop: ${typeof i}`
+    `[ChatMessage Render] Invalid 'i' prop: ${typeof i}`,
   );
   assert(
     !followUpPrompts || Array.isArray(followUpPrompts),
-    `[ChatMessage Render] Invalid 'followUpPrompts' prop type: ${typeof followUpPrompts}`
+    `[ChatMessage Render] Invalid 'followUpPrompts' prop type: ${typeof followUpPrompts}`,
   );
   assert(
     !onFollowUpClick || typeof onFollowUpClick === "function",
-    `[ChatMessage Render] Invalid 'onFollowUpClick' prop type: ${typeof onFollowUpClick}`
+    `[ChatMessage Render] Invalid 'onFollowUpClick' prop type: ${typeof onFollowUpClick}`,
   );
 
   const markdownOptions = {
@@ -65,7 +69,6 @@ export const ChatMessage = memo(function ChatMessage({
     },
   };
 
-
   const formattedTime = new Date(message.createdAt).toLocaleTimeString(
     "en-US",
     {
@@ -73,7 +76,7 @@ export const ChatMessage = memo(function ChatMessage({
       minute: "2-digit",
       second: "2-digit",
       hour12: true,
-    }
+    },
   );
 
   return (
@@ -82,7 +85,7 @@ export const ChatMessage = memo(function ChatMessage({
         "w-full",
         message.name === USER_NAME && i !== 0
           ? "border-t pt-4 border-zinc-950/5 dark:border-white/5"
-          : ""
+          : "",
       )}
     >
       <div className="flex items-start gap-3">
@@ -114,7 +117,7 @@ export const ChatMessage = memo(function ChatMessage({
             <div
               className={clsx(
                 "prose prose-zinc dark:prose-invert !max-w-full",
-                "prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0"
+                "prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0",
               )}
             >
               <MemoizedMarkdown
@@ -124,7 +127,6 @@ export const ChatMessage = memo(function ChatMessage({
               />
             </div>
           </div>
-
 
           {message.name !== USER_NAME && followUpPrompts?.length > 0 && (
             <div className="mt-2">
@@ -151,6 +153,46 @@ export const ChatMessage = memo(function ChatMessage({
               </div>
             </div>
           )}
+
+          {/* Papers Section */}
+          {message.name !== USER_NAME &&
+            message.papers &&
+            message.papers.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    RELEVANT PAPERS ({message.papers.length})
+                  </span>
+                  {message.papers.length > 3 && (
+                    <button
+                      onClick={() => setShowAllPapers(!showAllPapers)}
+                      className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                    >
+                      {showAllPapers ? (
+                        <>
+                          <span>Show less</span>
+                          <ChevronUpIcon className="w-3 h-3" />
+                        </>
+                      ) : (
+                        <>
+                          <span>View all</span>
+                          <ChevronDownIcon className="w-3 h-3" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {(showAllPapers
+                    ? message.papers
+                    : message.papers.slice(0, 3)
+                  ).map((paper, index) => (
+                    <PaperCard key={`${paper.doi}-${index}`} paper={paper} />
+                  ))}
+                </div>
+              </div>
+            )}
         </div>
       </div>
     </div>

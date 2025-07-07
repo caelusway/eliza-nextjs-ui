@@ -63,7 +63,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   const [input, setInput] = useState("");
   const [inputDisabled, setInputDisabled] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(
-    propSessionId || null
+    propSessionId || null,
   );
   const [sessionData, setSessionData] = useState<any>(null);
   const [channelId, setChannelId] = useState<string | null>(null);
@@ -145,7 +145,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
       try {
         console.log(
-          `[Chat] Creating new session with initial message: "${initialMessage}"`
+          `[Chat] Creating new session with initial message: "${initialMessage}"`,
         );
 
         const response = await fetch("/api/chat-session/create", {
@@ -168,7 +168,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         const newChannelId = result.data.channelId;
 
         console.log(
-          `[Chat] Created new session: ${newSessionId} with channel: ${newChannelId}`
+          `[Chat] Created new session: ${newSessionId} with channel: ${newChannelId}`,
         );
 
         // Navigate to the new session
@@ -180,7 +180,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         return null;
       }
     },
-    [userEntity, agentId, router]
+    [userEntity, agentId, router],
   );
 
   // --- Load Session Data ---
@@ -198,7 +198,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         console.log(`[Chat] Loading session: ${sessionId}`);
 
         const response = await fetch(
-          `/api/chat-session/${sessionId}?userId=${encodeURIComponent(userEntity)}`
+          `/api/chat-session/${sessionId}?userId=${encodeURIComponent(userEntity)}`,
         );
 
         if (!response.ok) {
@@ -218,7 +218,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         setChannelId(session.channelId);
 
         console.log(
-          `[Chat] Loaded session: ${session.title} (${session.messageCount} messages)`
+          `[Chat] Loaded session: ${session.title} (${session.messageCount} messages)`,
         );
       } catch (error) {
         console.error("[Chat] Failed to load session:", error);
@@ -257,19 +257,19 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
               body: JSON.stringify({
                 agentId: agentId,
               }),
-            }
+            },
           );
 
           if (addAgentResponse.ok) {
             console.log(
-              "[Chat] ✅ Agent successfully added to centralized channel"
+              "[Chat] ✅ Agent successfully added to centralized channel",
             );
             setAgentStatus("ready");
           } else {
             const errorText = await addAgentResponse.text();
             console.warn(
               "[Chat] ⚠️ Failed to add agent to channel:",
-              errorText
+              errorText,
             );
             // Agent might already be in channel, treat as success
             setAgentStatus("ready");
@@ -335,6 +335,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         source: data.source,
         thought: data.thought,
         actions: data.actions,
+        papers: data.papers,
         isLoading: false,
       };
 
@@ -442,7 +443,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         setIsAgentThinking(false);
       }, 60000); // 60 seconds timeout
     },
-    [userEntity, channelId, inputDisabled, connectionStatus, socketIOManager]
+    [userEntity, channelId, inputDisabled, connectionStatus, socketIOManager],
   );
 
   // --- Load Message History and Send Initial Query ---
@@ -469,18 +470,18 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         const channelMessages = await getChannelMessages(channelId, 50);
         if (channelMessages.length > 0) {
           console.log(
-            `[Chat] Loaded ${channelMessages.length} channel messages`
+            `[Chat] Loaded ${channelMessages.length} channel messages`,
           );
           return channelMessages;
         }
 
         // Fallback to room memories if channel messages are empty
         console.log(
-          "[Chat] No channel messages found, trying room memories..."
+          "[Chat] No channel messages found, trying room memories...",
         );
         const roomMessages = await getRoomMemories(agentId, channelId, 50);
         console.log(
-          `[Chat] Loaded ${roomMessages.length} room memory messages`
+          `[Chat] Loaded ${roomMessages.length} room memory messages`,
         );
         return roomMessages;
       } catch (error) {
@@ -492,7 +493,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     loadMessageHistory()
       .then((loadedMessages) => {
         console.log(
-          `[Chat] Loaded ${loadedMessages.length} messages from history`
+          `[Chat] Loaded ${loadedMessages.length} messages from history`,
         );
         setMessages(loadedMessages);
 
@@ -502,7 +503,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
           loadedMessages.length === 0
         ) {
           console.log(
-            `[Chat] New session detected - sending initial message: ${sessionData.metadata.initialMessage}`
+            `[Chat] New session detected - sending initial message: ${sessionData.metadata.initialMessage}`,
           );
           setTimeout(() => {
             sendMessage(sessionData.metadata.initialMessage);
@@ -515,7 +516,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         // Even if history loading fails, send initial message if present
         if (sessionData?.metadata?.initialMessage) {
           console.log(
-            `[Chat] Sending initial message despite history loading failure: ${sessionData.metadata.initialMessage}`
+            `[Chat] Sending initial message despite history loading failure: ${sessionData.metadata.initialMessage}`,
           );
           setTimeout(() => {
             sendMessage(sessionData.metadata.initialMessage);
@@ -543,7 +544,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         setInput("");
       }
     },
-    [input, sendMessage]
+    [input, sendMessage],
   );
 
   // --- Render Connection Status ---

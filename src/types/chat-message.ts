@@ -1,3 +1,9 @@
+export type Paper = {
+  doi: string;
+  title: string;
+  abstract: string;
+};
+
 export interface ChatMessage {
   id: string;
   name: string;
@@ -9,4 +15,5 @@ export interface ChatMessage {
   isLoading?: boolean;
   thought?: string;
   actions?: any[]; // Consider defining a more specific type if the structure is known
+  papers?: Paper[];
 }

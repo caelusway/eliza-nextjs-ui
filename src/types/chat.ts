@@ -1,6 +1,5 @@
 import { Message } from "ai";
 
-
 export interface ChatStreamData {}
 
 export interface ChatRequest {

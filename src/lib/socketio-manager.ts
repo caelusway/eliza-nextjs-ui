@@ -1,4 +1,5 @@
 import { USER_NAME } from "@/constants";
+import { Paper } from "@/types/chat-message";
 import { Evt } from "evt";
 import { io, type Socket } from "socket.io-client";
 import { v4 } from "uuid";
@@ -32,6 +33,7 @@ export type MessageBroadcastData = {
   thought?: string; // Agent's thought process
   actions?: string[]; // Actions taken by the agent
   prompt?: string; // The LLM prompt used to generate this message
+  papers?: Paper[]; // Papers used to generate this message
   [key: string]: any;
 };
 
