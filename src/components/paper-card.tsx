@@ -65,7 +65,7 @@ export function PaperCard({ paper, className }: PaperCardProps) {
           {truncateTitle(paper.title)}
         </h4>
         {paper.doi && (
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">DOI: {paper.doi}</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate break-all">DOI: {paper.doi}</p>
         )}
       </button>
 

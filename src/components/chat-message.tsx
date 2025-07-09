@@ -70,7 +70,7 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <div
       className={clsx(
-        'w-full',
+        'w-full max-w-full overflow-hidden',
         message.name === USER_NAME && i !== 0
           ? 'border-t pt-4 border-zinc-950/5 dark:border-white/5'
           : ''
@@ -90,9 +90,9 @@ export const ChatMessage = memo(function ChatMessage({
             className="rounded-full"
           />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg text-zinc-700 dark:text-zinc-300 font-bold">
+            <span className="text-sm md:text-base lg:text-lg text-zinc-700 dark:text-zinc-300 font-bold">
               {message.name === USER_NAME ? USER_NAME : process.env.NEXT_PUBLIC_AGENT_NAME}
             </span>
             <span className="text-xs text-zinc-500 dark:text-zinc-400">{formattedTime}</span>
@@ -101,7 +101,15 @@ export const ChatMessage = memo(function ChatMessage({
             <div
               className={clsx(
                 'prose prose-zinc dark:prose-invert !max-w-full',
-                'prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0'
+                'prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0',
+                // Responsive text sizing
+                'prose-sm md:prose-base lg:prose-lg',
+                // Override specific elements for better mobile readability
+                'prose-p:text-sm md:prose-p:text-base lg:prose-p:text-lg',
+                'prose-li:text-sm md:prose-li:text-base lg:prose-li:text-lg',
+                'prose-code:text-xs md:prose-code:text-sm lg:prose-code:text-base',
+                // Prevent overflow
+                'overflow-hidden break-words'
               )}
             >
               <MemoizedMarkdown
@@ -126,7 +134,7 @@ export const ChatMessage = memo(function ChatMessage({
                       'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200',
                       'transition-colors',
                       'group cursor-pointer',
-                      'text-left text-sm',
+                      'text-left text-xs md:text-sm lg:text-base',
                       'w-full',
                     ])}
                   >
@@ -142,13 +150,13 @@ export const ChatMessage = memo(function ChatMessage({
           {message.name !== USER_NAME && message.papers && message.papers.length > 0 && (
             <div className="mt-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <span className="text-xs md:text-sm lg:text-base font-medium text-zinc-700 dark:text-zinc-300">
                   RELEVANT PAPERS ({message.papers.length})
                 </span>
                 {message.papers.length > 3 && (
                   <button
                     onClick={() => setShowAllPapers(!showAllPapers)}
-                    className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                    className="flex items-center gap-1 text-xs md:text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
                   >
                     {showAllPapers ? (
                       <>
@@ -165,10 +173,12 @@ export const ChatMessage = memo(function ChatMessage({
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 max-w-full overflow-hidden">
                 {(showAllPapers ? message.papers : message.papers.slice(0, 3)).map(
                   (paper, index) => (
-                    <PaperCard key={`${paper.doi}-${index}`} paper={paper} />
+                    <div key={`${paper.doi}-${index}`} className="w-full min-w-0">
+                      <PaperCard paper={paper} />
+                    </div>
                   )
                 )}
               </div>

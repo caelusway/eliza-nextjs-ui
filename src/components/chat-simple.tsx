@@ -69,6 +69,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // --- Refs ---
   const initStartedRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketIOManager = SocketIOManager.getInstance();
 
   // Format time ago utility
@@ -315,11 +316,49 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       };
 
       console.log('[Chat] Adding message:', { isAgentMessage, message });
-      setMessages((prev) => [...prev, message]);
 
-      // If this was an agent response, stop the thinking indicator
-      if (isAgentMessage) {
+      // If this is an agent message, simulate streaming by adding character by character
+      if (isAgentMessage && message.text) {
+        // Add the message with empty text first
+        const streamingMessage = { ...message, text: '' };
+        setMessages((prev) => [...prev, streamingMessage]);
+
         setIsAgentThinking(false);
+
+        // Stream the text character by character
+        const fullText = message.text;
+        let currentIndex = 0;
+
+        const streamInterval = setInterval(() => {
+          if (currentIndex < fullText.length) {
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              const messageIndex = newMessages.findIndex((msg) => msg.id === message.id);
+              if (messageIndex !== -1) {
+                newMessages[messageIndex] = {
+                  ...newMessages[messageIndex],
+                  text: fullText.slice(0, currentIndex + 1),
+                };
+              }
+              return newMessages;
+            });
+            currentIndex++;
+
+            // Scroll to bottom during streaming
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            setIsAgentThinking(false);
+            clearInterval(streamInterval);
+          }
+        }, 10); // Adjust speed: lower = faster, higher = slower
+      } else {
+        // For non-agent messages, add normally
+        setMessages((prev) => [...prev, message]);
+      }
+
+      // If this was an agent response, stop the thinking indicator after streaming is complete
+      if (isAgentMessage) {
+        // The thinking indicator will be stopped by the streaming interval above
       }
     };
 
@@ -596,10 +635,10 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-4xl mx-auto flex flex-col mt-20">
-      {/* Header Section - Top/Middle */}
-      <div className="flex-1 flex flex-col px-4 pb-32">
-        <div className="mb-8">
+    <div className="h-screen w-full max-w-4xl mx-auto flex flex-col">
+      {/* Fixed Header Section */}
+      <div className="flex-shrink-0 px-4 pt-20 pb-4 bg-white dark:bg-black border-b border-zinc-950/10 dark:border-white/10">
+        <div className="hidden lg:block mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex-1">
               <h1 className="text-2xl font-bold">
@@ -626,44 +665,47 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         </div>
 
         {/* Connection Status */}
-        <div className="mb-8">{renderConnectionStatus()}</div>
+        <div className="mb-4">{renderConnectionStatus()}</div>
 
         {/* Session Switcher */}
         {showSessionSwitcher && userEntity && (
-          <div className="mb-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-4 border border-zinc-950/10 dark:border-white/10">
+          <div className="hidden lg:block mb-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-4 border border-zinc-950/10 dark:border-white/10">
             <ChatSessions userId={userEntity} currentSessionId={sessionId} showSwitcher={true} />
           </div>
         )}
+      </div>
 
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Only show history loading if we're connected and actually loading history */}
-          {connectionStatus === 'connected' && isLoadingHistory ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="flex items-center gap-2">
-                <LoadingSpinner />
-                <span className="text-gray-600">Loading conversation history...</span>
-              </div>
+      {/* Scrollable Chat Messages */}
+      <div className="flex-1 overflow-y-auto px-4 pb-32">
+        {/* Only show history loading if we're connected and actually loading history */}
+        {connectionStatus === 'connected' && isLoadingHistory ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="flex items-center gap-2">
+              <LoadingSpinner />
+              <span className="text-gray-600">Loading conversation history...</span>
             </div>
-          ) : (
-            <>
-              <ChatMessages
-                messages={messages}
-                followUpPromptsMap={{}}
-                onFollowUpClick={(prompt) => {
-                  // Handle follow-up prompts by setting as new input
-                  setInput(prompt);
-                }}
-              />
-              {isAgentThinking && (
-                <div className="flex items-center gap-2 py-4 text-gray-600">
-                  <LoadingSpinner />
-                  <span>Agent is thinking...</span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            <ChatMessages
+              messages={messages}
+              followUpPromptsMap={{}}
+              onFollowUpClick={(prompt) => {
+                // Handle follow-up prompts by setting as new input
+                setInput(prompt);
+              }}
+            />
+            {isAgentThinking && (
+              <div className="flex items-center gap-2 py-4 text-gray-600">
+                <LoadingSpinner />
+                <span>
+                  {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'} is fetching science knowledge...
+                </span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
 
       {/* Input Area - Fixed at Bottom */}

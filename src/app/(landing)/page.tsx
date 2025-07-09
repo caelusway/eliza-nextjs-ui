@@ -38,14 +38,14 @@ export default function Page() {
                 </Suspense>
               </div>
               {process.env.NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION && (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-6 max-w-lg mx-auto">
+                <p className="hidden lg:block text-sm text-zinc-500 dark:text-zinc-400 mt-6 max-w-lg mx-auto">
                   {process.env.NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION}
                 </p>
               )}
             </div>
 
             {/* Mobile Previous Conversations */}
-            <div className="lg:hidden w-full max-w-2xl mx-auto">
+            <div className="lg:hidden w-full max-w-2xl mx-auto max-h-[24vh]">
               <Suspense fallback={null}>
                 <LandingChatSessions />
               </Suspense>
