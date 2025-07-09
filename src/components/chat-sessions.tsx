@@ -41,12 +41,14 @@ interface ChatSessionsProps {
   userId: string | null;
   currentSessionId?: string;
   showSwitcher?: boolean;
+  showSidebar?: boolean;
 }
 
 export const ChatSessions = ({
   userId,
   currentSessionId,
   showSwitcher = false,
+  showSidebar = false,
 }: ChatSessionsProps) => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(false);
@@ -127,10 +129,15 @@ export const ChatSessions = ({
 
   if (sessions.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className={`${showSidebar ? 'py-4' : 'py-8'} text-center`}>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          {showSwitcher ? 'No other chat sessions found' : 'No previous chat sessions'}
+          {showSwitcher ? 'No other chat sessions found' : showSidebar ? 'No conversations yet' : 'No previous chat sessions'}
         </p>
+        {showSidebar && (
+          <p className="text-zinc-400 dark:text-zinc-500 text-xs mt-2">
+            Start a new conversation to see it here
+          </p>
+        )}
       </div>
     );
   }
@@ -148,38 +155,48 @@ export const ChatSessions = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className={`${showSidebar ? 'space-y-2' : 'space-y-3'}`}>
       {showSwitcher && (
         <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">
           Switch to another conversation:
         </h3>
       )}
 
-      {!showSwitcher && (
+      {!showSwitcher && !showSidebar && (
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
           Previous Conversations
         </h3>
       )}
 
-      <div className="space-y-2">
+      <div className={`${showSidebar ? 'space-y-2' : 'space-y-2'}`}>
         {filteredSessions.map((session) => (
           <div
             key={session.id}
             onClick={() => handleSessionClick(session)}
-            className="group cursor-pointer bg-white dark:bg-zinc-950 border border-zinc-950/10 dark:border-white/10 rounded-lg p-4 hover:bg-zinc-950/[2.5%] dark:hover:bg-white/[2.5%] transition-all duration-200"
+            className={`group cursor-pointer ${
+              showSidebar 
+                ? 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-3 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700' 
+                : 'bg-white dark:bg-zinc-950 border border-zinc-950/10 dark:border-white/10 rounded-lg p-4 hover:bg-zinc-950/[2.5%] dark:hover:bg-white/[2.5%]'
+            } transition-all duration-200`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-zinc-900 dark:text-white text-sm group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors line-clamp-1">
+                <h4 className={`font-medium text-zinc-900 dark:text-white ${
+                  showSidebar ? 'text-sm' : 'text-sm'
+                } group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors line-clamp-1`}>
                   {session.title}
                 </h4>
                 {session.preview && (
-                  <p className="text-zinc-600 dark:text-zinc-400 text-xs mt-1 line-clamp-2">
+                  <p className={`text-zinc-600 dark:text-zinc-400 ${
+                    showSidebar ? 'text-xs' : 'text-xs'
+                  } mt-1 line-clamp-2`}>
                     {session.isFromAgent ? '🤖 ' : ''}
                     {session.preview}
                   </p>
                 )}
-                <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className={`flex items-center gap-2 mt-2 ${
+                  showSidebar ? 'text-xs' : 'text-xs'
+                } text-zinc-500 dark:text-zinc-400`}>
                   <span>
                     {session.messageCount} message
                     {session.messageCount !== 1 ? 's' : ''}
@@ -188,21 +205,23 @@ export const ChatSessions = ({
                   <span>{formatTimeAgo(session.lastActivity)}</span>
                 </div>
               </div>
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </div>
+              {!showSidebar && (
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
         ))}

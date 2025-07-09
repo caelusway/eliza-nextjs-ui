@@ -22,8 +22,15 @@ export const LandingChatSessions = () => {
   }, []);
 
   return (
-    <div className="w-full">
-      <ChatSessions userId={userEntity} />
+    <div className="w-full mt-2 lg:mt-12">
+      <div className="mb-4 lg:mb-6">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+          Previous Conversations
+        </h2>
+      </div>
+      <div className="max-h-[calc(100vh-10rem)] overflow-y-auto">
+        <ChatSessions userId={userEntity} showSidebar={true} />
+      </div>
     </div>
   );
 };
