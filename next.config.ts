@@ -38,33 +38,7 @@ const nextConfig: NextConfig = {
     };
   },
   async redirects() {
-    return [
-      {
-        source: '/start',
-        destination: 'https://ai.eliza.how/eliza/',
-        permanent: false,
-      },
-      {
-        source: '/school',
-        destination: 'https://www.youtube.com/playlist?list=PL0D_B_lUFHBKZSKgLlt24RvjJ8pavZNVh',
-        permanent: false,
-      },
-      {
-        source: '/discord',
-        destination: 'https://discord.gg/2bkryvK9Yu',
-        permanent: false,
-      },
-      {
-        source: '/profiles',
-        destination: 'https://elizaos.github.io/profiles',
-        permanent: false,
-      },
-      {
-        source: '/bounties',
-        destination: 'https://elizaos.github.io/website/',
-        permanent: false,
-      },
-    ];
+    return [];
   },
   async rewrites() {
     return [

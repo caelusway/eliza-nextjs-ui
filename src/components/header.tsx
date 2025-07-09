@@ -17,18 +17,6 @@ export function Header() {
 
   const NavLinks = ({ mobile = false }) => (
     <>
-      <Link
-        href="/explore"
-        className={clsx(
-          'text-sm font-medium',
-          mobile
-            ? '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900'
-            : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
-        )}
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        Explore
-      </Link>
       <a
         href="https://docs.eliza.how/"
         target="_blank"
@@ -44,7 +32,7 @@ export function Header() {
         Docs
       </a>
       <a
-        href="https://twitter.com/elizaos"
+        href={`https://twitter.com/${process.env.NEXT_PUBLIC_AGENT_X_USERNAME}`}
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
@@ -58,7 +46,7 @@ export function Header() {
         <XIcon className="h-4 w-4" />
       </a>
       <a
-        href="https://discord.gg/elizaos"
+        href={process.env.NEXT_PUBLIC_AGENT_DISCORD_SERVER}
         target="_blank"
         rel="noopener noreferrer"
         className={clsx(
@@ -80,7 +68,7 @@ export function Header() {
         <div className="flex items-center justify-between py-4">
           <div className="flex">
             <Link href="/" className="-m-1.5 p-1.5">
-              <Logo width={32} height={32} />
+              <Logo width={32} height={32} src={process.env.NEXT_PUBLIC_AGENT_BANNER_LOGO || ''} />
             </Link>
           </div>
 
@@ -99,7 +87,7 @@ export function Header() {
         <div className="px-6 py-6 h-full">
           <div className="flex items-center justify-between">
             <Link href="/" className="-m-1.5 p-1.5" onClick={() => setMobileMenuOpen(false)}>
-              <Logo width={32} height={32} />
+              <Logo width={32} height={32} src={process.env.NEXT_PUBLIC_AGENT_BANNER_LOGO || ''} />
             </Link>
             <button
               type="button"
