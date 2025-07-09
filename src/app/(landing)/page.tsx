@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Footer } from '@/components/footer';
 import { LandingTextarea } from '@/components/landing-textarea';
 import { LandingChatSessions } from '@/components/landing-chat-sessions';
+import { Logo } from '@/components/logo';
 
 export default function Page() {
   return (
@@ -21,14 +22,26 @@ export default function Page() {
         <div className="flex-1 flex flex-col">
           <div className="flex-1 flex flex-col justify-center items-center gap-6 lg:gap-8 px-4 md:px-8 py-6 lg:py-8">
             <div className="max-w-2xl mx-auto w-full text-center">
-              <h1 className="text-2xl md:text-3xl xl:text-4xl font-semibold tracking-tighter text-pretty mb-6 lg:mb-8">
-                Ask anything about {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'}
-              </h1>
+              {process.env.NEXT_PUBLIC_AGENT_BANNER_LOGO && (
+                <div className="hidden lg:block mb-6 lg:mb-8">
+                  <Logo
+                    src={process.env.NEXT_PUBLIC_AGENT_BANNER_LOGO}
+                    width={120}
+                    height={120}
+                    className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 mx-auto"
+                  />
+                </div>
+              )}
               <div className="max-w-xl mx-auto w-full">
                 <Suspense fallback={null}>
                   <LandingTextarea />
                 </Suspense>
               </div>
+              {process.env.NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION && (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-6 max-w-lg mx-auto">
+                  {process.env.NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION}
+                </p>
+              )}
             </div>
 
             {/* Mobile Previous Conversations */}

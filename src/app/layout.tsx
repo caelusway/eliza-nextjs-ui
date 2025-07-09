@@ -16,11 +16,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  title: `${siteConfig.name} - Learn about the Eliza Agent Framework`,
+  title: `${siteConfig.name}`,
   description: siteConfig.description,
   openGraph: {
     siteName: siteConfig.name,
-    title: 'The Documentation for Eliza',
+    title: siteConfig.name,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
     type: 'website',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: siteConfig.name,
-    title: 'The Documentation for Eliza',
+    title: siteConfig.name,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
     creator: siteConfig.creator,
