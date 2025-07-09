@@ -492,7 +492,7 @@ class SocketIOManager extends EventAdapter {
         messageId,
         source,
         attachments: [],
-        metadata: {},
+        metadata: { channelType: 'DM' },
       },
     });
 
