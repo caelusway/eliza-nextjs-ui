@@ -105,12 +105,6 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
     };
   }, []);
 
-  console.log({
-    messages,
-    followUpPromptsMap,
-  });
-
-  console.log('[ChatMessages Render] Rendering with messages prop:', messages);
   return (
     <div className="flex flex-col gap-4">
       {messages.map((message, i) => {

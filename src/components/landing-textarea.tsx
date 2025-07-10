@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/button';
 import { ExamplePrompts } from '@/components/example-prompts';
+import SpeechToTextButton from '@/components/speech-to-text-button';
 
 export const LandingTextarea = () => {
   const [input, setInput] = useState('');
@@ -16,6 +17,12 @@ export const LandingTextarea = () => {
   const [userEntity, setUserEntity] = useState<string | null>(null);
 
   const { push } = useRouter();
+
+  // Helper function to get user entity from localStorage
+  const getUserEntity = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('elizaHowUserEntity');
+  };
 
   // Initialize user entity on client side only to avoid hydration mismatch
   useEffect(() => {
@@ -31,78 +38,92 @@ export const LandingTextarea = () => {
     }
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-  }, []);
+  };
 
-  const createNewSession = useCallback(
-    async (initialMessage: string) => {
-      if (!userEntity) {
-        console.error('User entity not available');
+  const createNewSession = async (initialMessage: string) => {
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+    if (!currentUserEntity) {
+      console.error('User entity not available');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log(`[Landing] Creating new session with message: "${initialMessage}"`);
+      console.log(`[Landing] Using user entity: ${currentUserEntity}`);
+
+      const response = await fetch('/api/chat-session/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUserEntity,
+          initialMessage: initialMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create session');
+      }
+
+      const result = await response.json();
+      const sessionId = result.data.sessionId;
+
+      console.log(`[Landing] Created new session: ${sessionId}`);
+
+      // Navigate to the new session
+      push(`/chat/${sessionId}`);
+    } catch (error) {
+      console.error('[Landing] Failed to create new session:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: any) => {
+    try {
+      e?.preventDefault();
+
+      const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+      if (!input.trim() || !currentUserEntity) {
+        console.log('Submit blocked - input:', input.trim(), 'userEntity:', currentUserEntity);
+        setIsLoading(false);
         return;
       }
 
-      try {
-        setIsLoading(true);
-        console.log(`[Landing] Creating new session with message: "${initialMessage}"`);
-
-        const response = await fetch('/api/chat-session/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: userEntity,
-            initialMessage: initialMessage,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to create session');
-        }
-
-        const result = await response.json();
-        const sessionId = result.data.sessionId;
-
-        console.log(`[Landing] Created new session: ${sessionId}`);
-
-        // Navigate to the new session
-        push(`/chat/${sessionId}`);
-      } catch (error) {
-        console.error('[Landing] Failed to create new session:', error);
-        setIsLoading(false);
-      }
-    },
-    [userEntity, push]
-  );
-
-  const handleSubmit = useCallback(
-    (e: any) => {
-      try {
-        e?.preventDefault();
-
-        if (!input.trim() || !userEntity) {
-          setIsLoading(false);
-          return;
-        }
-
-        createNewSession(input.trim());
-      } catch (error) {
-        console.error(error);
-        setIsLoading(false);
-      }
-    },
-    [input, userEntity, createNewSession]
-  );
+      createNewSession(input.trim());
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+    }
+  };
 
   const handlePromptSelect = useCallback(
     (prompt: string) => {
-      if (userEntity) {
+      const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+      if (currentUserEntity) {
         createNewSession(prompt);
       }
     },
-    [userEntity, createNewSession]
+    [] // No dependencies needed since we read from localStorage
   );
+
+  const handleTranscript = (text: string) => {
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+    console.log('Transcript:', text);
+
+    if (currentUserEntity) {
+      createNewSession(text);
+    } else {
+      console.error('No user entity found in localStorage for transcript');
+    }
+  };
 
   return (
     <div className="flex flex-col w-full gap-4">
@@ -127,13 +148,7 @@ export const LandingTextarea = () => {
             'border border-zinc-950/10 dark:border-white/10',
           ])}
         >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmit(e);
-            }}
-            className="flex flex-col items-center justify-center"
-          >
+          <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center">
             <div className="relative min-h-[36px] w-full">
               <textarea
                 aria-label="Prompt"
@@ -164,19 +179,25 @@ export const LandingTextarea = () => {
             </div>
             <div className="flex w-full items-center justify-between px-2 pb-2.5">
               <div />
-              <Button
-                type="submit"
-                color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
-                disabled={!input || !userEntity || isLoading}
-                aria-label="Submit"
-                className="size-8"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <ArrowUpIcon className="!h-3 !w-3 !shrink-0" />
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <SpeechToTextButton
+                  onTranscript={handleTranscript}
+                  disabled={!userEntity || isLoading}
+                />
+                <Button
+                  type="submit"
+                  color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
+                  disabled={!input || !userEntity || isLoading}
+                  aria-label="Submit"
+                  className="size-8"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <ArrowUpIcon className="!h-3 !w-3 !shrink-0" />
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </div>

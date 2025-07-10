@@ -51,6 +51,12 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   // --- User Entity ---
   const [userEntity, setUserEntity] = useState<string | null>(null);
 
+  // Helper function to get user entity from localStorage
+  const getUserEntity = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('elizaHowUserEntity');
+  };
+
   // --- State ---
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -126,49 +132,54 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   }, [agentId]);
 
   // Function to create a new chat session
-  const createNewSession = useCallback(
-    async (initialMessage?: string) => {
-      if (!userEntity || !agentId) return null;
+  const createNewSession = async (initialMessage?: string) => {
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
 
-      try {
-        console.log(`[Chat] Creating new session with initial message: "${initialMessage}"`);
+    if (!currentUserEntity || !agentId) {
+      console.error('[Chat] Cannot create session - missing userEntity or agentId');
+      return null;
+    }
 
-        const response = await fetch('/api/chat-session/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: userEntity,
-            initialMessage: initialMessage,
-          }),
-        });
+    try {
+      console.log(`[Chat] Creating new session with initial message: "${initialMessage}"`);
+      console.log(`[Chat] Using user entity: ${currentUserEntity}`);
 
-        if (!response.ok) {
-          throw new Error('Failed to create session');
-        }
+      const response = await fetch('/api/chat-session/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUserEntity,
+          initialMessage: initialMessage,
+        }),
+      });
 
-        const result = await response.json();
-        const newSessionId = result.data.sessionId;
-        const newChannelId = result.data.channelId;
-
-        console.log(`[Chat] Created new session: ${newSessionId} with channel: ${newChannelId}`);
-
-        // Navigate to the new session
-        router.push(`/chat/${newSessionId}`);
-
-        return { sessionId: newSessionId, channelId: newChannelId };
-      } catch (error) {
-        console.error('[Chat] Failed to create new session:', error);
-        return null;
+      if (!response.ok) {
+        throw new Error('Failed to create session');
       }
-    },
-    [userEntity, agentId, router]
-  );
+
+      const result = await response.json();
+      const newSessionId = result.data.sessionId;
+      const newChannelId = result.data.channelId;
+
+      console.log(`[Chat] Created new session: ${newSessionId} with channel: ${newChannelId}`);
+
+      // Navigate to the new session
+      router.push(`/chat/${newSessionId}`);
+
+      return { sessionId: newSessionId, channelId: newChannelId };
+    } catch (error) {
+      console.error('[Chat] Failed to create new session:', error);
+      return null;
+    }
+  };
 
   // --- Load Session Data ---
   useEffect(() => {
-    if (!sessionId || !userEntity || !agentId) return;
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+    if (!sessionId || !currentUserEntity || !agentId) return;
 
     // Reset session state for new session
     initStartedRef.current = false;
@@ -181,7 +192,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         console.log(`[Chat] Loading session: ${sessionId}`);
 
         const response = await fetch(
-          `/api/chat-session/${sessionId}?userId=${encodeURIComponent(userEntity)}`
+          `/api/chat-session/${sessionId}?userId=${encodeURIComponent(currentUserEntity)}`
         );
 
         if (!response.ok) {
@@ -208,11 +219,13 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     };
 
     loadSession();
-  }, [sessionId, userEntity, agentId, router]);
+  }, [sessionId, agentId, router]);
 
   // --- Initialize Socket Connection ---
   useEffect(() => {
-    if (!userEntity || !agentId || serverStatus !== 'online') {
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+    if (!currentUserEntity || !agentId || serverStatus !== 'online') {
       return;
     }
 
@@ -258,7 +271,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
         // Step 2: Initialize socket connection
         console.log('[Chat] Initializing socket connection...');
-        socketIOManager.initialize(userEntity, serverId);
+        socketIOManager.initialize(currentUserEntity, serverId);
 
         // Step 3: Check connection status
         const checkConnection = () => {
@@ -278,10 +291,12 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     };
 
     initializeConnection();
-  }, [userEntity, agentId, serverStatus, socketIOManager]);
+  }, [agentId, serverStatus, socketIOManager]);
 
   // --- Set up Socket Event Listeners ---
   useEffect(() => {
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
     if (connectionStatus !== 'connected' || !channelId || !sessionId) {
       return;
     }
@@ -293,7 +308,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       console.log('[Chat] Received message broadcast:', data);
 
       // Skip our own messages to avoid duplicates
-      if (data.senderId === userEntity) {
+      if (data.senderId === currentUserEntity) {
         console.log('[Chat] Skipping our own message broadcast');
         return;
       }
@@ -324,6 +339,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         setMessages((prev) => [...prev, streamingMessage]);
 
         setIsAgentThinking(false);
+        setInputDisabled(false);
 
         // Stream the text character by character
         const fullText = message.text;
@@ -347,18 +363,12 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
             // Scroll to bottom during streaming
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
           } else {
-            setIsAgentThinking(false);
             clearInterval(streamInterval);
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
       } else {
         // For non-agent messages, add normally
         setMessages((prev) => [...prev, message]);
-      }
-
-      // If this was an agent response, stop the thinking indicator after streaming is complete
-      if (isAgentMessage) {
-        // The thinking indicator will be stopped by the streaming interval above
       }
     };
 
@@ -403,21 +413,28 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
     };
-  }, [connectionStatus, channelId, agentId, userEntity, socketIOManager]);
+  }, [connectionStatus, channelId, agentId, socketIOManager]);
+
+  const sendMessageRef = useRef<(messageText: string) => void>(() => {});
 
   // --- Send Message Logic ---
-  const sendMessage = useCallback(
-    (messageText: string) => {
+  // This useEffect updates the ref on every render to hold the latest version of the sendMessage function,
+  // with access to the latest state (channelId, inputDisabled, etc.).
+  useEffect(() => {
+    sendMessageRef.current = (messageText: string) => {
+      const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
+      // This check now uses the most current state from the render it was created in.
       if (
         !messageText.trim() ||
-        !userEntity ||
+        !currentUserEntity ||
         !channelId ||
         inputDisabled ||
         connectionStatus !== 'connected'
       ) {
-        console.warn('[Chat] Cannot send message:', {
+        console.warn('[Chat] Cannot send message (stale state prevented):', {
           hasText: !!messageText.trim(),
-          hasUserEntity: !!userEntity,
+          hasUserEntity: !!currentUserEntity,
           hasChannelId: !!channelId,
           inputDisabled,
           connectionStatus,
@@ -429,7 +446,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         id: uuidv4(),
         name: USER_NAME,
         text: messageText,
-        senderId: userEntity,
+        senderId: currentUserEntity,
         roomId: channelId,
         createdAt: Date.now(),
         source: CHAT_SOURCE,
@@ -440,32 +457,36 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       setIsAgentThinking(true);
       setInputDisabled(true);
 
-      // Send message directly to the session's channel
       console.log('[Chat] Sending message to session channel:', {
         messageText,
         channelId,
         source: CHAT_SOURCE,
       });
 
-      // Send to the session's specific channel
       socketIOManager.sendChannelMessage(messageText, channelId, CHAT_SOURCE);
 
-      // Add a timeout to re-enable input if no response comes (safety measure)
       setTimeout(() => {
         console.log('[Chat] Timeout reached, re-enabling input');
         setInputDisabled(false);
         setIsAgentThinking(false);
-      }, 60000); // 60 seconds timeout
-    },
-    [userEntity, channelId, inputDisabled, connectionStatus, socketIOManager]
-  );
+      }, 60000);
+    };
+  }); // No dependency array, so it updates on every render
+
+  // This is a stable function that we can pass as a prop. It never changes.
+  // It acts as a "portal" to call the most up-to-date logic from our ref.
+  const sendMessage = useCallback((messageText: string) => {
+    sendMessageRef.current?.(messageText);
+  }, []); // Empty dependency array ensures this function is created only ONCE.
 
   // --- Load Message History and Send Initial Query ---
   useEffect(() => {
+    const currentUserEntity = getUserEntity(); // Read from localStorage directly
+
     if (
       !channelId ||
       !agentId ||
-      !userEntity ||
+      !currentUserEntity ||
       connectionStatus !== 'connected' ||
       initStartedRef.current
     ) {
@@ -529,7 +550,12 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       .finally(() => {
         setIsLoadingHistory(false);
       });
-  }, [channelId, agentId, userEntity, connectionStatus, sessionData, sendMessage]);
+  }, [channelId, agentId, connectionStatus, sessionData, sendMessage]);
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // --- Handle Form Submit ---
   const handleSubmit = useCallback(
@@ -541,6 +567,19 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       }
     },
     [input, sendMessage]
+  );
+
+  // --- Handle Speech-to-Text ---
+  const handleTranscript = useCallback(
+    (transcribedText: string) => {
+      console.log('[Chat] Received transcript:', transcribedText);
+
+      if (transcribedText.trim()) {
+        sendMessage(transcribedText.trim());
+        setInput(''); // Clear the input field after sending
+      }
+    },
+    [sendMessage]
   );
 
   // --- Render Connection Status ---
@@ -719,6 +758,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
             placeholder={
               connectionStatus === 'connected' ? 'Type your message...' : 'Connecting...'
             }
+            onTranscript={handleTranscript}
           />
         </div>
       </div>
@@ -730,6 +770,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
           <div>Session ID: {sessionId}</div>
           <div>Channel ID: {channelId}</div>
           <div>User Entity: {userEntity}</div>
+          <div>User Entity (localStorage): {getUserEntity()}</div>
           <div>Connection: {connectionStatus}</div>
           <div>Server: {serverStatus}</div>
           <div>Agent Status: {agentStatus}</div>

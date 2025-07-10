@@ -3,22 +3,24 @@
 import { ArrowUpIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
-import { memo } from 'react';
 
 import { Button } from '@/components/button';
+import SpeechToTextButton from '@/components/speech-to-text-button';
 
-const ChatForm = memo(function ChatForm({
+const ChatForm = function ChatForm({
   input,
   onInputChange,
   onSubmit,
   isLoading,
   placeholder,
+  onTranscript,
 }: {
   input: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
   placeholder?: string;
+  onTranscript?: (text: string) => void;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -55,36 +57,41 @@ const ChatForm = memo(function ChatForm({
       </div>
       <div className="flex w-full items-center justify-between px-2 pb-2.5">
         <div />
-        <Button
-          type="submit"
-          color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
-          disabled={!input || isLoading}
-          aria-label="Submit"
-          className="size-8"
-        >
-          {isLoading ? (
-            <Loader2 className="!h-3 !w-3 !shrink-0 animate-spin" />
-          ) : (
-            <ArrowUpIcon className="!h-3 !w-3 !shrink-0" />
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          {onTranscript && <SpeechToTextButton onTranscript={onTranscript} disabled={isLoading} />}
+          <Button
+            type="submit"
+            color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
+            disabled={!input || isLoading}
+            aria-label="Submit"
+            className="size-8"
+          >
+            {isLoading ? (
+              <Loader2 className="!h-3 !w-3 !shrink-0 animate-spin" />
+            ) : (
+              <ArrowUpIcon className="!h-3 !w-3 !shrink-0" />
+            )}
+          </Button>
+        </div>
       </div>
     </form>
   );
-});
+};
 
-export const TextareaWithActions = memo(function TextareaWithActions({
+export const TextareaWithActions = function TextareaWithActions({
   input,
   onInputChange,
   onSubmit,
   isLoading,
   placeholder,
+  onTranscript,
 }: {
   input: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
   placeholder?: string;
+  onTranscript?: (text: string) => void;
 }) {
   return (
     <div className="flex flex-col w-full">
@@ -116,9 +123,10 @@ export const TextareaWithActions = memo(function TextareaWithActions({
             onSubmit={onSubmit}
             isLoading={isLoading}
             placeholder={placeholder}
+            onTranscript={onTranscript}
           />
         </div>
       </span>
     </div>
   );
-});
+};

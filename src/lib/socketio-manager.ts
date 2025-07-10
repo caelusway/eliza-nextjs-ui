@@ -297,7 +297,39 @@ class SocketIOManager extends EventAdapter {
 
     this.socket.on('messageComplete', (data) => {
       console.info(`[SocketIO] Message complete received:`, data);
-      this.emit('messageComplete', data);
+
+      // Check if this event is for our active session
+      const isForActiveSession =
+        this.activeSessionChannelId &&
+        (data.channelId === this.activeSessionChannelId ||
+          data.roomId === this.activeSessionChannelId);
+
+      // Also check if it's for any of our joined channels (for backward compatibility)
+      const isActiveChannel = data.channelId && this.activeChannels.has(data.channelId);
+      const isActiveRoom = data.roomId && this.activeRooms.has(data.roomId);
+
+      if (isForActiveSession || isActiveChannel || isActiveRoom) {
+        const context = isForActiveSession
+          ? `active session ${this.activeSessionChannelId}`
+          : isActiveChannel
+            ? `active channel ${data.channelId}`
+            : `active room ${data.roomId}`;
+        console.info(`[SocketIO] Handling messageComplete for ${context}`);
+
+        // Post the event now that we've confirmed it's for us
+        this.emit('messageComplete', data);
+      } else {
+        // This is not an error, it's expected. It's a messageComplete for a
+        // channel we are no longer actively listening to. We can safely ignore it.
+        console.warn(
+          `[SocketIO] Received messageComplete for inactive session/channel/room, ignoring:`,
+          {
+            channelId: data.channelId,
+            roomId: data.roomId,
+            activeSession: this.activeSessionChannelId,
+          }
+        );
+      }
     });
 
     this.socket.on('controlMessage', (data) => {
