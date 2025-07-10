@@ -1,19 +1,93 @@
-# ElizaOS Next.js Starter
+# BioAgents UI
 
-A production-ready Next.js application for integrating with ElizaOS agents, featuring real-time messaging, proper agent participation management, and comprehensive error handling.
+A customizable Next.js UI for ElizaOS agents. Each BioAgent has its own UI instance (this repo) which can be easily customized to match the agent's branding and functionality.
 
 ## 🚀 Features
 
-- **Real-time Agent Communication**: Full Socket.IO integration with ElizaOS messaging system
-- **Agent Participation Management**: Automatic agent registration to channels for reliable message processing
-- **CORS-Friendly Architecture**: API proxy pattern for seamless browser-to-ElizaOS communication
+- **Agent-Specific UI**: Each agent gets its own customizable interface
+- **Real-time Communication**: Full Socket.IO integration with ElizaOS messaging system
+- **Speech-to-Text**: Built-in voice input with ElevenLabs transcription
+- **Easy Customization**: Configure branding, prompts, and behavior via environment variables
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Error Handling & Recovery**: Robust connection management with proper error states
-- **Framework Agnostic Design**: Patterns that work across different platforms and frameworks
-- **Comprehensive Documentation**: Detailed ElizaOS messaging system documentation included
+
+## 🎨 Customization Options
+
+All customization is done through environment variables in your `.env` file:
+
+### Agent Branding
+```env
+NEXT_PUBLIC_AGENT_NAME="Your Agent Name"
+NEXT_PUBLIC_AGENT_LOGO="/assets/your-logo.png"
+NEXT_PUBLIC_AGENT_BANNER_LOGO="/assets/your-banner.png"
+NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION="Brief description of your agent"
+```
+
+### Social Links
+```env
+NEXT_PUBLIC_AGENT_X_USERNAME="your_twitter_handle"
+NEXT_PUBLIC_AGENT_DISCORD_SERVER="https://discord.gg/your-server"
+```
+
+### Example Prompts
+```env
+NEXT_PUBLIC_EXAMPLE_PROMPTS="What is gene therapy?,Explain CRISPR technology,How do vaccines work?"
+```
+
+### Server Configuration
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:4000
+NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+NEXT_PUBLIC_AGENT_ID=your-agent-id-here
+NEXT_PUBLIC_WORLD_ID=00000000-0000-0000-0000-000000000000
+```
+
+### Optional Features
+```env
+# Enable speech-to-text with ElevenLabs
+ELEVENLABS_API_KEY=sk_...
+
+# Enable debug mode for development
+NEXT_PUBLIC_DEBUG=true
+
+# Repository context for agent knowledge
+REPO_DIR_NAME=your-repo-name
+REPO_URL=https://github.com/your-org/your-repo.git
+REPO_BRANCH=main
+```
+
+## 🛠️ Quick Setup
+
+### 1. Clone and Install
+```bash
+git clone <your-repo-url>
+cd eliza-nextjs-ui
+bun install  # or npm install
+```
+
+### 2. Configure Your Agent
+Copy `.env.example` to `.env` and customize:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your agent's details:
+- Set `NEXT_PUBLIC_AGENT_ID` to your agent's ID
+- Customize `NEXT_PUBLIC_AGENT_NAME` and description
+- Add your logos to the `public/assets/` folder
+- Configure example prompts relevant to your agent
+
+### 3. Start Development Server
+```bash
+bun run dev  # or npm run dev
+```
+
+Visit [http://localhost:4000](http://localhost:4000)
 
 ## 🏗️ Architecture
 
-This starter implements the complete ElizaOS messaging flow:
+This UI implements the complete ElizaOS messaging flow:
 
 ```
 [Next.js Client] → [API Proxy] → [ElizaOS Server] → [Message Bus] → [Agent Runtime]
@@ -21,12 +95,11 @@ This starter implements the complete ElizaOS messaging flow:
 [Socket.IO UI] ← [ElizaOS Socket.IO] ← [Message Bus] ← [Agent Response] ← [Agent Processing]
 ```
 
-### Key Components
-
-- **Agent Participation Setup**: Ensures agents can receive and process messages
-- **Centralized Bus Channel**: Uses ElizaOS default channel (`00000000-0000-0000-0000-000000000000`)
-- **Message Flow Management**: Handles both user messages and agent responses
+### Key Features
+- **Agent Participation Management**: Automatic agent registration to channels
+- **CORS-Friendly Architecture**: API proxy pattern for seamless communication
 - **Real-time Updates**: Socket.IO integration for instant message delivery
+- **Session Management**: Persistent chat sessions with history
 
 ## 📋 Prerequisites
 
@@ -34,175 +107,97 @@ This starter implements the complete ElizaOS messaging flow:
 - **ElizaOS Server** running on localhost:3000 (or configured URL)
 - **Active ElizaOS Agent** with valid agent ID
 
-## 🛠️ Setup
+## 🎯 Agent-Specific Customization
 
-### 1. Clone and Install
+### Branding Your Agent
 
-```bash
-git clone <your-repo-url>
-cd eliza-nextjs-starter
-bun install  # or npm install
-```
+1. **Add your logos** to `public/assets/`:
+   - Agent logo (square format recommended)
+   - Banner logo (wide format for header)
 
-### 2. Environment Configuration
+2. **Configure agent details** in `.env`:
+   ```env
+   NEXT_PUBLIC_AGENT_NAME="Dr. BioBot"
+   NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION="AI assistant specializing in biotechnology and life sciences research."
+   ```
 
-Create a `.env` file:
+3. **Set relevant example prompts**:
+   ```env
+   NEXT_PUBLIC_EXAMPLE_PROMPTS="Explain gene editing,What is synthetic biology?,How do mRNA vaccines work?"
+   ```
 
-```env
-# Next.js Configuration
-NEXT_PUBLIC_APP_URL=http://localhost:4000
-NEXT_PUBLIC_SERVER_URL=http://localhost:3000
-NEXT_TELEMETRY_DISABLED=true
-NEXT_PUBLIC_NODE_ENV="development"
+### Custom Styling
 
-# ElizaOS Agent Configuration
-NEXT_PUBLIC_AGENT_ID=your-agent-id-here
-NEXT_PUBLIC_WORLD_ID=00000000-0000-0000-0000-000000000000
+The UI uses Tailwind CSS for easy customization. You can:
 
-# Optional API Authentication
-NEXT_PUBLIC_API_KEY=your-api-key-if-needed
+- Modify colors in `tailwind.config.js`
+- Add custom CSS in `src/app/globals.css`
+- Update component styles in individual component files
 
-# Debug Mode (shows debug panel with connection details)
-# NEXT_PUBLIC_DEBUG=true
-
-# Repository Context (Optional)
-REPO_DIR_NAME=elizaos
-REPO_URL=https://github.com/elizaos/eliza.git
-REPO_BRANCH=v2-develop
-```
-
-### 3. ElizaOS Server Setup
-
-Ensure your ElizaOS instance is running with required API keys:
-
-```env
-# In your ElizaOS .env file
-GROQ_API_KEY=your-groq-api-key
-OPENAI_API_KEY=your-openai-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-```
-
-### 4. Start Development Server
+## 🔧 Development Commands
 
 ```bash
-bun run dev  # or npm run dev
+# Development
+bun run dev                    # Start development server
+bun run build                  # Build for production
+bun start                     # Start production server
+
+# Code Quality
+bun run lint                  # Format code with Prettier
+bun run format                # Same as lint
+bun run format:check          # Check formatting without changes
 ```
-
-Visit [http://localhost:4000](http://localhost:4000)
-
-## 🔧 How It Works
-
-### Agent Participation Flow
-
-1. **Agent Registration**: App automatically adds agent to centralized channel
-2. **Socket Connection**: Establishes real-time connection to ElizaOS
-3. **Message Routing**: User messages → Central Channel → Agent Processing
-4. **Response Handling**: Agent responses → Socket.IO → UI Update
-
-### Key Implementation Details
-
-```typescript
-// 1. Add agent to channel (critical for message processing)
-await fetch('/api/eliza/messaging/central-channels/00000000-0000-0000-0000-000000000000/agents', {
-  method: 'POST',
-  body: JSON.stringify({ agentId: 'your-agent-id' }),
-});
-
-// 2. Handle centralized channel messages
-socket.on('messageBroadcast', (data) => {
-  const isCentralChannel = data.channelId === '00000000-0000-0000-0000-000000000000';
-  if (isCentralChannel && data.senderId !== userEntity) {
-    displayAgentMessage(data);
-  }
-});
-```
-
-## 📚 Documentation
-
-### ElizaOS Messaging System
-
-Comprehensive documentation is available at [`/docs/eliza-messaging-system.md`](./docs/eliza-messaging-system.md), covering:
-
-- **Architecture Overview**: Core components and message flow
-- **Entity Model**: Worlds, Rooms, Entities, and Memories explained
-- **Implementation Patterns**: Framework-agnostic code examples
-- **Troubleshooting Guide**: Common issues and solutions
-- **Best Practices**: Production considerations and scaling
-
-### API Endpoints
-
-The app provides CORS-friendly proxy endpoints:
-
-- `GET /api/eliza/server/ping` - Server health check
-- `POST /api/eliza/messaging/central-channels/:channelId/messages` - Send messages
-- `POST /api/eliza/messaging/central-channels/:channelId/agents` - Add agents
-- `GET /api/eliza/messaging/central-channels/:channelId/participants` - List participants
 
 ## 🚨 Common Issues & Solutions
 
 ### 1. "Agent not responding"
-
-**Cause**: Agent not added to channel
-**Solution**: Check browser console for agent participation setup logs
+**Cause**: Agent not added to channel or incorrect agent ID
+**Solution**: Check `NEXT_PUBLIC_AGENT_ID` in `.env` and ensure ElizaOS server is running
 
 ### 2. "CORS errors"
-
 **Cause**: Direct browser-to-ElizaOS requests blocked
 **Solution**: All requests automatically proxied via `/api/eliza/*`
 
-### 3. "Message duplication"
+### 3. "Speech-to-text not working"
+**Cause**: Missing ElevenLabs API key
+**Solution**: Add `ELEVENLABS_API_KEY` to your `.env` file
 
-**Cause**: Poor message filtering
-**Solution**: App filters own messages by `senderId`
+### 4. "Images not loading"
+**Cause**: Incorrect logo paths
+**Solution**: Ensure logos are in `public/assets/` and paths match `.env` configuration
 
-### 4. "Connection failed"
+## 🔍 Debug Mode
 
-**Cause**: ElizaOS server not running or wrong URL
-**Solution**: Verify `NEXT_PUBLIC_SERVER_URL` and server status
-
-## 🔍 Development
-
-### Debug Mode
-
-Enable the debug panel by setting `NEXT_PUBLIC_DEBUG=true` in your `.env` file:
+Enable debug mode for development:
 
 ```env
 NEXT_PUBLIC_DEBUG=true
 ```
 
 Debug mode provides:
-
-- **Debug Panel**: Agent ID, Room ID, User Entity, connection states
-- **Connection Status**: Real-time connection state display
-- **Agent Status**: Participation setup progress
-- **Message Logs**: Full message flow in browser console (always available)
-
-### Testing
-
-```bash
-bun run build    # Test production build
-bun run lint     # Code quality check
-bun run type-check  # TypeScript validation
-```
+- Connection status indicators
+- Agent participation status
+- Message flow logs in browser console
+- Environment variable display
 
 ## 🚀 Production Deployment
 
 ### Environment Variables for Production
 
 ```env
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+NEXT_PUBLIC_APP_URL=https://your-agent-domain.com
 NEXT_PUBLIC_SERVER_URL=https://your-elizaos-server.com
 NEXT_PUBLIC_AGENT_ID=your-production-agent-id
 NEXT_TELEMETRY_DISABLED=true
 NEXT_PUBLIC_NODE_ENV="production"
 ```
 
-### Build & Deploy
+### Deploy to Vercel
 
-```bash
-bun run build
-bun start  # or deploy to Vercel, Netlify, etc.
-```
+1. Push your customized code to GitHub
+2. Connect to Vercel
+3. Set environment variables in Vercel dashboard
+4. Deploy
 
 ## 🤝 Contributing
 
@@ -222,13 +217,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Next.js](https://nextjs.org/) - React framework
 - [Socket.IO](https://socket.io/) - Real-time communication
 - [Tailwind CSS](https://tailwindcss.com/) - Styling framework
-
-## 📞 Support
-
-- **Documentation**: [`/docs/eliza-messaging-system.md`](./docs/eliza-messaging-system.md)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **ElizaOS**: [Official Repository](https://github.com/elizaos/eliza)
+- [ElevenLabs](https://elevenlabs.io/) - Speech-to-text functionality
 
 ---
 
-**Built with ❤️ for the ElizaOS community**
+**Built with ❤️ for the BioAgents community**
