@@ -10,11 +10,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/button';
 import { ExamplePrompts } from '@/components/example-prompts';
 import SpeechToTextButton from '@/components/speech-to-text-button';
+import DeepResearchButton from '@/components/deep-research-button';
 
 export const LandingTextarea = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userEntity, setUserEntity] = useState<string | null>(null);
+  const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
 
   const { push } = useRouter();
 
@@ -52,7 +54,13 @@ export const LandingTextarea = () => {
 
     try {
       setIsLoading(true);
-      console.log(`[Landing] Creating new session with message: "${initialMessage}"`);
+      
+      // Add deep research suffix if enabled
+      const finalMessage = deepResearchEnabled 
+        ? `${initialMessage.trim()} Use FutureHouse to answer.`
+        : initialMessage.trim();
+
+      console.log(`[Landing] Creating new session with message: "${finalMessage}"`);
       console.log(`[Landing] Using user entity: ${currentUserEntity}`);
 
       const response = await fetch('/api/chat-session/create', {
@@ -62,7 +70,7 @@ export const LandingTextarea = () => {
         },
         body: JSON.stringify({
           userId: currentUserEntity,
-          initialMessage: initialMessage,
+          initialMessage: finalMessage,
         }),
       });
 
@@ -125,6 +133,10 @@ export const LandingTextarea = () => {
     }
   };
 
+  const handleDeepResearchToggle = () => {
+    setDeepResearchEnabled(prev => !prev);
+  };
+
   return (
     <div className="flex flex-col w-full gap-4">
       <span
@@ -180,6 +192,11 @@ export const LandingTextarea = () => {
             <div className="flex w-full items-center justify-between px-2 pb-2.5">
               <div />
               <div className="flex items-center gap-2">
+                <DeepResearchButton
+                  isActive={deepResearchEnabled}
+                  onToggle={handleDeepResearchToggle}
+                  disabled={!userEntity || isLoading}
+                />
                 <SpeechToTextButton
                   onTranscript={handleTranscript}
                   disabled={!userEntity || isLoading}

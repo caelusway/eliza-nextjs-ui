@@ -72,6 +72,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [agentStatus, setAgentStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [showSessionSwitcher, setShowSessionSwitcher] = useState<boolean>(false);
+  const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
 
   // --- Refs ---
   const initStartedRef = useRef(false);
@@ -442,10 +443,15 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         return;
       }
 
+      // Add deep research suffix if enabled
+      const finalMessageText = deepResearchEnabled 
+        ? `${messageText.trim()} Use FutureHouse to answer.`
+        : messageText.trim();
+
       const userMessage: ChatMessage = {
         id: uuidv4(),
         name: USER_NAME,
-        text: messageText,
+        text: finalMessageText,
         senderId: currentUserEntity,
         roomId: channelId,
         createdAt: Date.now(),
@@ -458,12 +464,13 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       setInputDisabled(true);
 
       console.log('[Chat] Sending message to session channel:', {
-        messageText,
+        messageText: finalMessageText,
         channelId,
         source: CHAT_SOURCE,
+        deepResearch: deepResearchEnabled,
       });
 
-      socketIOManager.sendChannelMessage(messageText, channelId, CHAT_SOURCE);
+      socketIOManager.sendChannelMessage(finalMessageText, channelId, CHAT_SOURCE);
 
       setTimeout(() => {
         console.log('[Chat] Timeout reached, re-enabling input');
@@ -581,6 +588,11 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     },
     [sendMessage]
   );
+
+  // --- Handle Deep Research Toggle ---
+  const handleDeepResearchToggle = useCallback(() => {
+    setDeepResearchEnabled(prev => !prev);
+  }, []);
 
   // --- Render Connection Status ---
   const renderConnectionStatus = () => {
@@ -759,6 +771,8 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
               connectionStatus === 'connected' ? 'Type your message...' : 'Connecting...'
             }
             onTranscript={handleTranscript}
+            deepResearchEnabled={deepResearchEnabled}
+            onDeepResearchToggle={handleDeepResearchToggle}
           />
         </div>
       </div>

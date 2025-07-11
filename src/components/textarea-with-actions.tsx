@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/button';
 import SpeechToTextButton from '@/components/speech-to-text-button';
+import DeepResearchButton from '@/components/deep-research-button';
 
 const ChatForm = function ChatForm({
   input,
@@ -14,6 +15,8 @@ const ChatForm = function ChatForm({
   isLoading,
   placeholder,
   onTranscript,
+  deepResearchEnabled,
+  onDeepResearchToggle,
 }: {
   input: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -21,6 +24,8 @@ const ChatForm = function ChatForm({
   isLoading: boolean;
   placeholder?: string;
   onTranscript?: (text: string) => void;
+  deepResearchEnabled?: boolean;
+  onDeepResearchToggle?: () => void;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -58,6 +63,13 @@ const ChatForm = function ChatForm({
       <div className="flex w-full items-center justify-between px-2 pb-2.5">
         <div />
         <div className="flex items-center gap-2">
+          {onDeepResearchToggle && (
+            <DeepResearchButton
+              isActive={deepResearchEnabled || false}
+              onToggle={onDeepResearchToggle}
+              disabled={isLoading}
+            />
+          )}
           {onTranscript && <SpeechToTextButton onTranscript={onTranscript} disabled={isLoading} />}
           <Button
             type="submit"
@@ -85,6 +97,8 @@ export const TextareaWithActions = function TextareaWithActions({
   isLoading,
   placeholder,
   onTranscript,
+  deepResearchEnabled,
+  onDeepResearchToggle,
 }: {
   input: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -92,6 +106,8 @@ export const TextareaWithActions = function TextareaWithActions({
   isLoading: boolean;
   placeholder?: string;
   onTranscript?: (text: string) => void;
+  deepResearchEnabled?: boolean;
+  onDeepResearchToggle?: () => void;
 }) {
   return (
     <div className="flex flex-col w-full">
@@ -124,6 +140,8 @@ export const TextareaWithActions = function TextareaWithActions({
             isLoading={isLoading}
             placeholder={placeholder}
             onTranscript={onTranscript}
+            deepResearchEnabled={deepResearchEnabled}
+            onDeepResearchToggle={onDeepResearchToggle}
           />
         </div>
       </span>
