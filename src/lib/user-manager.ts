@@ -88,7 +88,7 @@ export const useUserManager = () => {
     getUserWallet,
     user,
     authenticated,
-    ready
+    ready,
   };
 };
 

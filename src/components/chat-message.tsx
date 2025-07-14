@@ -6,12 +6,22 @@ import Image from 'next/image';
 import { CodeBlock } from '@/components/code-block';
 import { MemoizedMarkdown } from '@/components/memoized-markdown';
 import { PaperCard } from '@/components/paper-card';
+import PlaySoundButton from '@/components/play-sound-button';
 import { ChatMessage as ChatMessageType } from '@/types/chat-message';
 import { assert } from '@/utils/assert';
 
-// Define constants if needed, or use literals directly
-const USER_NAME = 'User';
-// const ASSISTANT_NAME = "Agent"; // Or get from message if dynamic
+// Get agent ID from environment
+const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
+
+// Helper function to check if message is from agent
+const isAgentMessage = (message: ChatMessageType) => {
+  return message.senderId === AGENT_ID;
+};
+
+// Helper function to check if message is from user
+const isUserMessage = (message: ChatMessageType) => {
+  return message.senderId !== AGENT_ID;
+};
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -71,7 +81,7 @@ export const ChatMessage = memo(function ChatMessage({
     <div
       className={clsx(
         'w-full max-w-full overflow-hidden',
-        message.name === USER_NAME && i !== 0
+        isUserMessage(message) && i !== 0
           ? 'border-t pt-4 border-zinc-950/5 dark:border-white/5'
           : ''
       )}
@@ -80,7 +90,7 @@ export const ChatMessage = memo(function ChatMessage({
         <div className="flex-shrink-0 w-8 h-8">
           <Image
             src={
-              message.name === USER_NAME
+              isUserMessage(message)
                 ? '/assets/user.png'
                 : process.env.NEXT_PUBLIC_AGENT_LOGO || '/assets/bot.png'
             }
@@ -93,7 +103,7 @@ export const ChatMessage = memo(function ChatMessage({
         <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm md:text-base lg:text-lg text-zinc-700 dark:text-zinc-300 font-bold">
-              {message.name === USER_NAME ? USER_NAME : process.env.NEXT_PUBLIC_AGENT_NAME}
+              {isUserMessage(message) ? 'User' : process.env.NEXT_PUBLIC_AGENT_NAME}
             </span>
             <span className="text-xs text-zinc-500 dark:text-zinc-400">{formattedTime}</span>
           </div>
@@ -120,7 +130,15 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           </div>
 
-          {message.name !== USER_NAME && followUpPrompts?.length > 0 && (
+          {/* Play Sound Button - only for agent messages */}
+          {isAgentMessage(message) && message.text && message.text.trim() && (
+            <div className="flex items-center gap-2 mt-2">
+              <PlaySoundButton text={message.text} />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">Play audio</span>
+            </div>
+          )}
+
+          {isAgentMessage(message) && followUpPrompts?.length > 0 && (
             <div className="mt-2">
               <div className="flex flex-col divide-y divide-zinc-950/5 dark:divide-white/5">
                 {followUpPrompts.map((prompt, index) => (
@@ -147,7 +165,7 @@ export const ChatMessage = memo(function ChatMessage({
           )}
 
           {/* Papers Section */}
-          {message.name !== USER_NAME && message.papers && message.papers.length > 0 && (
+          {isAgentMessage(message) && message.papers && message.papers.length > 0 && (
             <div className="mt-4">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs md:text-sm lg:text-base font-medium text-zinc-700 dark:text-zinc-300">

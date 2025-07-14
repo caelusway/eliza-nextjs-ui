@@ -392,13 +392,18 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     };
   }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId]);
 
-  const sendMessageRef = useRef<(messageText: string, options?: { useInternalKnowledge?: boolean }) => void>(() => {});
+  const sendMessageRef = useRef<
+    (messageText: string, options?: { useInternalKnowledge?: boolean }) => void
+  >(() => {});
 
   // --- Send Message Logic ---
   // This useEffect updates the ref on every render to hold the latest version of the sendMessage function,
   // with access to the latest state (channelId, inputDisabled, etc.).
   useEffect(() => {
-    sendMessageRef.current = (messageText: string, options?: { useInternalKnowledge?: boolean }) => {
+    sendMessageRef.current = (
+      messageText: string,
+      options?: { useInternalKnowledge?: boolean }
+    ) => {
       // This check now uses the most current state from the render it was created in.
       if (
         !messageText.trim() ||
@@ -445,7 +450,14 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         useInternalKnowledge: options?.useInternalKnowledge ?? true,
       });
 
-      socketIOManager.sendChannelMessage(finalMessageText, channelId, CHAT_SOURCE, undefined, undefined, options);
+      socketIOManager.sendChannelMessage(
+        finalMessageText,
+        channelId,
+        CHAT_SOURCE,
+        undefined,
+        undefined,
+        options
+      );
 
       setTimeout(() => {
         console.log('[Chat] Timeout reached, re-enabling input');
@@ -457,9 +469,12 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // This is a stable function that we can pass as a prop. It never changes.
   // It acts as a "portal" to call the most up-to-date logic from our ref.
-  const sendMessage = useCallback((messageText: string, options?: { useInternalKnowledge?: boolean }) => {
-    sendMessageRef.current?.(messageText, options);
-  }, []); // Empty dependency array ensures this function is created only ONCE.
+  const sendMessage = useCallback(
+    (messageText: string, options?: { useInternalKnowledge?: boolean }) => {
+      sendMessageRef.current?.(messageText, options);
+    },
+    []
+  ); // Empty dependency array ensures this function is created only ONCE.
 
   // --- Load Message History and Send Initial Query ---
   useEffect(() => {

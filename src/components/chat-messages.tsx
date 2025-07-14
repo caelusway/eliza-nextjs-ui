@@ -3,9 +3,16 @@
 import { useEffect, useRef } from 'react';
 
 import { ChatMessage } from '@/components/chat-message';
-import { USER_NAME } from '@/constants';
 import { ChatMessage as ChatMessageType } from '@/types/chat-message';
 import { assert } from '@/utils/assert';
+
+// Get agent ID from environment
+const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
+
+// Helper function to check if message is from agent
+const isAgentMessage = (message: ChatMessageType) => {
+  return message.senderId === AGENT_ID;
+};
 
 interface ChatMessagesProps {
   messages: ChatMessageType[];
@@ -87,7 +94,7 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
       `[ChatMessages Effect 2] Invalid lastMessage.text (index ${messages.length - 1}): ${typeof lastMessage.text}`
     );
 
-    if (lastMessage.name !== USER_NAME) {
+    if (isAgentMessage(lastMessage)) {
       const isAtBottom =
         window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100;
 
@@ -123,19 +130,16 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
           `[ChatMessages Map] Invalid message.name at index ${i}: ${typeof message.name}`
         );
 
-        const assistantIndex =
-          message.name !== USER_NAME
-            ? messages.slice(0, i + 1).filter((m) => m.name !== USER_NAME).length - 1
-            : -1;
+        const assistantIndex = isAgentMessage(message)
+          ? messages.slice(0, i + 1).filter((m) => isAgentMessage(m)).length - 1
+          : -1;
 
         return (
           <div key={messageKey} ref={i === messages.length - 1 ? messagesEndRef : undefined}>
             <ChatMessage
               message={message}
               i={i}
-              followUpPrompts={
-                message.name !== USER_NAME ? followUpPromptsMap[assistantIndex] : undefined
-              }
+              followUpPrompts={isAgentMessage(message) ? followUpPromptsMap[assistantIndex] : undefined}
               onFollowUpClick={onFollowUpClick}
             />
           </div>

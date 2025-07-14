@@ -17,9 +17,7 @@ export const LandingChatSessions = () => {
           </h2>
         </div>
         <div className="max-h-[calc(100vh-10rem)] overflow-y-auto">
-          <div className="text-center text-gray-500 dark:text-gray-400">
-            Loading...
-          </div>
+          <div className="text-center text-gray-500 dark:text-gray-400">Loading...</div>
         </div>
       </div>
     );

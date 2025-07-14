@@ -131,7 +131,11 @@ export const ChatSessions = ({
     return (
       <div className={`${showSidebar ? 'py-4' : 'py-8'} text-center`}>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          {showSwitcher ? 'No other chat sessions found' : showSidebar ? 'No conversations yet' : 'No previous chat sessions'}
+          {showSwitcher
+            ? 'No other chat sessions found'
+            : showSidebar
+              ? 'No conversations yet'
+              : 'No previous chat sessions'}
         </p>
         {showSidebar && (
           <p className="text-zinc-400 dark:text-zinc-500 text-xs mt-2">
@@ -174,29 +178,35 @@ export const ChatSessions = ({
             key={session.id}
             onClick={() => handleSessionClick(session)}
             className={`group cursor-pointer ${
-              showSidebar 
-                ? 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-3 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700' 
+              showSidebar
+                ? 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-3 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700'
                 : 'bg-white dark:bg-zinc-950 border border-zinc-950/10 dark:border-white/10 rounded-lg p-4 hover:bg-zinc-950/[2.5%] dark:hover:bg-white/[2.5%]'
             } transition-all duration-200`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h4 className={`font-medium text-zinc-900 dark:text-white ${
-                  showSidebar ? 'text-sm' : 'text-sm'
-                } group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors line-clamp-1`}>
+                <h4
+                  className={`font-medium text-zinc-900 dark:text-white ${
+                    showSidebar ? 'text-sm' : 'text-sm'
+                  } group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors line-clamp-1`}
+                >
                   {session.title}
                 </h4>
                 {session.preview && (
-                  <p className={`text-zinc-600 dark:text-zinc-400 ${
-                    showSidebar ? 'text-xs' : 'text-xs'
-                  } mt-1 line-clamp-2`}>
+                  <p
+                    className={`text-zinc-600 dark:text-zinc-400 ${
+                      showSidebar ? 'text-xs' : 'text-xs'
+                    } mt-1 line-clamp-2`}
+                  >
                     {session.isFromAgent ? '🤖 ' : ''}
                     {session.preview}
                   </p>
                 )}
-                <div className={`flex items-center gap-2 mt-2 ${
-                  showSidebar ? 'text-xs' : 'text-xs'
-                } text-zinc-500 dark:text-zinc-400`}>
+                <div
+                  className={`flex items-center gap-2 mt-2 ${
+                    showSidebar ? 'text-xs' : 'text-xs'
+                  } text-zinc-500 dark:text-zinc-400`}
+                >
                   <span>
                     {session.messageCount} message
                     {session.messageCount !== 1 ? 's' : ''}
