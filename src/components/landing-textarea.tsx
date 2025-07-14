@@ -5,63 +5,43 @@ import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/button';
 import { ExamplePrompts } from '@/components/example-prompts';
 import SpeechToTextButton from '@/components/speech-to-text-button';
 import DeepResearchButton from '@/components/deep-research-button';
+import { useUserManager } from '@/lib/user-manager';
 
 export const LandingTextarea = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [userEntity, setUserEntity] = useState<string | null>(null);
   const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
 
   const { push } = useRouter();
+  const { getUserId, isUserAuthenticated } = useUserManager();
 
-  // Helper function to get user entity from localStorage
-  const getUserEntity = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('elizaHowUserEntity');
-  };
-
-  // Initialize user entity on client side only to avoid hydration mismatch
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedEntity = localStorage.getItem('elizaHowUserEntity');
-      if (storedEntity) {
-        setUserEntity(storedEntity);
-      } else {
-        const newEntity = uuidv4();
-        localStorage.setItem('elizaHowUserEntity', newEntity);
-        setUserEntity(newEntity);
-      }
-    }
-  }, []);
+  const currentUserId = getUserId();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   };
 
   const createNewSession = async (initialMessage: string) => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-    if (!currentUserEntity) {
-      console.error('User entity not available');
+    if (!currentUserId) {
+      console.error('User not authenticated');
       return;
     }
 
     try {
       setIsLoading(true);
-      
+
       // Add deep research suffix if enabled
-      const finalMessage = deepResearchEnabled 
+      const finalMessage = deepResearchEnabled
         ? `${initialMessage.trim()} Use FutureHouse to answer.`
         : initialMessage.trim();
 
       console.log(`[Landing] Creating new session with message: "${finalMessage}"`);
-      console.log(`[Landing] Using user entity: ${currentUserEntity}`);
+      console.log(`[Landing] Using user ID: ${currentUserId}`);
 
       const response = await fetch('/api/chat-session/create', {
         method: 'POST',
@@ -69,7 +49,7 @@ export const LandingTextarea = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: currentUserEntity,
+          userId: currentUserId,
           initialMessage: finalMessage,
         }),
       });
@@ -95,10 +75,8 @@ export const LandingTextarea = () => {
     try {
       e?.preventDefault();
 
-      const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-      if (!input.trim() || !currentUserEntity) {
-        console.log('Submit blocked - input:', input.trim(), 'userEntity:', currentUserEntity);
+      if (!input.trim() || !currentUserId) {
+        console.log('Submit blocked - input:', input.trim(), 'userId:', currentUserId);
         setIsLoading(false);
         return;
       }
@@ -112,29 +90,25 @@ export const LandingTextarea = () => {
 
   const handlePromptSelect = useCallback(
     (prompt: string) => {
-      const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-      if (currentUserEntity) {
+      if (currentUserId) {
         createNewSession(prompt);
       }
     },
-    [] // No dependencies needed since we read from localStorage
+    [currentUserId, createNewSession]
   );
 
   const handleTranscript = (text: string) => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
     console.log('Transcript:', text);
 
-    if (currentUserEntity) {
+    if (currentUserId) {
       createNewSession(text);
     } else {
-      console.error('No user entity found in localStorage for transcript');
+      console.error('User not authenticated for transcript');
     }
   };
 
   const handleDeepResearchToggle = () => {
-    setDeepResearchEnabled(prev => !prev);
+    setDeepResearchEnabled((prev) => !prev);
   };
 
   return (
@@ -166,7 +140,12 @@ export const LandingTextarea = () => {
                 aria-label="Prompt"
                 value={input}
                 onChange={handleInputChange}
-                placeholder={`Ask ${process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'} a question...`}
+                placeholder={
+                  !isUserAuthenticated()
+                    ? 'Please login to start a chat..'
+                    : `Ask ${process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'} a question...`
+                }
+                disabled={!isUserAuthenticated()}
                 className={clsx([
                   'size-full bg-transparent',
                   'relative block size-full appearance-none',
@@ -180,6 +159,7 @@ export const LandingTextarea = () => {
                   'field-sizing-content resize-none',
                   'scrollbar-thin scrollbar-thumb-rounded-md',
                   'max-h-[48vh]',
+                  'disabled:opacity-30 disabled:cursor-not-allowed',
                 ])}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -195,16 +175,16 @@ export const LandingTextarea = () => {
                 <DeepResearchButton
                   isActive={deepResearchEnabled}
                   onToggle={handleDeepResearchToggle}
-                  disabled={!userEntity || isLoading}
+                  disabled={!isUserAuthenticated() || isLoading}
                 />
                 <SpeechToTextButton
                   onTranscript={handleTranscript}
-                  disabled={!userEntity || isLoading}
+                  disabled={!isUserAuthenticated() || isLoading}
                 />
                 <Button
                   type="submit"
                   color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
-                  disabled={!input || !userEntity || isLoading}
+                  disabled={!input || !isUserAuthenticated() || isLoading}
                   aria-label="Submit"
                   className="size-8"
                 >
@@ -220,7 +200,7 @@ export const LandingTextarea = () => {
         </div>
       </span>
 
-      <ExamplePrompts onPromptSelect={handlePromptSelect} />
+      <ExamplePrompts onPromptSelect={handlePromptSelect} disabled={!isUserAuthenticated()} />
     </div>
   );
 };

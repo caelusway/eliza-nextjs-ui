@@ -17,6 +17,7 @@ const ChatForm = function ChatForm({
   onTranscript,
   deepResearchEnabled,
   onDeepResearchToggle,
+  disabled,
 }: {
   input: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -26,6 +27,7 @@ const ChatForm = function ChatForm({
   onTranscript?: (text: string) => void;
   deepResearchEnabled?: boolean;
   onDeepResearchToggle?: () => void;
+  disabled?: boolean;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -43,6 +45,7 @@ const ChatForm = function ChatForm({
           value={input}
           onChange={onInputChange}
           placeholder={placeholder || 'Ask a follow up...'}
+          disabled={disabled}
           className={clsx([
             'size-full',
             'relative block size-full appearance-none',
@@ -56,6 +59,7 @@ const ChatForm = function ChatForm({
             'field-sizing-content resize-none',
             'scrollbar-thin scrollbar-thumb-rounded-md',
             'max-h-[48vh]',
+            disabled && 'opacity-30 cursor-not-allowed',
           ])}
           onKeyDown={handleKeyDown}
         />
@@ -67,14 +71,16 @@ const ChatForm = function ChatForm({
             <DeepResearchButton
               isActive={deepResearchEnabled || false}
               onToggle={onDeepResearchToggle}
-              disabled={isLoading}
+              disabled={disabled || isLoading}
             />
           )}
-          {onTranscript && <SpeechToTextButton onTranscript={onTranscript} disabled={isLoading} />}
+          {onTranscript && (
+            <SpeechToTextButton onTranscript={onTranscript} disabled={disabled || isLoading} />
+          )}
           <Button
             type="submit"
             color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
-            disabled={!input || isLoading}
+            disabled={!input || disabled || isLoading}
             aria-label="Submit"
             className="size-8"
           >
@@ -99,6 +105,7 @@ export const TextareaWithActions = function TextareaWithActions({
   onTranscript,
   deepResearchEnabled,
   onDeepResearchToggle,
+  disabled,
 }: {
   input: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -108,6 +115,7 @@ export const TextareaWithActions = function TextareaWithActions({
   onTranscript?: (text: string) => void;
   deepResearchEnabled?: boolean;
   onDeepResearchToggle?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col w-full">
@@ -142,6 +150,7 @@ export const TextareaWithActions = function TextareaWithActions({
             onTranscript={onTranscript}
             deepResearchEnabled={deepResearchEnabled}
             onDeepResearchToggle={onDeepResearchToggle}
+            disabled={disabled}
           />
         </div>
       </span>

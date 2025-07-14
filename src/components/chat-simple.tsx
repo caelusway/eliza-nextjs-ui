@@ -7,11 +7,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessages } from '@/components/chat-messages';
 import { TextareaWithActions } from '@/components/textarea-with-actions';
 import { ChatSessions } from '@/components/chat-sessions';
-import { Button, styles } from '@/components/button';
-import { USER_NAME, CHAT_SOURCE } from '@/constants';
+import { Button } from '@/components/button';
+import { CHAT_SOURCE } from '@/constants';
 import SocketIOManager, { ControlMessageData, MessageBroadcastData } from '@/lib/socketio-manager';
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
+import { useUserManager } from '@/lib/user-manager';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -48,14 +49,8 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   const agentId = process.env.NEXT_PUBLIC_AGENT_ID;
   const serverId = '00000000-0000-0000-0000-000000000000'; // Default server ID from ElizaOS
 
-  // --- User Entity ---
-  const [userEntity, setUserEntity] = useState<string | null>(null);
-
-  // Helper function to get user entity from localStorage
-  const getUserEntity = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('elizaHowUserEntity');
-  };
+  // --- User Management ---
+  const { getUserId, getUserName, isUserAuthenticated, isReady } = useUserManager();
 
   // --- State ---
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -95,19 +90,8 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     return date.toLocaleDateString();
   };
 
-  // Initialize user entity on client side only to avoid hydration mismatch
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedEntity = localStorage.getItem('elizaHowUserEntity');
-      if (storedEntity) {
-        setUserEntity(storedEntity);
-      } else {
-        const newEntity = uuidv4();
-        localStorage.setItem('elizaHowUserEntity', newEntity);
-        setUserEntity(newEntity);
-      }
-    }
-  }, []);
+  // Get current user ID (email)
+  const currentUserId = getUserId();
 
   // --- Check Server Status ---
   useEffect(() => {
@@ -134,16 +118,14 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // Function to create a new chat session
   const createNewSession = async (initialMessage?: string) => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-    if (!currentUserEntity || !agentId) {
-      console.error('[Chat] Cannot create session - missing userEntity or agentId');
+    if (!currentUserId || !agentId) {
+      console.error('[Chat] Cannot create session - missing userId or agentId');
       return null;
     }
 
     try {
       console.log(`[Chat] Creating new session with initial message: "${initialMessage}"`);
-      console.log(`[Chat] Using user entity: ${currentUserEntity}`);
+      console.log(`[Chat] Using user ID: ${currentUserId}`);
 
       const response = await fetch('/api/chat-session/create', {
         method: 'POST',
@@ -151,7 +133,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: currentUserEntity,
+          userId: currentUserId,
           initialMessage: initialMessage,
         }),
       });
@@ -178,9 +160,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // --- Load Session Data ---
   useEffect(() => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-    if (!sessionId || !currentUserEntity || !agentId) return;
+    if (!sessionId || !currentUserId || !agentId) return;
 
     // Reset session state for new session
     initStartedRef.current = false;
@@ -193,7 +173,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         console.log(`[Chat] Loading session: ${sessionId}`);
 
         const response = await fetch(
-          `/api/chat-session/${sessionId}?userId=${encodeURIComponent(currentUserEntity)}`
+          `/api/chat-session/${sessionId}?userId=${encodeURIComponent(currentUserId)}`
         );
 
         if (!response.ok) {
@@ -220,13 +200,11 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     };
 
     loadSession();
-  }, [sessionId, agentId, router]);
+  }, [sessionId, agentId, router, currentUserId]);
 
   // --- Initialize Socket Connection ---
   useEffect(() => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-    if (!currentUserEntity || !agentId || serverStatus !== 'online') {
+    if (!currentUserId || !agentId || serverStatus !== 'online') {
       return;
     }
 
@@ -272,7 +250,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
         // Step 2: Initialize socket connection
         console.log('[Chat] Initializing socket connection...');
-        socketIOManager.initialize(currentUserEntity, serverId);
+        socketIOManager.initialize(currentUserId, serverId);
 
         // Step 3: Check connection status
         const checkConnection = () => {
@@ -292,13 +270,11 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     };
 
     initializeConnection();
-  }, [agentId, serverStatus, socketIOManager]);
+  }, [agentId, serverStatus, socketIOManager, currentUserId]);
 
   // --- Set up Socket Event Listeners ---
   useEffect(() => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
-    if (connectionStatus !== 'connected' || !channelId || !sessionId) {
+    if (connectionStatus !== 'connected' || !channelId || !sessionId || !currentUserId) {
       return;
     }
 
@@ -309,7 +285,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       console.log('[Chat] Received message broadcast:', data);
 
       // Skip our own messages to avoid duplicates
-      if (data.senderId === currentUserEntity) {
+      if (data.senderId === currentUserId) {
         console.log('[Chat] Skipping our own message broadcast');
         return;
       }
@@ -414,7 +390,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
     };
-  }, [connectionStatus, channelId, agentId, socketIOManager]);
+  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId]);
 
   const sendMessageRef = useRef<(messageText: string) => void>(() => {});
 
@@ -423,19 +399,17 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   // with access to the latest state (channelId, inputDisabled, etc.).
   useEffect(() => {
     sendMessageRef.current = (messageText: string) => {
-      const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
       // This check now uses the most current state from the render it was created in.
       if (
         !messageText.trim() ||
-        !currentUserEntity ||
+        !currentUserId ||
         !channelId ||
         inputDisabled ||
         connectionStatus !== 'connected'
       ) {
         console.warn('[Chat] Cannot send message (stale state prevented):', {
           hasText: !!messageText.trim(),
-          hasUserEntity: !!currentUserEntity,
+          hasUserId: !!currentUserId,
           hasChannelId: !!channelId,
           inputDisabled,
           connectionStatus,
@@ -444,15 +418,15 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       }
 
       // Add deep research suffix if enabled
-      const finalMessageText = deepResearchEnabled 
+      const finalMessageText = deepResearchEnabled
         ? `${messageText.trim()} Use FutureHouse to answer.`
         : messageText.trim();
 
       const userMessage: ChatMessage = {
         id: uuidv4(),
-        name: USER_NAME,
+        name: getUserName(),
         text: finalMessageText,
-        senderId: currentUserEntity,
+        senderId: currentUserId,
         roomId: channelId,
         createdAt: Date.now(),
         source: CHAT_SOURCE,
@@ -488,12 +462,10 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // --- Load Message History and Send Initial Query ---
   useEffect(() => {
-    const currentUserEntity = getUserEntity(); // Read from localStorage directly
-
     if (
       !channelId ||
       !agentId ||
-      !currentUserEntity ||
+      !currentUserId ||
       connectionStatus !== 'connected' ||
       initStartedRef.current
     ) {
@@ -557,7 +529,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
       .finally(() => {
         setIsLoadingHistory(false);
       });
-  }, [channelId, agentId, connectionStatus, sessionData, sendMessage]);
+  }, [channelId, agentId, connectionStatus, sessionData, sendMessage, currentUserId]);
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
@@ -591,7 +563,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // --- Handle Deep Research Toggle ---
   const handleDeepResearchToggle = useCallback(() => {
-    setDeepResearchEnabled(prev => !prev);
+    setDeepResearchEnabled((prev) => !prev);
   }, []);
 
   // --- Render Connection Status ---
@@ -685,6 +657,18 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     );
   }
 
+  // Check if user is authenticated
+  if (!isReady) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center p-6">
+          <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+          <p className="text-gray-600">Initializing authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-full max-w-4xl mx-auto flex flex-col">
       {/* Fixed Header Section */}
@@ -719,9 +703,9 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         <div className="mb-4">{renderConnectionStatus()}</div>
 
         {/* Session Switcher */}
-        {showSessionSwitcher && userEntity && (
+        {showSessionSwitcher && currentUserId && (
           <div className="hidden lg:block mb-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-4 border border-zinc-950/10 dark:border-white/10">
-            <ChatSessions userId={userEntity} currentSessionId={sessionId} showSwitcher={true} />
+            <ChatSessions userId={currentUserId} currentSessionId={sessionId} showSwitcher={true} />
           </div>
         )}
       </div>
@@ -768,11 +752,16 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
             onSubmit={handleSubmit}
             isLoading={isAgentThinking || inputDisabled || connectionStatus !== 'connected'}
             placeholder={
-              connectionStatus === 'connected' ? 'Type your message...' : 'Connecting...'
+              !isUserAuthenticated()
+                ? 'Please login to start a chat..'
+                : connectionStatus === 'connected'
+                  ? 'Type your message...'
+                  : 'Connecting...'
             }
             onTranscript={handleTranscript}
             deepResearchEnabled={deepResearchEnabled}
             onDeepResearchToggle={handleDeepResearchToggle}
+            disabled={!isUserAuthenticated()}
           />
         </div>
       </div>
@@ -783,8 +772,8 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
           <div>Agent ID: {agentId}</div>
           <div>Session ID: {sessionId}</div>
           <div>Channel ID: {channelId}</div>
-          <div>User Entity: {userEntity}</div>
-          <div>User Entity (localStorage): {getUserEntity()}</div>
+          <div>User ID: {currentUserId}</div>
+          <div>User Name: {getUserName()}</div>
           <div>Connection: {connectionStatus}</div>
           <div>Server: {serverStatus}</div>
           <div>Agent Status: {agentStatus}</div>

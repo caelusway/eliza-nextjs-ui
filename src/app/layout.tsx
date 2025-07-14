@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
-
 import { siteConfig } from '@/app/constants';
 import { inter } from '@/app/fonts';
 import '@/app/globals.css';
 import { ProgressBar } from '@/app/progress-bar';
 import { Toaster } from '@/app/toaster';
 import { Header } from '@/components/header';
+import { PrivyClientProvider } from './privy-client-provider';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -54,8 +54,10 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <Header />
-              {children}
+              <PrivyClientProvider>
+                <Header />
+                {children}
+              </PrivyClientProvider>
             </ThemeProvider>
           </div>
         </div>

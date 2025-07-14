@@ -8,9 +8,10 @@ const examplePrompts: string[] = (
 
 interface ExamplePromptsProps {
   onPromptSelect: (prompt: string) => void;
+  disabled?: boolean;
 }
 
-export function ExamplePrompts({ onPromptSelect }: ExamplePromptsProps) {
+export function ExamplePrompts({ onPromptSelect, disabled }: ExamplePromptsProps) {
   return (
     <div className="flex w-full flex-wrap items-center justify-center gap-2 md:gap-4">
       {examplePrompts.map((prompt, index) => (
@@ -32,7 +33,9 @@ export function ExamplePrompts({ onPromptSelect }: ExamplePromptsProps) {
             'dark:border-white/15 dark:text-white dark:[--btn-bg:transparent] dark:hover:bg-white/5 dark:active:bg-white/5',
             // Icon
             '[--btn-icon:var(--color-zinc-500)] hover:[--btn-icon:var(--color-zinc-700)] active:[--btn-icon:var(--color-zinc-700)] dark:active:[--btn-icon:var(--color-zinc-400)] dark:hover:[--btn-icon:var(--color-zinc-400)]',
+            disabled && 'opacity-30 cursor-not-allowed',
           ])}
+          disabled={disabled}
           onClick={() => onPromptSelect(prompt)}
         >
           {prompt.split('\n')[0].replace('Create ', '').replace('Design ', '')}
