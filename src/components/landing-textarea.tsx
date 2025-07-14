@@ -10,6 +10,7 @@ import { Button } from '@/components/button';
 import { ExamplePrompts } from '@/components/example-prompts';
 import SpeechToTextButton from '@/components/speech-to-text-button';
 import DeepResearchButton from '@/components/deep-research-button';
+import FileUploadButton from '@/components/file-upload-button';
 import { useUserManager } from '@/lib/user-manager';
 
 export const LandingTextarea = () => {
@@ -111,6 +112,19 @@ export const LandingTextarea = () => {
     setDeepResearchEnabled((prev) => !prev);
   };
 
+  const handleFileUpload = (file: File, uploadResult: any) => {
+    console.log('File uploaded:', file.name, uploadResult);
+
+    // Create a message indicating the file was uploaded and should use internal knowledge
+    const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
+
+    if (currentUserId) {
+      createNewSession(fileMessage);
+    } else {
+      console.error('User not authenticated for file upload');
+    }
+  };
+
   return (
     <div className="flex flex-col w-full gap-4">
       <span
@@ -135,7 +149,7 @@ export const LandingTextarea = () => {
           ])}
         >
           <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center">
-            <div className="relative min-h-[36px] w-full">
+            <div className="relative min-h-[36px] w-full mb-2">
               <textarea
                 aria-label="Prompt"
                 value={input}
@@ -170,7 +184,12 @@ export const LandingTextarea = () => {
               />
             </div>
             <div className="flex w-full items-center justify-between px-2 pb-2.5">
-              <div />
+              <div className="flex items-center gap-2">
+                <FileUploadButton
+                  onFileUpload={handleFileUpload}
+                  disabled={!isUserAuthenticated() || isLoading}
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <DeepResearchButton
                   isActive={deepResearchEnabled}

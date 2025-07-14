@@ -392,13 +392,13 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
     };
   }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId]);
 
-  const sendMessageRef = useRef<(messageText: string) => void>(() => {});
+  const sendMessageRef = useRef<(messageText: string, options?: { useInternalKnowledge?: boolean }) => void>(() => {});
 
   // --- Send Message Logic ---
   // This useEffect updates the ref on every render to hold the latest version of the sendMessage function,
   // with access to the latest state (channelId, inputDisabled, etc.).
   useEffect(() => {
-    sendMessageRef.current = (messageText: string) => {
+    sendMessageRef.current = (messageText: string, options?: { useInternalKnowledge?: boolean }) => {
       // This check now uses the most current state from the render it was created in.
       if (
         !messageText.trim() ||
@@ -442,9 +442,10 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
         channelId,
         source: CHAT_SOURCE,
         deepResearch: deepResearchEnabled,
+        useInternalKnowledge: options?.useInternalKnowledge ?? true,
       });
 
-      socketIOManager.sendChannelMessage(finalMessageText, channelId, CHAT_SOURCE);
+      socketIOManager.sendChannelMessage(finalMessageText, channelId, CHAT_SOURCE, undefined, undefined, options);
 
       setTimeout(() => {
         console.log('[Chat] Timeout reached, re-enabling input');
@@ -456,8 +457,8 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
 
   // This is a stable function that we can pass as a prop. It never changes.
   // It acts as a "portal" to call the most up-to-date logic from our ref.
-  const sendMessage = useCallback((messageText: string) => {
-    sendMessageRef.current?.(messageText);
+  const sendMessage = useCallback((messageText: string, options?: { useInternalKnowledge?: boolean }) => {
+    sendMessageRef.current?.(messageText, options);
   }, []); // Empty dependency array ensures this function is created only ONCE.
 
   // --- Load Message History and Send Initial Query ---
@@ -565,6 +566,18 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
   const handleDeepResearchToggle = useCallback(() => {
     setDeepResearchEnabled((prev) => !prev);
   }, []);
+
+  // --- Handle File Upload ---
+  const handleFileUpload = useCallback(
+    (file: File, uploadResult: any) => {
+      console.log('[Chat] File uploaded:', file.name, uploadResult);
+
+      // Create a message indicating the file was uploaded and enable internal knowledge
+      const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
+      sendMessage(fileMessage, { useInternalKnowledge: true });
+    },
+    [sendMessage]
+  );
 
   // --- Render Connection Status ---
   const renderConnectionStatus = () => {
@@ -761,6 +774,7 @@ export const Chat = ({ sessionId: propSessionId }: ChatProps = {}) => {
             onTranscript={handleTranscript}
             deepResearchEnabled={deepResearchEnabled}
             onDeepResearchToggle={handleDeepResearchToggle}
+            onFileUpload={handleFileUpload}
             disabled={!isUserAuthenticated()}
           />
         </div>

@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/button';
 import SpeechToTextButton from '@/components/speech-to-text-button';
 import DeepResearchButton from '@/components/deep-research-button';
+import FileUploadButton from '@/components/file-upload-button';
 
 const ChatForm = function ChatForm({
   input,
@@ -17,6 +18,7 @@ const ChatForm = function ChatForm({
   onTranscript,
   deepResearchEnabled,
   onDeepResearchToggle,
+  onFileUpload,
   disabled,
 }: {
   input: string;
@@ -27,6 +29,7 @@ const ChatForm = function ChatForm({
   onTranscript?: (text: string) => void;
   deepResearchEnabled?: boolean;
   onDeepResearchToggle?: () => void;
+  onFileUpload?: (file: File, uploadResult: any) => void;
   disabled?: boolean;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -38,7 +41,7 @@ const ChatForm = function ChatForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col items-center justify-center">
-      <div className="relative min-h-[36px] w-full">
+      <div className="relative min-h-[36px] w-full mb-2">
         <textarea
           autoFocus
           aria-label="Prompt"
@@ -65,7 +68,11 @@ const ChatForm = function ChatForm({
         />
       </div>
       <div className="flex w-full items-center justify-between px-2 pb-2.5">
-        <div />
+        <div className="flex items-center gap-2">
+          {onFileUpload && (
+            <FileUploadButton onFileUpload={onFileUpload} disabled={disabled || isLoading} />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {onDeepResearchToggle && (
             <DeepResearchButton
@@ -105,6 +112,7 @@ export const TextareaWithActions = function TextareaWithActions({
   onTranscript,
   deepResearchEnabled,
   onDeepResearchToggle,
+  onFileUpload,
   disabled,
 }: {
   input: string;
@@ -115,6 +123,7 @@ export const TextareaWithActions = function TextareaWithActions({
   onTranscript?: (text: string) => void;
   deepResearchEnabled?: boolean;
   onDeepResearchToggle?: () => void;
+  onFileUpload?: (file: File, uploadResult: any) => void;
   disabled?: boolean;
 }) {
   return (
@@ -150,6 +159,7 @@ export const TextareaWithActions = function TextareaWithActions({
             onTranscript={onTranscript}
             deepResearchEnabled={deepResearchEnabled}
             onDeepResearchToggle={onDeepResearchToggle}
+            onFileUpload={onFileUpload}
             disabled={disabled}
           />
         </div>

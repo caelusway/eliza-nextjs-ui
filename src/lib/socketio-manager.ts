@@ -492,7 +492,8 @@ class SocketIOManager extends EventAdapter {
     channelId: string,
     source: string,
     sessionChannelId?: string,
-    serverId?: string
+    serverId?: string,
+    options?: { useInternalKnowledge?: boolean }
   ): Promise<void> {
     if (!this.socket) {
       console.error('[SocketIO] Cannot send channel message: socket not initialized');
@@ -525,6 +526,7 @@ class SocketIOManager extends EventAdapter {
         source,
         attachments: [],
         metadata: { channelType: 'DM' },
+        useInternalKnowledge: options?.useInternalKnowledge ?? true,
       },
     });
 
