@@ -45,14 +45,35 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const channelsData = await channelsResponse.json();
     const channels = channelsData.data?.channels || channelsData.channels || [];
 
-    // Find the channel with matching sessionId ONLY
+    // Find the channel with matching sessionId AND verify user ownership
     const sessionChannel = channels.find((channel: any) => {
       const metadata = channel.metadata || {};
-      return channel.id === sessionId || metadata.sessionId === sessionId;
+
+      // Check if this is the correct session
+      const isCorrectSession = channel.id === sessionId || metadata.sessionId === sessionId;
+
+      if (!isCorrectSession) {
+        return false;
+      }
+
+      console.log('Debugging...', metadata.channelType, metadata.user1, metadata.user2);
+
+      // Verify that the user is authorized to access this session
+      // For DM channels, check if the user is one of the participants
+      const isUserParticipant = metadata.user1 === userId || metadata.user2 === userId;
+
+      if (!isUserParticipant) {
+        console.warn(
+          `[API] Unauthorized access attempt: User ${userId} tried to access session ${sessionId}`
+        );
+        return false;
+      }
+
+      return true;
     });
 
     if (!sessionChannel) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Session not found or access denied' }, { status: 404 });
     }
 
     // Fetch messages for this session using the correct API endpoint
