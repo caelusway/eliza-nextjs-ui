@@ -58,20 +58,20 @@ export default function LoginForm({
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-600/50 rounded-xl p-4 sm:p-5 flex items-start gap-3 shadow-sm">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm sm:text-base text-red-600 dark:text-red-200 leading-relaxed">{error}</p>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-600/50 rounded-lg p-3 sm:p-4 flex items-start gap-2 shadow-sm">
+          <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+          <p className="text-xs sm:text-sm text-red-600 dark:text-red-200 leading-relaxed">{error}</p>
         </div>
       )}
 
       {/* Checking User State */}
       {isCheckingUser && (
-        <div className="flex items-center justify-center gap-3 py-8 sm:py-10">
-          <Loader2 className="w-5 h-5 animate-spin text-[#FF6E71]" />
-          <span className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400">Verifying your account...</span>
+        <div className="flex items-center justify-center gap-2 py-6 sm:py-8">
+          <Loader2 className="w-4 h-4 animate-spin text-[#FF6E71]" />
+          <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Verifying your account...</span>
         </div>
       )}
 
@@ -81,13 +81,13 @@ export default function LoginForm({
           onClick={handleExistingUserLogin}
           disabled={isAuthenticating || !ready}
           className={cn(
-            "w-full flex items-center justify-center gap-2 px-4 py-4 sm:py-5",
-            "bg-zinc-900 border border-zinc-800 rounded-xl",
+            "w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-4",
+            "bg-zinc-900 border border-zinc-800 rounded-lg",
             "text-white font-medium",
             "hover:bg-zinc-800 transition-all duration-200",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             "focus:outline-none focus:ring-2 focus:ring-[#FF6E71] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black",
-            "min-h-[56px] sm:min-h-[60px] text-base sm:text-lg",
+            "min-h-[48px] sm:min-h-[52px] text-sm sm:text-base",
             "active:scale-[0.98] transform"
           )}
         >
@@ -103,17 +103,17 @@ export default function LoginForm({
       )}
 
       {/* Divider */}
-      <div className="flex items-center gap-4 py-4 sm:py-5">
+      <div className="flex items-center gap-3 py-3 sm:py-4">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-zinc-300 to-transparent dark:from-transparent dark:via-zinc-700 dark:to-transparent" />
-        <span className="text-sm sm:text-base text-zinc-500 dark:text-zinc-400 font-medium px-3">or</span>
+        <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-medium px-2">or</span>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-zinc-300 to-transparent dark:from-transparent dark:via-zinc-700 dark:to-transparent" />
       </div>
 
       {/* Invite Code Form */}
       {ready && (
-        <form onSubmit={handleInviteSubmit} className="space-y-5 sm:space-y-6">
+        <form onSubmit={handleInviteSubmit} className="space-y-4 sm:space-y-5">
           <div>
-            <label htmlFor="invite-code" className="block text-sm sm:text-base font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+            <label htmlFor="invite-code" className="block text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Invite Code
             </label>
             <input
@@ -123,13 +123,13 @@ export default function LoginForm({
               onChange={handleInviteChange}
               placeholder="Enter your invite code"
               className={cn(
-                "w-full px-4 py-4 sm:py-5 rounded-xl text-base sm:text-lg",
+                "w-full px-3 py-3 sm:py-4 rounded-lg text-sm sm:text-base",
                 "bg-white dark:bg-zinc-950 border text-zinc-900 dark:text-white",
                 "placeholder:text-zinc-500 dark:placeholder:text-zinc-400",
                 "focus:outline-none focus:ring-2 focus:ring-[#FF6E71] focus:border-transparent",
                 "transition-all duration-200 shadow-sm",
                 "hover:border-zinc-300 dark:hover:border-zinc-600",
-                "min-h-[56px] sm:min-h-[60px]",
+                "min-h-[48px] sm:min-h-[52px]",
                 error ? "border-red-500 bg-red-50/50 dark:bg-red-900/10" : "border-zinc-200 dark:border-zinc-700"
               )}
               autoFocus
@@ -143,7 +143,7 @@ export default function LoginForm({
             type="submit"
             disabled={!inviteCode || isValidating || isAuthenticating || !ready}
             className={cn(
-              "w-full min-h-[56px] sm:min-h-[60px] text-base sm:text-lg font-semibold rounded-xl",
+              "w-full min-h-[48px] sm:min-h-[52px] text-sm sm:text-base font-semibold rounded-lg",
               "bg-[#FF6E71] hover:bg-[#E55A5D] text-white",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors duration-200",
@@ -163,8 +163,8 @@ export default function LoginForm({
       )}
 
       {/* Terms */}
-      <div className="pt-5 sm:pt-6">
-        <p className="text-sm sm:text-base text-zinc-500 dark:text-zinc-400 text-center leading-relaxed">
+      <div className="pt-4 sm:pt-5">
+        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 text-center leading-relaxed">
           By continuing, you acknowledge AUBRAI&apos;s{' '}
           <a 
             href="/privacy" 

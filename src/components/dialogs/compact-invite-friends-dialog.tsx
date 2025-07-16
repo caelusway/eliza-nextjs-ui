@@ -281,7 +281,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
           <DialogPrimitive.Content 
-            className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] focus:outline-none"
+            className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] focus:outline-none overflow-visible"
             >
             <DialogPrimitive.Title className="sr-only">
               Invite friends to AUBRAI
@@ -329,7 +329,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
 
             {/* Invite List */}
             <div className="px-6 pb-6">
-              <div className="space-y-3 max-h-[320px] overflow-y-auto">
+              <div className="space-y-3 max-h-[320px] overflow-y-auto overflow-x-visible">
                 {/* Invite Rows */}
                 {isLoading ? (
                   <div className="text-center py-8">
@@ -369,7 +369,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                 <Copy className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                               </button>
                               {hoveredButton === `copy-${invite.id}` && (
-                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[60] shadow-lg">
+                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg overflow-visible">
                                   Copy code
                                 </div>
                               )}
@@ -387,7 +387,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                 <Link className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                               </button>
                               {hoveredButton === `share-${invite.id}` && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[60] shadow-lg">
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg">
                                   Share link
                                 </div>
                               )}
@@ -411,7 +411,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                   )}
                                 </button>
                                 {hoveredButton === `send-${invite.id}` && (
-                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[60] shadow-lg">
+                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg">
                                     Send invite
                                   </div>
                                 )}

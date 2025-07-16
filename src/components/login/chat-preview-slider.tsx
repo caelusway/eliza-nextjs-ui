@@ -108,14 +108,14 @@ export default function ChatPreviewSlider() {
         <img
           src="/assets/aubrai-login-image.png"
           alt="AUBRAI Background"
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-100 dark:opacity-100 scale-85"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-100 dark:opacity-100 scale-75"
         />
         {/* Light overlay for better text contrast */}
         <div className="absolute inset-0  z-10"></div>
       </div>
 
       {/* Header */}
-      <div className="relative z-30 flex-shrink-0 px-3 sm:px-4 md:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-6 lg:pt-8 pb-2 sm:pb-2 md:pb-3 lg:pb-4">
+      <div className="relative z-30 flex-shrink-0 px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-4 md:pt-6 lg:pt-8 pb-2 sm:pb-2 md:pb-3 lg:pb-4">
         <div className="max-w-full lg:max-w-2xl mx-auto">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 md:mb-4 lg:mb-6">
             <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-[#FF6E71] to-[#E55A5D] rounded-full flex items-center justify-center shadow-md">
@@ -134,7 +134,7 @@ export default function ChatPreviewSlider() {
       </div>
 
       {/* Slider Container */}
-      <div className="relative z-30 flex-1 relative overflow-hidden min-h-0 mt-5">
+      <div className="relative z-30 flex-1 relative overflow-hidden min-h-0 mt-8">
         <div 
           className={cn(
             "flex h-full transition-all duration-700 ease-out",
@@ -143,14 +143,14 @@ export default function ChatPreviewSlider() {
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         >
           {chatSlides.map((slide, slideIndex) => (
-            <div key={slide.id} className="w-full h-full flex-shrink-0 px-3 sm:px-4 md:px-6 lg:px-8">
-              <div className="w-full max-w-full lg:max-w-2xl mx-auto h-full flex flex-col justify-center">
-                <div className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6 py-2 sm:py-3 md:py-4 overflow-y-auto">
+            <div key={slide.id} className="w-full h-full flex-shrink-0 px-3 sm:px-4 md:px-4 lg:px-6">
+              <div className="w-full max-w-full lg:max-w-xl mx-auto h-full flex flex-col justify-center">
+                <div className="space-y-2 sm:space-y-2 md:space-y-3 lg:space-y-4 py-2 sm:py-2 md:py-3 overflow-y-auto">
                   {slide.messages.map((message, idx) => (
                     <div
                       key={idx}
                       className={cn(
-                        "flex items-start gap-2 sm:gap-2 md:gap-3 transition-all duration-500",
+                        "flex items-start gap-2 sm:gap-2 md:gap-2 transition-all duration-500",
                         message.type === 'user' ? "justify-end" : "justify-start",
                         slideIndex === currentSlide ? "animate-in fade-in-0 slide-in-from-bottom-2" : "opacity-0"
                       )}
@@ -159,27 +159,27 @@ export default function ChatPreviewSlider() {
                       }}
                     >
                       {message.type === 'aubrai' && (
-                        <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-[#FF6E71] to-[#E55A5D] rounded-full flex items-center justify-center shadow-sm mt-0.5 sm:mt-1">
-                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3 lg:h-3 bg-white rounded-full opacity-90"></div>
+                        <div className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-6 lg:h-6 bg-gradient-to-br from-[#FF6E71] to-[#E55A5D] rounded-full flex items-center justify-center shadow-sm mt-0.5 sm:mt-1">
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 lg:w-2.5 lg:h-2.5 bg-white rounded-full opacity-90"></div>
                         </div>
                       )}
                       
                       <div
                         className={cn(
-                          "max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg sm:rounded-xl md:rounded-2xl px-2.5 sm:px-3 md:px-4 lg:px-5 py-2 sm:py-2.5 md:py-3 lg:py-4 shadow-sm backdrop-blur-sm border border-opacity-50",
+                          "max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg sm:rounded-lg md:rounded-xl px-2 sm:px-2.5 md:px-3 lg:px-4 py-2 sm:py-2 md:py-2.5 lg:py-3 shadow-sm backdrop-blur-sm border border-opacity-50",
                           message.type === 'user'
                             ? "bg-gradient-to-br from-[#FF6E71]/90 to-[#E55A5D]/90 text-white shadow-[#FF6E71]/20 border-[#FF6E71]/30"
                             : "bg-white/75 dark:bg-zinc-800/75 text-zinc-900 dark:text-zinc-100 shadow-zinc-900/5 dark:shadow-zinc-100/5 border-zinc-200/40 dark:border-zinc-700/40"
                         )}
                       >
-                        <p className="text-xs sm:text-xs md:text-sm lg:text-sm leading-relaxed font-medium opacity-95">
+                        <p className="text-xs sm:text-xs md:text-xs lg:text-sm leading-relaxed font-medium opacity-95">
                           {message.content}
                         </p>
                       </div>
 
                       {message.type === 'user' && (
-                        <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-zinc-400 to-zinc-500 rounded-full flex items-center justify-center shadow-sm mt-0.5 sm:mt-1">
-                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3 lg:h-3 bg-white rounded-full opacity-90"></div>
+                        <div className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-6 lg:h-6 bg-gradient-to-br from-zinc-400 to-zinc-500 rounded-full flex items-center justify-center shadow-sm mt-0.5 sm:mt-1">
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 lg:w-2.5 lg:h-2.5 bg-white rounded-full opacity-90"></div>
                         </div>
                       )}
                     </div>
@@ -192,8 +192,8 @@ export default function ChatPreviewSlider() {
       </div>
 
       {/* Enhanced Navigation Dots */}
-      <div className="relative z-30 flex-shrink-0 pb-3 sm:pb-4 md:pb-6 lg:pb-8 pt-1 sm:pt-2 md:pt-3 lg:pt-4 flex justify-center items-center gap-2 sm:gap-3">
-        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-white/70 dark:bg-zinc-800/70 backdrop-blur-sm rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 shadow-sm border border-zinc-200/30 dark:border-zinc-700/30">
+      <div className="relative z-30 flex-shrink-0 pb-3 sm:pb-4 md:pb-4 lg:pb-6 pt-1 sm:pt-2 md:pt-2 lg:pt-3 flex justify-center items-center gap-2 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-1.5 bg-white/70 dark:bg-zinc-800/70 backdrop-blur-sm rounded-full px-2 sm:px-3 md:px-3 py-1 sm:py-1.5 md:py-1.5 shadow-sm border border-zinc-200/30 dark:border-zinc-700/30">
           {chatSlides.map((_, index) => (
             <button
               key={index}
@@ -201,8 +201,8 @@ export default function ChatPreviewSlider() {
               className={cn(
                 "transition-all duration-300 rounded-full",
                 index === currentSlide
-                  ? "w-4 sm:w-6 md:w-8 h-2 sm:h-2.5 md:h-3 bg-gradient-to-r from-[#FF6E71] to-[#E55A5D] shadow-sm"
-                  : "w-2 sm:w-2.5 md:w-3 h-2 sm:h-2.5 md:h-3 bg-zinc-300/80 dark:bg-zinc-600/80 hover:bg-zinc-400/80 dark:hover:bg-zinc-500/80 hover:scale-110"
+                  ? "w-3 sm:w-4 md:w-6 h-1.5 sm:h-2 md:h-2.5 bg-gradient-to-r from-[#FF6E71] to-[#E55A5D] shadow-sm"
+                  : "w-1.5 sm:w-2 md:w-2.5 h-1.5 sm:h-2 md:h-2.5 bg-zinc-300/80 dark:bg-zinc-600/80 hover:bg-zinc-400/80 dark:hover:bg-zinc-500/80 hover:scale-110"
               )}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -211,8 +211,8 @@ export default function ChatPreviewSlider() {
       </div>
 
       {/* Subtle corner decorations - softened */}
-      <div className="absolute top-0 left-0 w-16 sm:w-24 md:w-32 h-16 sm:h-24 md:h-32 bg-gradient-to-br from-[#FF6E71]/5 to-transparent rounded-full blur-2xl z-20"></div>
-      <div className="absolute bottom-0 right-0 w-20 sm:w-32 md:w-40 h-20 sm:h-32 md:h-40 bg-gradient-to-tl from-[#FF6E71]/5 to-transparent rounded-full blur-2xl z-20"></div>
+      <div className="absolute top-0 left-0 w-12 sm:w-16 md:w-24 h-12 sm:h-16 md:h-24 bg-gradient-to-br from-[#FF6E71]/5 to-transparent rounded-full blur-2xl z-20"></div>
+      <div className="absolute bottom-0 right-0 w-16 sm:w-20 md:w-32 h-16 sm:h-20 md:h-32 bg-gradient-to-tl from-[#FF6E71]/5 to-transparent rounded-full blur-2xl z-20"></div>
     </div>
   );
 } 

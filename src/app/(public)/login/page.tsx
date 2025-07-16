@@ -65,7 +65,7 @@ function LoginPageContent() {
         const { getUserRowIdByPrivyId } = await import('@/services/user-service');
         const existingUserId = await getUserRowIdByPrivyId(user.id);
         
-        if (!existingUserId) {
+        if (existingUserId) {
           // User exists, proceed to chat
           router.push('/chat');
         } else {
@@ -240,37 +240,37 @@ function LoginPageContent() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-white dark:bg-black">
       {/* Left Panel - Auth Section - Full width on mobile, 50% on desktop */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 min-h-screen lg:min-h-auto">
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-md xl:max-w-lg">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-6 lg:p-8 min-h-screen lg:min-h-auto">
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-md lg:max-w-md xl:max-w-md">
           {/* Logo */}
-          <div className="mb-6 sm:mb-8 md:mb-10 lg:mb-12 text-center lg:text-left">
+          <div className="mb-6 sm:mb-6 md:mb-8 lg:mb-8 text-center lg:text-left">
             <Image 
               src="/assets/aubrai_logo_white.png" 
               alt="AUBRAI" 
-              width={200} 
-              height={50} 
-              className="h-14 sm:h-16 md:h-16 lg:h-16 w-auto mx-auto lg:mx-0"
+              width={180} 
+              height={45} 
+              className="h-10 sm:h-12 md:h-12 lg:h-12 w-auto mx-auto lg:mx-0"
             />
           </div>
 
           {/* Main Content */}
-          <div className="space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8">
+          <div className="space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6">
             {/* Hero Section */}
             <div className="text-center lg:text-left">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-4xl font-bold text-zinc-900 dark:text-white mb-3 sm:mb-4 leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-3xl font-bold text-zinc-900 dark:text-white mb-2 sm:mb-3 leading-tight">
                 Your longevity co-pilot
               </h1>
-              <p className="text-base sm:text-lg md:text-xl lg:text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              <p className="text-sm sm:text-base md:text-base lg:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 Expert AI guidance from Dr. Aubrey de Grey&apos;s research.
               </p>
             </div>
 
             {/* Welcome Message for New Users */}
-            <div className="relative bg-gradient-to-r from-[#FF6E71]/10 to-[#FF6E71]/5 dark:from-[#FF6E71]/20 dark:to-[#FF6E71]/10 border border-[#FF6E71]/30 dark:border-[#FF6E71]/40 rounded-xl p-4 sm:p-5 md:p-6 lg:p-6 overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-[#FF6E71]/5 rounded-full blur-xl"></div>
-              <div className="relative flex items-start gap-3 sm:gap-4">
-                <div className="flex-shrink-0 w-2 h-2 bg-[#FF6E71] rounded-full mt-2 animate-pulse" />
-                <div className="text-sm sm:text-base">
+            <div className="relative bg-gradient-to-r from-[#FF6E71]/10 to-[#FF6E71]/5 dark:from-[#FF6E71]/20 dark:to-[#FF6E71]/10 border border-[#FF6E71]/30 dark:border-[#FF6E71]/40 rounded-lg p-3 sm:p-4 md:p-4 lg:p-4 overflow-hidden">
+              <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#FF6E71]/5 rounded-full blur-xl"></div>
+              <div className="relative flex items-start gap-2 sm:gap-3">
+                <div className="flex-shrink-0 w-1.5 h-1.5 bg-[#FF6E71] rounded-full mt-2 animate-pulse" />
+                <div className="text-xs sm:text-sm">
                   <p className="text-[#FF6E71] dark:text-[#FF6E71] font-semibold mb-1">Welcome to AUBRAI</p>
                   <p className="text-[#FF6E71]/80 dark:text-[#FF6E71]/70 leading-relaxed">
                     Join thousands exploring longevity science with AI-powered insights from cutting-edge research.
@@ -280,7 +280,7 @@ function LoginPageContent() {
             </div>
 
             {/* Auth Container */}
-            <div className="pt-2 sm:pt-4 md:pt-6">
+            <div className="pt-2 sm:pt-3 md:pt-4">
               <LoginForm
                 onInviteSubmit={handleInviteSubmit}
                 onSignIn={handleSignIn}
