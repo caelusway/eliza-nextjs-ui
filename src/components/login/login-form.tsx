@@ -76,7 +76,7 @@ export default function LoginForm({
       )}
 
       {/* Sign In Button for Existing Users */}
-      {!isCheckingUser && ready && (
+      {isCheckingUser && ready && (
         <button
           onClick={handleExistingUserLogin}
           disabled={isAuthenticating || !ready}
