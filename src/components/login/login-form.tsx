@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePrivy } from '@privy-io/react-auth';
 
@@ -33,12 +33,12 @@ export default function LoginForm({
     return formatted.slice(0, 12);
   };
 
-  const handleInviteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInviteChange = (e: { target: { value: string } }) => {
     const formatted = formatInviteCode(e.target.value);
     setInviteCode(formatted);
   };
 
-  const handleInviteSubmit = (e: React.FormEvent) => {
+  const handleInviteSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (!inviteCode.trim()) return;
     onInviteSubmit(inviteCode);
@@ -76,7 +76,7 @@ export default function LoginForm({
       )}
 
       {/* Sign In Button for Existing Users */}
-      {isCheckingUser && ready && (
+      {!isCheckingUser && ready && (
         <button
           onClick={handleExistingUserLogin}
           disabled={isAuthenticating || !ready}
@@ -139,21 +139,26 @@ export default function LoginForm({
             />
           </div>
 
-          <Button
+          <button
             type="submit"
             disabled={!inviteCode || isValidating || isAuthenticating || !ready}
-            color="brand"
-            className="w-full min-h-[56px] sm:min-h-[60px] text-base sm:text-lg font-semibold rounded-xl"
+            className={cn(
+              "w-full min-h-[56px] sm:min-h-[60px] text-base sm:text-lg font-semibold rounded-xl",
+              "bg-[#FF6E71] hover:bg-[#E55A5D] text-white",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              "transition-colors duration-200",
+              "flex items-center justify-center gap-2"
+            )}
           >
             {isValidating || isAuthenticating ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 <span>{isValidating ? 'Validating...' : 'Authenticating...'}</span>
               </>
             ) : (
               <span>Continue with invite</span>
             )}
-          </Button>
+          </button>
         </form>
       )}
 

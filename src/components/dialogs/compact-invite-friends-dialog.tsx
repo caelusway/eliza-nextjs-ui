@@ -369,7 +369,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                 <Copy className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                               </button>
                               {hoveredButton === `copy-${invite.id}` && (
-                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[60] shadow-lg">
                                   Copy code
                                 </div>
                               )}
@@ -387,7 +387,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                 <Link className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                               </button>
                               {hoveredButton === `share-${invite.id}` && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[60] shadow-lg">
                                   Share link
                                 </div>
                               )}
@@ -411,7 +411,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                   )}
                                 </button>
                                 {hoveredButton === `send-${invite.id}` && (
-                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[60] shadow-lg">
                                     Send invite
                                   </div>
                                 )}

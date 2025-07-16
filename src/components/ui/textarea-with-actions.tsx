@@ -4,10 +4,10 @@ import { ArrowUpIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui';
-import { SpeechToTextButton } from '@/components/ui';
-import { DeepResearchButton } from '@/components/ui';
-import { FileUploadButton } from '@/components/ui';
+import { Button } from '@/components/ui/button';
+import { SpeechToTextButton } from '@/components/ui/speech-to-text-button';
+import { DeepResearchButton } from '@/components/ui/deep-research-button';
+import { FileUploadButton } from '@/components/ui/file-upload-button';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 const ChatForm = function ChatForm({
@@ -23,8 +23,8 @@ const ChatForm = function ChatForm({
   disabled,
 }: {
   input: string;
-  onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onInputChange: (e: { target: { value: string } }) => void;
+  onSubmit: (e: { preventDefault: () => void }) => void;
   isLoading: boolean;
   placeholder?: string;
   onTranscript?: (text: string) => void;
@@ -33,7 +33,7 @@ const ChatForm = function ChatForm({
   onFileUpload?: (file: File, uploadResult: any) => void;
   disabled?: boolean;
 }) {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: { key: string; shiftKey: boolean; preventDefault: () => void }) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSubmit(e);
@@ -54,8 +54,9 @@ const ChatForm = function ChatForm({
             className={clsx([
               'size-full',
               'relative block size-full appearance-none',
-              'font-inter text-gray-900 dark:text-white',
-              'placeholder:text-gray-500 dark:placeholder:text-gray-400',
+              'font-inter text-white dark:text-white',
+              'placeholder:text-gray-400 dark:placeholder:text-gray-400',
+              'bg-transparent',
               'resize-none',
               'focus:outline-none',
               'scrollbar scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-thumb-rounded-full scrollbar-w-[4px]',
@@ -116,19 +117,26 @@ const ChatForm = function ChatForm({
             )}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <button
                   type="submit"
-                  color={(input ? 'blue' : 'dark') as 'blue' | 'dark'}
                   disabled={!input || disabled || isLoading}
                   aria-label="Submit"
-                  className="size-10 transition-all duration-200 hover:scale-105"
+                  className={clsx(
+                    "size-10 transition-all duration-200 hover:scale-105",
+                    "rounded-md flex items-center justify-center",
+                    "border border-gray-300 dark:border-gray-600",
+                    input 
+                      ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                      : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400",
+                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
                 >
                   {isLoading ? (
                     <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin" />
                   ) : (
                     <ArrowUpIcon className="!h-5 !w-5 !shrink-0" />
                   )}
-                </Button>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p>{isLoading ? 'Processing your message...' : input ? 'Send message (Enter)' : 'Type a message to send'}</p>
@@ -154,8 +162,8 @@ export const TextareaWithActions = function TextareaWithActions({
   disabled,
 }: {
   input: string;
-  onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onInputChange: (e: { target: { value: string } }) => void;
+  onSubmit: (e: { preventDefault: () => void }) => void;
   isLoading: boolean;
   placeholder?: string;
   onTranscript?: (text: string) => void;
@@ -177,15 +185,15 @@ export const TextareaWithActions = function TextareaWithActions({
         <div
           className={clsx([
             'relative block size-full appearance-none overflow-hidden rounded-xl',
-            'text-base leading-6 text-gray-950 placeholder:text-gray-500 dark:text-white dark:placeholder:text-gray-400',
-            'bg-zinc-50 dark:bg-zinc-900',
+            'text-base leading-6 text-white placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-400',
+            'bg-zinc-900 dark:bg-zinc-900',
             'focus:outline-none',
             'data-[invalid]:border-red-500 data-[invalid]:data-[hover]:border-red-500 data-[invalid]:dark:border-red-600 data-[invalid]:data-[hover]:dark:border-red-600',
             'disabled:border-gray-950/20 disabled:dark:border-white/15 disabled:dark:bg-white/[2.5%] dark:data-[hover]:disabled:border-white/15',
             'ring-offset-background',
             'focus-within:ring-2 focus-within:ring-blue-500/20 dark:focus-within:ring-blue-400/20',
-            'border-2 border-gray-200 dark:border-gray-800',
-            'hover:border-gray-300 dark:hover:border-gray-600',
+            'border-2 border-gray-700 dark:border-gray-800',
+            'hover:border-gray-600 dark:hover:border-gray-600',
             'transition-all duration-200',
             'shadow-sm hover:shadow-md',
             'relative',
