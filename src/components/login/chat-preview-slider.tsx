@@ -115,7 +115,7 @@ export default function ChatPreviewSlider() {
       </div>
 
       {/* Header */}
-      <div className="relative z-30 flex-shrink-0 px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-4 md:pt-6 lg:pt-8 pb-2 sm:pb-2 md:pb-3 lg:pb-4">
+      <div className="relative z-30 flex-shrink-0 px-6 mt-6 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-4 md:pt-6 lg:pt-8 pb-2 sm:pb-2 md:pb-3 lg:pb-4">
         <div className="max-w-full lg:max-w-2xl mx-auto">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 md:mb-4 lg:mb-6">
             <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-[#FF6E71] to-[#E55A5D] rounded-full flex items-center justify-center shadow-md">

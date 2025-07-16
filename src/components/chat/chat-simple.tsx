@@ -76,6 +76,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [channelId, setChannelId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
   const [isAgentThinking, setIsAgentThinking] = useState<boolean>(false);
+  const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>(
     'connecting'
   );
@@ -413,8 +414,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         const streamingMessage = { ...message, text: '' };
         setMessages((prev) => [...prev, streamingMessage]);
 
-        setIsAgentThinking(false);
-        setInputDisabled(false);
+        // Ensure thinking indicator shows for at least 800ms for better UX
+        const minimumThinkingDuration = 800;
+        const currentThinkingStartTime = thinkingStartTime || Date.now();
 
         // Stream the text character by character
         const fullText = message.text;
@@ -439,6 +441,16 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
           } else {
             clearInterval(streamInterval);
+            
+            // Only disable thinking indicator after minimum duration AND streaming is complete
+            const elapsedTime = Date.now() - currentThinkingStartTime;
+            const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
+            
+            setTimeout(() => {
+              setIsAgentThinking(false);
+              setInputDisabled(false);
+              setThinkingStartTime(null);
+            }, remainingTime);
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
       } else {
@@ -461,8 +473,17 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     // Message complete handler
     const handleMessageComplete = () => {
       console.log('[Chat] Message complete');
-      setIsAgentThinking(false);
-      setInputDisabled(false);
+      // Ensure minimum thinking duration for better UX
+      const minimumThinkingDuration = 800;
+      const currentThinkingStartTime = thinkingStartTime || Date.now();
+      const elapsedTime = Date.now() - currentThinkingStartTime;
+      const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
+      
+      setTimeout(() => {
+        setIsAgentThinking(false);
+        setInputDisabled(false);
+        setThinkingStartTime(null);
+      }, remainingTime);
     };
 
     // Attach event listeners
@@ -531,6 +552,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       setMessages((prev) => [...prev, userMessage]);
       setIsAgentThinking(true);
+      setThinkingStartTime(Date.now());
       setInputDisabled(true);
 
       console.log('[Chat] Sending message to session channel:', {
@@ -554,6 +576,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         console.log('[Chat] Timeout reached, re-enabling input');
         setInputDisabled(false);
         setIsAgentThinking(false);
+        setThinkingStartTime(null);
       }, 60000);
     };
   });

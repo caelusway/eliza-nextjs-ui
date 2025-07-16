@@ -1,21 +1,29 @@
 export const siteConfig = {
-  name: process.env.NEXT_PUBLIC_AGENT_NAME || 'Bio Launchpad Agent',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'https://ai.eliza.how/' || 'http://localhost:4000',
-  description: process.env.NEXT_PUBLIC_AGENT_DESCRIPTION || 'Bio Launchpad Agent',
+  name: process.env.NEXT_PUBLIC_AGENT_NAME || 'AUBRAI - Longevity Lab AI',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'https://aubr.ai' || 'http://localhost:4000',
+  description: process.env.NEXT_PUBLIC_AGENT_DESCRIPTION || 'Advanced Understanding of Biological Research through AI - Accelerating longevity breakthroughs for the RMR2 project',
   ogImage: '/og.png',
-  creator: 'BioProtocol',
+  creator: 'AUBRAI Team',
+  keywords: ['longevity', 'AI', 'research', 'RMR2', 'Aubrey de Grey', 'mouse rejuvenation', 'bioDAO', 'science'],
   icons: [
     {
       rel: 'icon',
-      type: 'image/png',
+      type: 'image/x-icon',
       url: '/favicon.ico',
-      media: '(prefers-color-scheme: light)',
     },
     {
       rel: 'icon',
       type: 'image/png',
-      url: '/favicon.ico',
-      media: '(prefers-color-scheme: dark)',
+      url: '/favicon.png',
+    },
+    {
+      rel: 'apple-touch-icon',
+      url: '/apple-touch-icon.png',
+    },
+    {
+      rel: 'apple-touch-icon',
+      sizes: '180x180',
+      url: '/apple-touch-icon.png',
     },
   ],
 };
