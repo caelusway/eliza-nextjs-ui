@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSessions } from '@/contexts/SessionsContext';
 
@@ -123,7 +122,8 @@ export const ChatSessions = ({
   // Render grouped sessions like the old UI
   const renderConversationGroups = () => {
     return Object.entries(groupedSessions).map(([group, groupSessions]) => {
-      if (groupSessions.length === 0) return null;
+      const sessions = groupSessions as ChatSession[];
+      if (sessions.length === 0) return null;
       
       return (
         <div key={group} className="mb-4">
@@ -131,7 +131,7 @@ export const ChatSessions = ({
             {group}
           </div>
           <div className="space-y-1">
-            {groupSessions.map(session => (
+            {sessions.map(session => (
               <div
                 key={session.id}
                 className={cn(
@@ -142,18 +142,12 @@ export const ChatSessions = ({
                 )}
                 onClick={() => handleSessionClick(session)}
               >
-                <div className="flex-1 flex items-center gap-2 px-3 py-2 text-sm text-zinc-900 dark:text-white text-left min-w-0">
-                  <MessageCircle className="w-4 h-4 flex-shrink-0 text-zinc-500 dark:text-zinc-400" />
+                <div className="flex-1 flex items-center px-3 py-2 text-sm text-zinc-900 dark:text-white text-left min-w-0">
                   <div className="flex-1 min-w-0">
                     <div className="truncate font-medium">
                       {session.title || 'New conversation'}
                     </div>
-                    {session.preview && (
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
-                        {session.isFromAgent ? '🤖 ' : ''}
-                        {session.preview}
-                      </div>
-                    )}
+                    
                   </div>
                 </div>
               </div>

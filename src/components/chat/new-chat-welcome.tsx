@@ -1,7 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
 
 interface NewChatWelcomeProps {
   userId: string;
@@ -16,6 +17,8 @@ const SUGGESTED_PROMPTS = [
 
 export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const router = useRouter();
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePromptClick = async (prompt: string) => {
     if (!userId) return;
@@ -45,10 +48,14 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
     }
   };
 
-  const handleNewChat = async () => {
-    if (!userId) return;
+  const handleDirectSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    
+    if (!userId || !input.trim()) return;
 
     try {
+      setIsLoading(true);
+      
       const response = await fetch('/api/chat-session/create', {
         method: 'POST',
         headers: {
@@ -56,7 +63,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         },
         body: JSON.stringify({
           userId,
-          initialMessage: 'Hello! I would like to chat about longevity research.',
+          initialMessage: input.trim(),
         }),
       });
 
@@ -70,6 +77,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
       console.error('[NewChatWelcome] Error creating session:', err);
+      setIsLoading(false);
     }
   };
 
@@ -112,22 +120,16 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         </div>
 
         <div className="text-center">
-          <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
-            <p className="text-zinc-700 dark:text-zinc-300 mb-4 sm:mb-6 text-sm sm:text-base lg:text-lg">
-              Ready to start your research journey?
-            </p>
-            <Button
-              color="brand"
-              onClick={handleNewChat}
-              className="px-3 sm:px-5 lg:px-7 py-2 sm:py-1.5 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium rounded-md sm:rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
-            >
-              Start New Chat
-            </Button>
+          <div className="mb-4 sm:mb-6">
+            <TextareaWithActions
+              input={input}
+              onInputChange={(e) => setInput(e.target.value)}
+              onSubmit={handleDirectSubmit}
+              isLoading={isLoading}
+              placeholder="Ask me anything about longevity research, anti-aging therapies, or health optimization..."
+              disabled={isLoading}
+            />
           </div>
-          
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 px-2 sm:px-0">
-            Ask me anything about longevity research, anti-aging therapies, or health optimization
-          </p>
         </div>
       </div>
     </div>

@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 
 interface NewChatButtonProps {
   onNewChat?: () => void;
+  isCollapsed?: boolean;
 }
 
-export function NewChatButton({ onNewChat }: NewChatButtonProps) {
+export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonProps) {
   const router = useRouter();
   const { getUserId } = useUserManager();
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -61,16 +62,25 @@ export function NewChatButton({ onNewChat }: NewChatButtonProps) {
         onClick={handleCreateNewSession}
         disabled={isCreatingSession}
         className={cn(
-          "w-full flex items-center gap-3 p-3 rounded-lg transition-colors",
+          "flex items-center rounded-lg transition-colors",
           "bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white",
           "border border-dashed border-white/20 hover:border-white/40",
-          "disabled:opacity-50 disabled:cursor-not-allowed"
+          "disabled:opacity-50 disabled:cursor-not-allowed",
+          isCollapsed 
+            ? "w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 justify-center" 
+            : "w-full gap-3 p-3"
         )}
+        title={isCollapsed ? (isCreatingSession ? 'Creating...' : 'New Chat') : undefined}
       >
-        <Plus className="w-4 h-4 flex-shrink-0" />
-        <span className="text-sm font-medium">
-          {isCreatingSession ? 'Creating...' : 'New Chat'}
-        </span>
+        <Plus className={cn(
+          "flex-shrink-0",
+          isCollapsed ? "w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6" : "w-4 h-4"
+        )} />
+        {!isCollapsed && (
+          <span className="text-sm font-medium">
+            {isCreatingSession ? 'Creating...' : 'New Chat'}
+          </span>
+        )}
       </button>
       {error && (
         <div className="mt-2 text-xs text-red-600 dark:text-red-400">

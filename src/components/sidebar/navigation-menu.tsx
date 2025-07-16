@@ -12,7 +12,7 @@ interface NavigationMenuProps {
 
 export function NavigationMenu({ onShowInviteDialog, onMobileMenuClose }: NavigationMenuProps) {
   return (
-    <div className="p-4 space-y-2">
+    <div className="px-4 py-2 space-y-1">
       {/* Invite Friends */}
       <button
         onClick={() => {

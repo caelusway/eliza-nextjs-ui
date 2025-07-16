@@ -198,7 +198,7 @@ export const TextareaWithActions = function TextareaWithActions({
         <div
           className={clsx([
             'relative block size-full appearance-none overflow-visible rounded-xl',
-            'text-base leading-6 text-white placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-400',
+            'text-base leading-3 text-white placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-400',
             'bg-zinc-900 dark:bg-zinc-900',
             'focus:outline-none',
             'data-[invalid]:border-red-500 data-[invalid]:data-[hover]:border-red-500 data-[invalid]:dark:border-red-600 data-[invalid]:data-[hover]:dark:border-red-600',

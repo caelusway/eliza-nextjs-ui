@@ -15,7 +15,7 @@ export function ChatSessionsList({ userId, onMobileMenuClose }: ChatSessionsList
     <div className="px-4 pb-4">
       <div className="mb-3">
       </div>
-      <div className="max-h-[40vh] overflow-y-auto">
+      <div>
         <ChatSessions 
           userId={userId} 
           showSidebar={true} 
