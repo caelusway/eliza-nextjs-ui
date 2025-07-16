@@ -1,0 +1,45 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { Users, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface NavigationMenuProps {
+  onShowInviteDialog: () => void;
+  onMobileMenuClose?: () => void;
+}
+
+export function NavigationMenu({ onShowInviteDialog, onMobileMenuClose }: NavigationMenuProps) {
+  return (
+    <div className="p-4 space-y-2">
+      {/* Invite Friends */}
+      <button
+        onClick={() => {
+          onShowInviteDialog();
+          onMobileMenuClose?.();
+        }}
+        className={cn(
+          "w-full flex items-center gap-3 p-3 rounded-lg transition-colors",
+          "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+        )}
+      >
+        <Users className="w-4 h-4 flex-shrink-0" />
+        <span className="text-sm">Invite Friends</span>
+      </button>
+
+      {/* Account */}
+      <Link
+        href="/account"
+        onClick={() => onMobileMenuClose?.()}
+        className={cn(
+          "w-full flex items-center gap-3 p-3 rounded-lg transition-colors",
+          "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+        )}
+      >
+        <User className="w-4 h-4 flex-shrink-0" />
+        <span className="text-sm">Account</span>
+      </Link>
+    </div>
+  );
+} 

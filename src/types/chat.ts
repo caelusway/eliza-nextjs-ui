@@ -1,6 +1,6 @@
 import { Message } from 'ai';
 
-export interface ChatStreamData {}
+export type ChatStreamData = Record<string, unknown>;
 
 export interface ChatRequest {
   messages: Message[];

@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
-import { siteConfig } from '@/app/constants';
-import { inter } from '@/app/fonts';
+import { siteConfig } from '@/app/shared/constants';
+import { inter } from '@/app/shared/fonts';
 import '@/app/globals.css';
-import { ProgressBar } from '@/app/progress-bar';
-import { Toaster } from '@/app/toaster';
-import { Header } from '@/components/header';
-import { PrivyClientProvider } from './privy-client-provider';
+import { ProgressBar } from '@/app/core/progress-bar';
+import { Toaster } from '@/app/core/toaster';
+import { ConditionalHeader } from '@/components/layout/conditional-header';
+import { PrivyClientProvider } from './core/privy-client-provider';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -55,7 +55,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <PrivyClientProvider>
-                <Header />
+                <ConditionalHeader />
                 {children}
               </PrivyClientProvider>
             </ThemeProvider>

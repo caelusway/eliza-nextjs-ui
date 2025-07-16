@@ -1,6 +1,36 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
+/* Custom Colors for AUBRAI */
+:root {
+  --color-brand: #FF6E71;
+  --color-brand-hover: #FF5A5E;
+  --color-brand-light: #FFE8E8;
+  --color-brand-dark: #E55A5D;
+}
+
+/* Define custom color utilities */
+.text-brand { color: var(--color-brand); }
+.bg-brand { background-color: var(--color-brand); }
+.border-brand { border-color: var(--color-brand); }
+.hover\:bg-brand:hover { background-color: var(--color-brand-hover); }
+.hover\:text-brand:hover { color: var(--color-brand-hover); }
+.focus\:ring-brand:focus { --tw-ring-color: var(--color-brand); }
+.focus\:border-brand:focus { border-color: var(--color-brand); }
+
+/* Brand color with opacity */
+.bg-brand\/10 { background-color: rgb(255 110 113 / 0.1); }
+.bg-brand\/20 { background-color: rgb(255 110 113 / 0.2); }
+.bg-brand\/30 { background-color: rgb(255 110 113 / 0.3); }
+.bg-brand\/90 { background-color: rgb(255 110 113 / 0.9); }
+.border-brand\/30 { border-color: rgb(255 110 113 / 0.3); }
+.ring-brand\/20 { --tw-ring-color: rgb(255 110 113 / 0.2); }
+.hover\:border-brand\/30:hover { border-color: rgb(255 110 113 / 0.3); }
+
+/* Common spinner colors */
+.border-brand { border-color: var(--color-brand); }
+.border-b-2.border-brand { border-bottom-color: var(--color-brand); }
+
 .prose :where(pre):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply !px-0 !py-0;
 }
@@ -12,3 +42,158 @@
 .prose :where(p:last-child) {
   @apply !mb-0;
 }
+
+/* Custom animations for chat preview slider */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in-0 {
+  animation-name: fade-in;
+}
+
+.slide-in-from-bottom-2 {
+  animation-name: slide-in-from-bottom;
+}
+
+.duration-500 {
+  animation-duration: 500ms;
+}
+
+/* Enhanced glassmorphism effects */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Custom scrollbar for better consistency */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.8);
+}
+
+/* Privy Modal/Popup Black Theme Overrides */
+[data-privy-modal] {
+  background-color: #000000 !important;
+}
+
+[data-privy-modal] * {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Privy dropdown/popover styling */
+[role="dialog"] {
+  background-color: #000000 !important;
+}
+
+[role="dialog"] * {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Privy buttons */
+[data-privy-modal] button {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #FFFFFF !important;
+}
+
+[data-privy-modal] button:hover {
+  background-color: #E5E5E5 !important;
+}
+
+/* Privy cards/containers */
+[data-privy-modal] [role="group"],
+[data-privy-modal] [data-testid],
+[data-privy-modal] div[class*="container"],
+[data-privy-modal] div[class*="card"] {
+  background-color: #000000 !important;
+  border-color: #374151 !important;
+}
+
+/* Override any light backgrounds */
+[data-privy-modal] *[style*="background"] {
+  background-color: #000000 !important;
+}
+
+/* Privy text inputs */
+[data-privy-modal] input {
+  background-color: #1E1E1E !important;
+  color: #FFFFFF !important;
+  border-color: #374151 !important;
+}
+
+/* Privy links */
+[data-privy-modal] a {
+  color: #FFFFFF !important;
+}
+
+/* Custom Animations for Chat Preview Slider */
+@keyframes subtle-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  25% { transform: translateY(-8px) translateX(4px); }
+  50% { transform: translateY(-12px) translateX(0px); }
+  75% { transform: translateY(-8px) translateX(-4px); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+  33% { transform: translateY(-6px) translateX(3px) scale(1.1); }
+  66% { transform: translateY(-4px) translateX(-3px) scale(0.9); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+  20% { transform: translateY(-4px) translateX(2px) rotate(5deg); }
+  40% { transform: translateY(-6px) translateX(-2px) rotate(-3deg); }
+  60% { transform: translateY(-8px) translateX(1px) rotate(2deg); }
+  80% { transform: translateY(-4px) translateX(-1px) rotate(-1deg); }
+}
+
+

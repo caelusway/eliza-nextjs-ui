@@ -19,6 +19,14 @@ interface DMChannelMetadata {
   initialMessage?: string;
 }
 
+// Simple title generation from the old UI
+function generateTitle(content: string): string {
+  if (!content) return `Chat - ${new Date().toLocaleString()}`;
+  
+  const cleaned = content.replace(/\s+/g, ' ').trim();
+  return cleaned.length > 50 ? cleaned.substring(0, 47) + '...' : cleaned;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GetOrCreateDMChannelRequest = await request.json();
@@ -64,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Create new DM channel
     const finalChannelId = sessionId || `dm-${userId}-${agentId}-${Date.now()}`;
-    const channelName = `Chat - ${new Date().toLocaleString()}`;
+    const channelName = generateTitle(initialMessage || '');
 
     // Create DM channel metadata following official client pattern
     const metadata: DMChannelMetadata = {
