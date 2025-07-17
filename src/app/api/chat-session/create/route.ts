@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agent ID not configured' }, { status: 500 });
     }
 
+    // Log environment configuration for debugging
+    console.log(`[API] Environment check - API_BASE_URL: ${API_BASE_URL}, AGENT_ID: ${AGENT_ID?.substring(0, 8)}...`);
+
     // Generate a new session ID
     const sessionId = uuidv4();
 
@@ -23,7 +26,9 @@ export async function POST(request: NextRequest) {
 
     try {
       // Create DM channel for this session using get-or-create with sessionId
-      const dmChannelResponse = await fetch(`http://localhost:4000/api/dm-channel/get-or-create`, {
+      const dmChannelUrl = `${API_BASE_URL}/api/dm-channel/get-or-create`;
+      console.log(`[API] Calling DM channel API: ${dmChannelUrl}`);
+      const dmChannelResponse = await fetch(dmChannelUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
