@@ -79,7 +79,8 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <div
       className={clsx(
-        'w-full max-w-full overflow-hidden mb-2'
+        'w-full max-w-full overflow-hidden',
+        isAgentMessage(message) ? 'mb-6' : 'mb-2'
       )}
     >
       <div className={clsx(
@@ -92,10 +93,10 @@ export const ChatMessage = memo(function ChatMessage({
           isUserMessage(message) ? 'flex flex-col items-end max-w-[80%]' : 'flex flex-col items-start max-w-[90%]'
         )}>
                      <div className={clsx(
-             'font-inter rounded-2xl px-4 py-3 shadow-sm max-w-full',
+             'font-inter rounded-2xl shadow-sm max-w-full',
              isUserMessage(message) 
-               ? 'bg-gray-800 text-white dark:bg-gray-700' 
-               : 'bg-gray-50/80 dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 backdrop-blur-sm'
+               ? 'bg-gray-800 text-white dark:bg-gray-700 px-4 py-3' 
+               : 'bg-gray-50/80 dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 backdrop-blur-sm px-6 py-6'
            )}>
             <div
               className={clsx(
