@@ -1,7 +1,6 @@
 import { ArrowRightIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { memo, useState } from 'react';
-import Image from 'next/image';
 
 import { CodeBlock } from '@/components/ui';
 import { MemoizedMarkdown } from '@/components/ui';
@@ -80,49 +79,41 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <div
       className={clsx(
-        'w-full max-w-full overflow-hidden',
-        isUserMessage(message) && i !== 0
-          ? 'border-t pt-4 border-zinc-950/5 dark:border-white/5'
-          : ''
+        'w-full max-w-full overflow-hidden mb-2'
       )}
     >
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-8 h-8">
-          <Image
-            src={
-              isUserMessage(message)
-                ? '/assets/user.png'
-                : process.env.NEXT_PUBLIC_AGENT_LOGO || '/assets/bot.png'
-            }
-            alt={`${message.name} logo`}
-            width={64}
-            height={64}
-            className="rounded-full"
-          />
-        </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-base font-inter text-gray-900 dark:text-white font-bold">
-              {isUserMessage(message) ? 'You' : process.env.NEXT_PUBLIC_AGENT_NAME}
-            </span>
-            <span className="text-xs font-inter text-gray-500 dark:text-gray-400">{formattedTime}</span>
-          </div>
-          <div className="font-inter text-gray-900 dark:text-white">
+      <div className={clsx(
+        'flex items-start gap-3',
+        isUserMessage(message) ? 'flex-row-reverse' : 'flex-row'
+      )}>
+
+        <div className={clsx(
+          'flex-1 min-w-0 overflow-hidden',
+          isUserMessage(message) ? 'flex flex-col items-end max-w-[80%]' : 'flex flex-col items-start max-w-[90%]'
+        )}>
+                     <div className={clsx(
+             'font-inter rounded-2xl px-4 py-3 shadow-sm max-w-full',
+             isUserMessage(message) 
+               ? 'bg-gray-800 text-white dark:bg-gray-700' 
+               : 'bg-gray-50/80 dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 backdrop-blur-sm'
+           )}>
             <div
               className={clsx(
-                'prose prose-zinc dark:prose-invert !max-w-full',
-                'prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0',
+                'prose prose-zinc !max-w-full',
+                'prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0 prose-p:mb-0',
                 // Use consistent font and sizing
                 'prose-base font-inter',
                 // Override specific elements for better consistency
-                'prose-p:text-base prose-p:font-inter prose-p:text-gray-900 dark:prose-p:text-white',
-                'prose-li:text-base prose-li:font-inter prose-li:text-gray-900 dark:prose-li:text-white',
                 'prose-code:text-sm prose-code:font-mono',
                 'prose-h1:text-lg prose-h1:font-inter prose-h1:font-bold',
                 'prose-h2:text-base prose-h2:font-inter prose-h2:font-bold',
                 'prose-h3:text-base prose-h3:font-inter prose-h3:font-semibold',
-                // Prevent overflow
-                'overflow-hidden break-words'
+                // Prevent overflow and improve text wrapping
+                'overflow-hidden break-words hyphens-auto',
+                // Color overrides based on message type
+                isUserMessage(message) 
+                  ? 'prose-invert prose-p:text-white prose-li:text-white prose-headings:text-white prose-strong:text-white prose-em:text-white'
+                  : 'dark:prose-invert prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white prose-headings:text-gray-900 dark:prose-headings:text-white'
               )}
             >
               <MemoizedMarkdown
@@ -131,6 +122,14 @@ export const ChatMessage = memo(function ChatMessage({
                 options={markdownOptions}
               />
             </div>
+          </div>
+          
+          {/* Timestamp below the message bubble */}
+          <div className={clsx(
+            'text-xs font-inter text-gray-500 dark:text-gray-400 mt-1 px-2',
+            isUserMessage(message) ? 'text-right' : 'text-left'
+          )}>
+            {formattedTime}
           </div>
 
           {/* Play Sound Button - only for agent messages */}
@@ -141,8 +140,9 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
+          {/* Follow-up prompts - only for agent messages */}
           {isAgentMessage(message) && followUpPrompts?.length > 0 && (
-            <div className="mt-2">
+            <div className="mt-2 w-full">
               <div className="flex flex-col divide-y divide-zinc-950/5 dark:divide-white/5">
                 {followUpPrompts.map((prompt, index) => (
                   <button
@@ -168,9 +168,9 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
-          {/* Papers Section */}
+          {/* Papers Section - only for agent messages */}
           {isAgentMessage(message) && message.papers && message.papers.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-4 w-full">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm font-inter font-medium text-gray-900 dark:text-white">
                   RELEVANT PAPERS ({message.papers.length})

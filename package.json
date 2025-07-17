@@ -119,7 +119,7 @@
   },
   "scripts": {
     "start": "next start -p 4000",
-    "dev": "next dev -p 4000",
+    "dev": "next dev -p 4000 --turbo",
     "dev:turbo": "next dev -p 4000 --turbo",
     "build": "next build",
     "lint": "prettier --write ./src",
