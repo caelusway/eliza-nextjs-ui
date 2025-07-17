@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ChatMessages } from '@/components/chat/chat-messages';
@@ -146,70 +146,41 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const renderConnectionStatus = () => {
     if (serverStatus === 'checking') {
       return (
-        <div className="flex items-center gap-2 text-sm font-inter text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-4 py-3 rounded-lg">
-          <LoadingSpinner />
-          <span>Checking server connection...</span>
-        </div>
+        <span className="text-gray-600 dark:text-gray-400">
+          • <span className="text-gray-500 dark:text-gray-400">Checking...</span>
+        </span>
       );
     }
 
     if (serverStatus === 'offline') {
       return (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div>
-            <h3 className="text-red-800 dark:text-red-200 font-semibold text-sm font-inter mb-2">
-              Connection Failed
-            </h3>
-            <p className="text-red-700 dark:text-red-300 text-sm font-inter leading-relaxed">
-              Unable to establish connection to ElizaOS server at{' '}
-              <code className="bg-red-100 dark:bg-red-800/50 px-2 py-1 rounded text-xs font-mono">
-                {process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}
-              </code>
-            </p>
-            <p className="text-red-600 dark:text-red-400 text-xs font-inter mt-3">
-              Please ensure the server is running and accessible.
-            </p>
-          </div>
-        </div>
+        <span className="text-red-500 dark:text-red-400">
+          • <span className="text-red-500 dark:text-red-400">Offline</span>
+        </span>
       );
     }
 
     if (connectionStatus === 'connecting') {
-      const statusText =
-        agentStatus === 'checking'
-          ? 'Setting up agent participation...'
-          : agentStatus === 'ready'
-            ? 'Connecting to agent...'
-            : 'Connecting (agent setup failed)...';
-
       return (
-        <div className="flex items-center gap-3 text-sm font-inter text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-lg">
-          <LoadingSpinner />
-          <span>{statusText}</span>
-        </div>
+        <span className="text-blue-500 dark:text-blue-400">
+          • <span className="text-blue-500 dark:text-blue-400">Connecting...</span>
+        </span>
       );
     }
 
     if (connectionStatus === 'error') {
       return (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-red-700 dark:text-red-300 font-medium font-inter">Connection Error</span>
-          </div>
-          <p className="text-red-600 dark:text-red-400 text-sm font-inter leading-relaxed">
-            Failed to connect to the agent. Please try refreshing the page.
-          </p>
-        </div>
+        <span className="text-red-500 dark:text-red-400">
+          • <span className="text-red-500 dark:text-red-400">Error</span>
+        </span>
       );
     }
 
     if (connectionStatus === 'connected') {
       return (
-        <div className="flex items-center gap-3 text-sm font-inter text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-4 py-3 rounded-lg">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span>Connected to Agent</span>
-        </div>
+        <span className="text-green-500 dark:text-green-400">
+          • <span className="text-green-500 dark:text-green-400">Connected</span>
+        </span>
       );
     }
 
@@ -746,7 +717,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
   // --- Form submission handler ---
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: FormEvent) => {
       e.preventDefault();
       if (!input.trim() || !currentUserId || inputDisabled) return;
 
@@ -829,24 +800,30 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   }
 
   return (
-    <div className="h-screen w-full flex flex-col bg-white dark:bg-black">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-black">
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 px-4 sm:px-6 pt-16 sm:pt-20 pb-4 sm:pb-6 bg-white dark:bg-black">
+      <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-black">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
             <h1 className="text-xl font-bold font-inter text-gray-900 dark:text-white leading-tight">
               {sessionData ? sessionData.title : <span className="animate-pulse">Loading session...</span>}
             </h1>
-            {sessionData && (
-              <div className="text-gray-600 dark:text-gray-400 text-sm font-inter mt-2 leading-relaxed">
-                {sessionData.messageCount} messages • Last activity{' '}
-                {formatTimeAgo(sessionData.lastActivity)}
+            {sessionData ? (
+              <div className="flex items-center gap-3 mt-2">
+                <div className="text-gray-600 dark:text-gray-400 text-sm font-inter">
+                  {sessionData.messageCount} messages • Last activity{' '}
+                  {formatTimeAgo(sessionData.lastActivity)}
+                </div>
+                <div className="text-sm font-inter">
+                  {renderConnectionStatus()}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2">
+                {renderConnectionStatus()}
               </div>
             )}
           </div>
-
-          {/* Connection Status */}
-          <div className="mt-1">{renderConnectionStatus()}</div>
         </div>
       </div>
 
@@ -886,7 +863,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       </div>
 
       {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800">
+      <div className="flex-shrink-0 p-3 bg-white dark:bg-black">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-black">
             <TextareaWithActions
