@@ -938,7 +938,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   if (!agentId) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
-        <div className="text-center p-8 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
+        <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold font-inter mb-4 text-gray-900 dark:text-white">Configuration Error</h2>
           <p className="text-gray-600 dark:text-gray-400 text-base font-inter mb-4 leading-relaxed">
             NEXT_PUBLIC_AGENT_ID is not configured in environment variables.
@@ -955,7 +955,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   if (!isReady) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
-        <div className="text-center p-8 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
+        <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold font-inter mb-4 text-gray-900 dark:text-white">Loading...</h2>
           <p className="text-gray-600 dark:text-gray-400 text-base font-inter leading-relaxed">Initializing authentication...</p>
         </div>
@@ -964,9 +964,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-white dark:bg-black">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717]">
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-black">
+              <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
             <h1 className="text-xl font-bold font-inter text-gray-900 dark:text-white leading-tight">
@@ -1067,9 +1067,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       </div>
 
       {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 p-3 bg-white dark:bg-black">
+      <div className="flex-shrink-0 p-3 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white dark:bg-black">
+                      <div className="bg-white dark:bg-[#171717]">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}

@@ -64,7 +64,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <SessionsProvider userId={getUserId()}>
       <>
-        <div className="flex h-screen bg-white dark:bg-black">
+        <div className="flex h-screen bg-white dark:bg-[#171717]">
           {/* Mobile backdrop overlay */}
           {isMobileMenuOpen && (
             <div 
@@ -95,7 +95,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <div className="lg:hidden fixed top-4 left-4 z-30">
                 <button
                   onClick={() => setIsMobileMenuOpen(true)}
-                  className="p-2 rounded-md bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors shadow-sm"
+                  className="p-2 rounded-md bg-white dark:bg-[#171717] border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors shadow-sm"
                   aria-label="Open mobile menu"
                 >
                   <PanelLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />

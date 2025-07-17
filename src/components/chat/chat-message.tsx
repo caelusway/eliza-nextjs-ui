@@ -95,8 +95,8 @@ export const ChatMessage = memo(function ChatMessage({
                      <div className={clsx(
              'font-inter rounded-2xl shadow-sm max-w-full',
              isUserMessage(message) 
-               ? 'bg-gray-800 text-white dark:bg-gray-700 px-4 py-3' 
-               : 'bg-gray-50/80 dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 backdrop-blur-sm px-6 py-6'
+               ? 'bg-zinc-100 text-white dark:bg-zinc-800 dark:shadow-lg px-4 py-3' 
+               : ' text-zinc-800 dark:text-zinc-200 backdrop-blur-sm dark:shadow-xl px-6 py-6'
            )}>
             <div
               className={clsx(
@@ -111,10 +111,10 @@ export const ChatMessage = memo(function ChatMessage({
                 'prose-h3:text-base prose-h3:font-inter prose-h3:font-semibold',
                 // Prevent overflow and improve text wrapping
                 'overflow-hidden break-words hyphens-auto',
-                // Color overrides based on message type
+                // Color overrides based on message type - using zinc palette
                 isUserMessage(message) 
-                  ? 'prose-invert prose-p:text-white prose-li:text-white prose-headings:text-white prose-strong:text-white prose-em:text-white'
-                  : 'dark:prose-invert prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white prose-headings:text-gray-900 dark:prose-headings:text-white'
+                  ? 'prose-invert prose-p:text-white prose-li:text-white prose-headings:text-white prose-strong:text-white prose-em:text-zinc-200'
+                  : 'dark:prose-invert prose-p:text-zinc-900 dark:prose-p:text-zinc-100 prose-li:text-zinc-900 dark:prose-li:text-zinc-100 prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 prose-strong:text-zinc-900 dark:prose-strong:text-zinc-100 prose-em:text-zinc-700 dark:prose-em:text-zinc-300'
               )}
             >
               <MemoizedMarkdown
@@ -127,7 +127,7 @@ export const ChatMessage = memo(function ChatMessage({
           
           {/* Timestamp below the message bubble */}
           <div className={clsx(
-            'text-xs font-inter text-gray-500 dark:text-gray-400 mt-1 px-2',
+            'text-xs font-inter text-zinc-500 dark:text-zinc-400 mt-1 px-2',
             isUserMessage(message) ? 'text-right' : 'text-left'
           )}>
             {formattedTime}
@@ -137,7 +137,7 @@ export const ChatMessage = memo(function ChatMessage({
           {isAgentMessage(message) && message.text && message.text.trim() && (
             <div className="flex items-center gap-2 mt-2">
               <PlaySoundButton text={message.text} />
-              <span className="text-xs font-inter text-gray-500 dark:text-gray-400">Play audio</span>
+                             <span className="text-xs font-inter text-zinc-500 dark:text-zinc-400">Play audio</span>
             </div>
           )}
 
@@ -153,7 +153,7 @@ export const ChatMessage = memo(function ChatMessage({
                       'flex items-center justify-between',
                       'py-2',
                       'bg-transparent',
-                      'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white',
+                                             'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
                       'font-inter text-base',
                       'transition-colors',
                       'group cursor-pointer',
@@ -173,13 +173,13 @@ export const ChatMessage = memo(function ChatMessage({
           {isAgentMessage(message) && message.papers && message.papers.length > 0 && (
             <div className="mt-4 w-full">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-inter font-medium text-gray-900 dark:text-white">
-                  RELEVANT PAPERS ({message.papers.length})
-                </span>
+                                 <span className="text-sm font-inter font-medium text-zinc-900 dark:text-zinc-100">
+                   RELEVANT PAPERS ({message.papers.length})
+                 </span>
                 {message.papers.length > 3 && (
                   <button
                     onClick={() => setShowAllPapers(!showAllPapers)}
-                    className="flex items-center gap-1 text-sm font-inter text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                         className="flex items-center gap-1 text-sm font-inter text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
                   >
                     {showAllPapers ? (
                       <>
