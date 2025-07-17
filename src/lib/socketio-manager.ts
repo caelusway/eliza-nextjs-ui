@@ -773,11 +773,14 @@ class SocketIOManager extends EventAdapter {
         channelId,
         serverId: serverId || this.serverId,
         entityId: this.entityId,
-        metadata: { isDm: false },
+        metadata: { isDm: true }, // Mark as DM channel for proper routing
       },
     });
 
-    console.info(`[SocketIO] Joined channel ${channelId}`);
+    console.info(`[SocketIO] Joined channel ${channelId} (DM session)`);
+    
+    // Give a small delay to ensure channel joining is processed
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   /**

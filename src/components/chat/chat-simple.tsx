@@ -400,152 +400,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     initializeConnection();
   }, [agentId, serverStatus, socketIOManager, currentUserId]);
 
-  // --- Set up Socket Event Listeners ---
-  useEffect(() => {
-    if (connectionStatus !== 'connected' || !channelId || !sessionId || !currentUserId) {
-      return;
-    }
-
-    console.log('[Chat] Setting up socket event listeners...');
-
-    // Message broadcast handler
-    const handleMessageBroadcast = (data: MessageBroadcastData) => {
-      console.log('[Chat] Received message broadcast:', data);
-
-      // Skip our own messages to avoid duplicates
-      if (data.senderId === currentUserId) {
-        console.log('[Chat] Skipping our own message broadcast');
-        return;
-      }
-
-      // Check if this is an agent message by sender ID
-      const isAgentMessage = data.senderId === agentId;
-      
-      console.log('[Chat] Message analysis:', {
-        isAgentMessage,
-        senderId: data.senderId,
-        expectedAgentId: agentId,
-        senderName: data.senderName,
-        channelId: data.channelId,
-        activeSession: socketIOManager.getActiveSessionChannelId(),
-        messageLength: data.text?.length || 0,
-      });
-
-      const message: ChatMessage = {
-        id: data.id || uuidv4(),
-        name: data.senderName || (isAgentMessage ? 'Agent' : 'User'),
-        text: data.text,
-        senderId: data.senderId,
-        roomId: data.roomId || data.channelId || channelId,
-        createdAt: data.createdAt || Date.now(),
-        source: data.source,
-        thought: data.thought,
-        actions: data.actions,
-        papers: data.papers,
-        isLoading: false,
-      };
-
-      console.log('[Chat] Adding message:', { isAgentMessage, message });
-
-      // If this is an agent message, simulate streaming by adding character by character
-      if (isAgentMessage && message.text) {
-        // Add the message with empty text first
-        const streamingMessage = { ...message, text: '' };
-        setMessages((prev) => [...prev, streamingMessage]);
-
-        // Ensure thinking indicator shows for at least 800ms for better UX
-        const minimumThinkingDuration = 800;
-        const currentThinkingStartTime = thinkingStartTime || Date.now();
-
-        // Stream the text character by character
-        const fullText = message.text;
-        let currentIndex = 0;
-
-        const streamInterval = setInterval(() => {
-          if (currentIndex < fullText.length) {
-            setMessages((prev) => {
-              const newMessages = [...prev];
-              const messageIndex = newMessages.findIndex((msg) => msg.id === message.id);
-              if (messageIndex !== -1) {
-                newMessages[messageIndex] = {
-                  ...newMessages[messageIndex],
-                  text: fullText.slice(0, currentIndex + 1),
-                };
-              }
-              return newMessages;
-            });
-            currentIndex++;
-
-            // Scroll to bottom during streaming
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            clearInterval(streamInterval);
-            
-            // Only disable thinking indicator after minimum duration AND streaming is complete
-            const elapsedTime = Date.now() - currentThinkingStartTime;
-            const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
-            
-                  setTimeout(() => {
-        safeStopAnimation();
-      }, remainingTime);
-          }
-        }, 10); // Adjust speed: lower = faster, higher = slower
-      } else {
-        // For non-agent messages, add normally
-        setMessages((prev) => [...prev, message]);
-      }
-    };
-
-    // Control message handler
-    const handleControlMessage = (data: ControlMessageData) => {
-      console.log('[Chat] Received control message:', data);
-
-      if (data.action === 'disable_input') {
-        setInputDisabled(true);
-      } else if (data.action === 'enable_input') {
-        setInputDisabled(false);
-      }
-    };
-
-    // Message complete handler
-    const handleMessageComplete = () => {
-      console.log('[Chat] Message complete');
-      // Ensure minimum thinking duration for better UX
-      const minimumThinkingDuration = 800;
-      const currentThinkingStartTime = thinkingStartTime || Date.now();
-      const elapsedTime = Date.now() - currentThinkingStartTime;
-      const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
-      
-                  setTimeout(() => {
-              safeStopAnimation();
-            }, remainingTime);
-    };
-
-    // Attach event listeners
-    socketIOManager.on('messageBroadcast', handleMessageBroadcast);
-    socketIOManager.on('controlMessage', handleControlMessage);
-    socketIOManager.on('messageComplete', handleMessageComplete);
-
-    // Join the session channel
-    socketIOManager.joinChannel(channelId, serverId);
-
-    // Set the active session channel ID for message filtering
-    socketIOManager.setActiveSessionChannelId(channelId);
-    console.log('[Chat] Set active session channel ID:', channelId);
-
-    // For DM sessions, we don't need to join the central channel
-    // The agent should respond directly to the session channel
-
-    // Cleanup function
-    return () => {
-      socketIOManager.off('messageBroadcast', handleMessageBroadcast);
-      socketIOManager.off('controlMessage', handleControlMessage);
-      socketIOManager.off('messageComplete', handleMessageComplete);
-      socketIOManager.leaveChannel(channelId);
-      socketIOManager.clearActiveSessionChannelId();
-    };
-      }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId]);
-
   // --- Send Message Logic ---
   useEffect(() => {
     sendMessageRef.current = (
@@ -627,7 +481,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       // Note: No timeout - animation continues until actual response received
     };
-  });
+  }, [channelId, currentUserId, inputDisabled, connectionStatus, deepResearchEnabled, getUserName, socketIOManager]);
 
   // This is a stable function that we can pass as a prop
   const sendMessage = useCallback(
@@ -637,7 +491,301 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     []
   );
 
-  // --- Load Message History and Send Initial Query ---
+  // --- Set up Socket Event Listeners ---
+  useEffect(() => {
+    if (connectionStatus !== 'connected' || !channelId || !sessionId || !currentUserId) {
+      return;
+    }
+
+    console.log('[Chat] Setting up socket event listeners...');
+
+    // Ensure agent is properly added to the channel for new sessions
+    const ensureAgentInChannel = async (): Promise<boolean> => {
+      try {
+        console.log('[Chat] Ensuring agent is in channel for new session...');
+        
+        // Add agent to the specific session channel
+        const addAgentResponse = await fetch(
+          `/api/eliza/messaging/central-channels/${channelId}/agents`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              agentId: agentId,
+            }),
+          }
+        );
+
+        if (addAgentResponse.ok) {
+          console.log('[Chat] ✅ Agent successfully added to session channel');
+          return true;
+        } else {
+          const errorText = await addAgentResponse.text();
+          console.log('[Chat] ℹ️ Agent add response:', errorText, '(might already be in channel)');
+          // Return true if agent is already in channel (409 conflict or similar)
+          return addAgentResponse.status === 409 || errorText.includes('already');
+        }
+      } catch (error) {
+        console.log('[Chat] ℹ️ Could not add agent to channel:', error, '(might already be in channel)');
+        return false;
+      }
+    };
+
+    // Verify agent is ready to receive messages
+    const verifyAgentReadiness = async (): Promise<boolean> => {
+      try {
+        // Check if agent is in the channel participants
+        const channelResponse = await fetch(
+          `/api/eliza/messaging/central-channels/${channelId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (channelResponse.ok) {
+          const channelData = await channelResponse.json();
+          const isAgentInChannel = channelData.participantCentralUserIds?.includes(agentId) || 
+                                   channelData.participants?.some((p: any) => p.id === agentId);
+          
+          console.log('[Chat] Agent readiness check:', {
+            isInChannel: isAgentInChannel,
+            participants: channelData.participantCentralUserIds || channelData.participants,
+          });
+          
+          return isAgentInChannel;
+        }
+      } catch (error) {
+        console.warn('[Chat] Could not verify agent readiness:', error);
+      }
+      return false;
+    };
+
+    // Send initial message with retry logic
+    const sendInitialMessageWithRetry = async (message: string, maxRetries: number = 3): Promise<void> => {
+      let attempts = 0;
+      
+      while (attempts < maxRetries) {
+        attempts++;
+        console.log(`[Chat] Sending initial message (attempt ${attempts}/${maxRetries}):`, message);
+        
+        // Send the message
+        sendMessage(message);
+        
+        // Wait for response with timeout
+        const responseReceived = await new Promise<boolean>((resolve) => {
+          let responseTimeout: NodeJS.Timeout;
+          
+          const checkForResponse = () => {
+            // Check if we received a response (agent thinking stopped or new messages)
+            if (!isCurrentlyThinking.current && messages.length > 0) {
+              clearTimeout(responseTimeout);
+              resolve(true);
+              return;
+            }
+            
+            // Check again in 1 second
+            responseTimeout = setTimeout(checkForResponse, 1000);
+          };
+          
+          // Start checking
+          checkForResponse();
+          
+          // Overall timeout for this attempt
+          setTimeout(() => {
+            clearTimeout(responseTimeout);
+            resolve(false);
+          }, 15000); // 15 second timeout per attempt
+        });
+        
+        if (responseReceived) {
+          console.log(`[Chat] ✅ Initial message sent successfully on attempt ${attempts}`);
+          return;
+        }
+        
+        console.log(`[Chat] ⚠️ No response received for attempt ${attempts}, retrying...`);
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
+      console.error(`[Chat] ❌ Failed to send initial message after ${maxRetries} attempts`);
+    };
+
+    // Enhanced setup for new sessions
+    const setupNewSession = async () => {
+      if (!sessionData?.metadata?.initialMessage) {
+        return;
+      }
+
+      console.log('[Chat] Setting up new session with initial message...');
+
+      // Step 1: Ensure agent is in channel
+      const agentAdded = await ensureAgentInChannel();
+      if (!agentAdded) {
+        console.warn('[Chat] ⚠️ Could not confirm agent was added to channel');
+      }
+
+      // Step 2: Wait for agent to be ready
+      let agentReady = false;
+      for (let i = 0; i < 5; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        agentReady = await verifyAgentReadiness();
+        if (agentReady) break;
+        console.log(`[Chat] Waiting for agent readiness... (${i + 1}/5)`);
+      }
+
+      if (!agentReady) {
+        console.warn('[Chat] ⚠️ Could not verify agent readiness, proceeding anyway');
+      }
+
+      // Step 3: Send initial message with retry logic
+      await sendInitialMessageWithRetry(sessionData.metadata.initialMessage);
+    };
+
+    // Message broadcast handler
+    const handleMessageBroadcast = (data: MessageBroadcastData) => {
+      console.log('[Chat] Received message broadcast:', data);
+
+      // Skip our own messages to avoid duplicates
+      if (data.senderId === currentUserId) {
+        console.log('[Chat] Skipping our own message broadcast');
+        return;
+      }
+
+      // Check if this is an agent message by sender ID
+      const isAgentMessage = data.senderId === agentId;
+      
+      console.log('[Chat] Message analysis:', {
+        isAgentMessage,
+        senderId: data.senderId,
+        expectedAgentId: agentId,
+        senderName: data.senderName,
+        channelId: data.channelId,
+        activeSession: socketIOManager.getActiveSessionChannelId(),
+        messageLength: data.text?.length || 0,
+      });
+
+      const message: ChatMessage = {
+        id: data.id || uuidv4(),
+        name: data.senderName || (isAgentMessage ? 'Agent' : 'User'),
+        text: data.text,
+        senderId: data.senderId,
+        roomId: data.roomId || data.channelId || channelId,
+        createdAt: data.createdAt || Date.now(),
+        source: data.source,
+        thought: data.thought,
+        actions: data.actions,
+        papers: data.papers,
+        isLoading: false,
+      };
+
+      console.log('[Chat] Adding message:', { isAgentMessage, message });
+
+      // If this is an agent message, simulate streaming by adding character by character
+      if (isAgentMessage && message.text) {
+        // Add the message with empty text first
+        const streamingMessage = { ...message, text: '' };
+        setMessages((prev) => [...prev, streamingMessage]);
+
+        // Ensure thinking indicator shows for at least 800ms for better UX
+        const minimumThinkingDuration = 800;
+        const currentThinkingStartTime = thinkingStartTime || Date.now();
+
+        // Stream the text character by character
+        const fullText = message.text;
+        let currentIndex = 0;
+
+        const streamInterval = setInterval(() => {
+          if (currentIndex < fullText.length) {
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              const messageIndex = newMessages.findIndex((msg) => msg.id === message.id);
+              if (messageIndex !== -1) {
+                newMessages[messageIndex] = {
+                  ...newMessages[messageIndex],
+                  text: fullText.slice(0, currentIndex + 1),
+                };
+              }
+              return newMessages;
+            });
+            currentIndex++;
+
+            // Scroll to bottom during streaming
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            clearInterval(streamInterval);
+            
+            // Only disable thinking indicator after minimum duration AND streaming is complete
+            const elapsedTime = Date.now() - currentThinkingStartTime;
+            const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
+            
+            setTimeout(() => {
+              safeStopAnimation();
+            }, remainingTime);
+          }
+        }, 10); // Adjust speed: lower = faster, higher = slower
+      } else {
+        // For non-agent messages, add normally
+        setMessages((prev) => [...prev, message]);
+      }
+    };
+
+    // Control message handler
+    const handleControlMessage = (data: ControlMessageData) => {
+      console.log('[Chat] Received control message:', data);
+
+      if (data.action === 'disable_input') {
+        setInputDisabled(true);
+      } else if (data.action === 'enable_input') {
+        setInputDisabled(false);
+      }
+    };
+
+    // Message complete handler
+    const handleMessageComplete = () => {
+      console.log('[Chat] Message complete');
+      // Ensure minimum thinking duration for better UX
+      const minimumThinkingDuration = 800;
+      const currentThinkingStartTime = thinkingStartTime || Date.now();
+      const elapsedTime = Date.now() - currentThinkingStartTime;
+      const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
+      
+      setTimeout(() => {
+        safeStopAnimation();
+      }, remainingTime);
+    };
+
+    // Attach event listeners
+    socketIOManager.on('messageBroadcast', handleMessageBroadcast);
+    socketIOManager.on('controlMessage', handleControlMessage);
+    socketIOManager.on('messageComplete', handleMessageComplete);
+
+    // Join the session channel
+    socketIOManager.joinChannel(channelId, serverId);
+
+    // Set the active session channel ID for message filtering
+    socketIOManager.setActiveSessionChannelId(channelId);
+    console.log('[Chat] Set active session channel ID:', channelId);
+
+    // Setup new session if needed
+    setupNewSession();
+
+    // Cleanup function
+    return () => {
+      socketIOManager.off('messageBroadcast', handleMessageBroadcast);
+      socketIOManager.off('controlMessage', handleControlMessage);
+      socketIOManager.off('messageComplete', handleMessageComplete);
+      socketIOManager.leaveChannel(channelId);
+      socketIOManager.clearActiveSessionChannelId();
+    };
+  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId, sessionData, sendMessage]);
+
+  // --- Load Message History (Simplified) ---
   useEffect(() => {
     if (
       !channelId ||
@@ -679,34 +827,17 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       .then((loadedMessages) => {
         console.log(`[Chat] Loaded ${loadedMessages.length} messages from history`);
         setMessages(loadedMessages);
-
-        // If there's an initial message from session creation and no existing messages, send it
-        if (sessionData?.metadata?.initialMessage && loadedMessages.length === 0) {
-          console.log(
-            `[Chat] New session detected - sending initial message: ${sessionData.metadata.initialMessage}`
-          );
-          setTimeout(() => {
-            sendMessage(sessionData.metadata.initialMessage);
-          }, 500); // Small delay to ensure everything is ready
-        }
+        
+        // Note: Initial message sending is now handled in the socket event listeners setup
+        // This prevents race conditions between history loading and message sending
       })
       .catch((error) => {
         console.error('[Chat] Failed to load message history:', error);
-
-        // Even if history loading fails, send initial message if present
-        if (sessionData?.metadata?.initialMessage) {
-          console.log(
-            `[Chat] Sending initial message despite history loading failure: ${sessionData.metadata.initialMessage}`
-          );
-          setTimeout(() => {
-            sendMessage(sessionData.metadata.initialMessage);
-          }, 1000);
-        }
       })
       .finally(() => {
         setIsLoadingHistory(false);
       });
-  }, [channelId, agentId, connectionStatus, sessionData, sendMessage, currentUserId]);
+  }, [channelId, agentId, connectionStatus, currentUserId]);
 
   // --- Auto-scroll to bottom ---
   useEffect(() => {

@@ -140,11 +140,16 @@ export async function POST(request: NextRequest) {
         const errorText = await addAgentResponse.text();
         console.warn('[DM Channel API] Failed to add agent to channel:', errorText);
         // Continue anyway - agent might already be a participant
+      } else {
+        console.log('[DM Channel API] ✅ Agent successfully added to new channel');
       }
     } catch (error) {
       console.warn('[DM Channel API] Error adding agent to channel:', error);
       // Continue anyway
     }
+
+    // Give the agent a moment to register the new channel
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     return NextResponse.json({
       success: true,
