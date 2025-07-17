@@ -7,6 +7,7 @@ import { ProgressBar } from '@/app/core/progress-bar';
 import { Toaster } from '@/app/core/toaster';
 import { ConditionalHeader } from '@/components/layout/conditional-header';
 import { PrivyClientProvider } from './core/privy-client-provider';
+import { AuthWrapper } from '@/components/auth/auth-wrapper';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -89,8 +90,10 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <PrivyClientProvider>
-                <ConditionalHeader />
-                {children}
+                <AuthWrapper>
+                  <ConditionalHeader />
+                  {children}
+                </AuthWrapper>
               </PrivyClientProvider>
             </ThemeProvider>
           </div>

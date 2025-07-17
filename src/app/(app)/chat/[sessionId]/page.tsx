@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSessions } from '@/contexts/SessionsContext';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 import { Chat } from '@/components/chat/chat-simple';
 
 interface ChatPageProps {
@@ -27,7 +28,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   }, [params, currentSession, getSessionById, setCurrentSession]);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingScreen message="Loading chat..." fullScreen={false} />}>
       <ChatPageContent params={params} />
     </Suspense>
   );
@@ -46,7 +47,7 @@ function ChatPageContent({ params }: ChatPageProps) {
   }, [params]);
   
   if (!sessionId) {
-    return <div>Loading...</div>;
+    return <LoadingScreen message="Loading chat..." fullScreen={false} />;
   }
 
   return (

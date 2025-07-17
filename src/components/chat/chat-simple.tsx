@@ -83,17 +83,55 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [agentStatus, setAgentStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
+  
+  // Animation safeguards
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState<boolean>(false);
+  const [responseTimeoutId, setResponseTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [animationLocked, setAnimationLocked] = useState<boolean>(false);
+  const [animationStartTime, setAnimationStartTime] = useState<number | null>(null);
 
   // --- Refs ---
   const initStartedRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sendMessageRef = useRef<((messageText: string, options?: { useInternalKnowledge?: boolean }) => void) | null>(null);
   const socketIOManager = SocketIOManager.getInstance();
+  const isCurrentlyThinking = useRef<boolean>(false);
+  const minimumAnimationTime = 1000; // Minimum 1 second to prevent flickering
 
   // --- Derived Values ---
   const currentUserId = getUserId();
+  
+  // Combined loading state with safeguards
+  const isShowingAnimation = isAgentThinking || isWaitingForResponse || animationLocked;
 
   // --- Helper Functions ---
+  const safeStopAnimation = (callback?: () => void) => {
+    const currentTime = Date.now();
+    const animationDuration = animationStartTime ? currentTime - animationStartTime : 0;
+    const remainingTime = Math.max(0, minimumAnimationTime - animationDuration);
+    
+    console.log('[Chat] Stopping animation - Duration:', animationDuration, 'Remaining:', remainingTime);
+    
+    setTimeout(() => {
+      setIsAgentThinking(false);
+      setIsWaitingForResponse(false);
+      setAnimationLocked(false);
+      setInputDisabled(false);
+      setThinkingStartTime(null);
+      setAnimationStartTime(null);
+      isCurrentlyThinking.current = false;
+      
+      // Clear timeout
+      if (responseTimeoutId) {
+        clearTimeout(responseTimeoutId);
+        setResponseTimeoutId(null);
+      }
+      
+      callback?.();
+      console.log('[Chat] Animation stopped at:', Date.now());
+    }, remainingTime);
+  };
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -257,7 +295,13 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     initStartedRef.current = false;
     setMessages([]);
     setIsLoadingHistory(true);
-    setIsAgentThinking(false);
+    
+    // Safe reset of thinking states
+    if (!isCurrentlyThinking.current) {
+      setIsAgentThinking(false);
+      setIsWaitingForResponse(false);
+      setAnimationLocked(false);
+    }
 
     // Use prop data if available, otherwise fetch from API
     if (propSessionData && propSessionData.id === sessionId) {
@@ -446,11 +490,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             const elapsedTime = Date.now() - currentThinkingStartTime;
             const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
             
-            setTimeout(() => {
-              setIsAgentThinking(false);
-              setInputDisabled(false);
-              setThinkingStartTime(null);
-            }, remainingTime);
+                  setTimeout(() => {
+        safeStopAnimation();
+      }, remainingTime);
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
       } else {
@@ -479,11 +521,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       const elapsedTime = Date.now() - currentThinkingStartTime;
       const remainingTime = Math.max(0, minimumThinkingDuration - elapsedTime);
       
-      setTimeout(() => {
-        setIsAgentThinking(false);
-        setInputDisabled(false);
-        setThinkingStartTime(null);
-      }, remainingTime);
+                  setTimeout(() => {
+              safeStopAnimation();
+            }, remainingTime);
     };
 
     // Attach event listeners
@@ -508,8 +548,13 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       socketIOManager.off('messageComplete', handleMessageComplete);
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
+      
+      // Clean up timeout on unmount
+      if (responseTimeoutId) {
+        clearTimeout(responseTimeoutId);
+      }
     };
-  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId]);
+  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId, responseTimeoutId]);
 
   // --- Send Message Logic ---
   useEffect(() => {
@@ -551,9 +596,18 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       };
 
       setMessages((prev) => [...prev, userMessage]);
+      
+      // Start thinking animation with safeguards
+      const currentTime = Date.now();
       setIsAgentThinking(true);
-      setThinkingStartTime(Date.now());
+      setIsWaitingForResponse(true);
+      setAnimationLocked(true);
+      setThinkingStartTime(currentTime);
+      setAnimationStartTime(currentTime);
       setInputDisabled(true);
+      isCurrentlyThinking.current = true;
+      
+      console.log('[Chat] Started thinking animation at:', currentTime);
 
       console.log('[Chat] Sending message to session channel:', {
         messageText: finalMessageText,
@@ -572,12 +626,18 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         options
       );
 
-      setTimeout(() => {
-        console.log('[Chat] Timeout reached, re-enabling input');
-        setInputDisabled(false);
-        setIsAgentThinking(false);
-        setThinkingStartTime(null);
+      // Clear any existing timeout
+      if (responseTimeoutId) {
+        clearTimeout(responseTimeoutId);
+      }
+
+      // Set backup timeout with better logging
+      const timeoutId = setTimeout(() => {
+        console.log('[Chat] Response timeout reached, re-enabling input');
+        safeStopAnimation();
       }, 60000);
+      
+      setResponseTimeoutId(timeoutId);
     };
   });
 
@@ -673,8 +733,21 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       e.preventDefault();
       if (!input.trim() || !currentUserId || inputDisabled) return;
 
-      sendMessage(input.trim());
+      const messageToSend = input.trim();
       setInput('');
+      
+      // Immediately start animation for better UX - ensure it shows before any async operations
+      const currentTime = Date.now();
+      setIsAgentThinking(true);
+      setIsWaitingForResponse(true);
+      setAnimationLocked(true);
+      setAnimationStartTime(currentTime);
+      setInputDisabled(true);
+      isCurrentlyThinking.current = true;
+      
+      console.log('[Chat] Animation started immediately on submit at:', currentTime);
+      
+      sendMessage(messageToSend);
     },
     [input, currentUserId, inputDisabled, sendMessage]
   );
@@ -781,7 +854,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                   setInput(prompt);
                 }}
               />
-              {isAgentThinking && (
+              {isShowingAnimation && (
                 <div className="flex items-center gap-3 py-6 text-gray-600 dark:text-gray-400">
                   <LoadingSpinner />
                   <span className="font-inter text-base">
@@ -803,7 +876,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
               input={input}
               onInputChange={(e) => setInput(e.target.value)}
               onSubmit={handleSubmit}
-              isLoading={isAgentThinking || inputDisabled || connectionStatus !== 'connected'}
+              isLoading={isShowingAnimation || inputDisabled || connectionStatus !== 'connected'}
               placeholder={
                 !isUserAuthenticated()
                   ? 'Please login to start a chat..'

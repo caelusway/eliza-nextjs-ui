@@ -30,6 +30,7 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [isCheckingExistingUser, setIsCheckingExistingUser] = useState(false);
   const [showExistingUserMode, setShowExistingUserMode] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Check for invite code in URL params on mount
   useEffect(() => {
@@ -66,8 +67,17 @@ function LoginPageContent() {
         const existingUserId = await getUserRowIdByPrivyId(user.id);
         
         if (existingUserId) {
-          // User exists, proceed to chat
-          router.push('/chat');
+          // User exists, show loading animation during redirect
+          setIsRedirecting(true);
+          console.log('[LoginPage] Existing user found, redirecting...');
+          
+          // Check for return URL parameter
+          const returnUrl = searchParams.get('returnUrl');
+          if (returnUrl) {
+            router.push(decodeURIComponent(returnUrl));
+          } else {
+            router.push('/chat');
+          }
         } else {
           // User doesn't exist - they need an invite
           console.log('[LoginPage] User not in database, logging out');
@@ -202,11 +212,25 @@ function LoginPageContent() {
       if (response.ok) {
         console.log('Redeem success:', data);
         
+        // Keep loading animation during redirect process
+        console.log('[LoginPage] Invite redeemed successfully, preparing redirect...');
+        
         // Small delay to ensure auth state is properly set
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Redirect to chat
-        router.push('/chat');
+        // Set redirecting state for better UX
+        setIsRedirecting(true);
+        
+        // Check for return URL parameter
+        const returnUrl = searchParams.get('returnUrl');
+        console.log('[LoginPage] Redirecting user to:', returnUrl || '/chat');
+        
+        if (returnUrl) {
+          router.push(decodeURIComponent(returnUrl));
+        } else {
+          router.push('/chat');
+        }
+        // Note: Animation continues until page navigation completes
       } else {
         console.error('Redeem error:', data);
         if (data.details) {
@@ -280,7 +304,7 @@ function LoginPageContent() {
             </div>
 
             {/* Auth Container */}
-            <div className="pt-2 sm:pt-3 md:pt-4">
+            <div className="pt-2 sm:pt-3 md:pt-4 relative">
               <LoginForm
                 onInviteSubmit={handleInviteSubmit}
                 onSignIn={handleSignIn}
@@ -289,6 +313,21 @@ function LoginPageContent() {
                 error={error}
                 isCheckingUser={isCheckingExistingUser}
               />
+              
+              {/* Loading overlay for user authentication checks */}
+              {(isAuthenticating || isCheckingExistingUser || isRedirecting) && (
+                <div className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] mb-3"></div>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      {isRedirecting ? 'Redirecting you...' :
+                       isCheckingExistingUser ? 'Verifying account...' : 
+                       isValidating ? 'Validating invite...' : 
+                       'Signing you in...'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

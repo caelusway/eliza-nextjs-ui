@@ -9,17 +9,13 @@ export function PrivyClientProvider({ children }: { children: React.ReactNode })
 
   // Memoize the Privy config to prevent re-initialization
   const privyConfig = useMemo<PrivyClientConfig>(() => ({
-    // Display email and wallet as login methods
-    loginMethods: ['email', 'wallet'],
+    // Display only email as login method
+    loginMethods: ['email'],
     // Customize the appearance of the login flow
     appearance: {
       theme: 'dark',
       accentColor: '#FF6E71',
       logo: '/assets/aubrai_logo_white.png',
-    },
-    // Create embedded wallets for users who don't have a wallet
-    embeddedWallets: {
-      createOnLogin: 'users-without-wallets',
     },
     // Modal configuration
     modal: {

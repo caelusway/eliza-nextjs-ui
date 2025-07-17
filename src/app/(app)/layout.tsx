@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { AppSidebar } from '@/components/sidebar';
 import { SessionsProvider } from '@/contexts/SessionsContext';
@@ -13,19 +12,15 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const router = useRouter();
-  const { isUserAuthenticated, isReady, getUserId } = useUserManager();
+  const { getUserId } = useUserManager();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
+  const userId = getUserId();
+
   // Initialize socket connection and track connection state
   useEffect(() => {
-    if (!isReady || !isUserAuthenticated()) {
-      return;
-    }
-
-    const userId = getUserId();
     if (!userId) {
       return;
     }
@@ -64,32 +59,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
       console.error('[AppLayout] Failed to initialize socket connection:', error);
       setIsConnected(false);
     }
-  }, [isReady, isUserAuthenticated, getUserId]);
-
-  // Handle authentication redirect
-  useEffect(() => {
-    if (isReady && !isUserAuthenticated()) {
-      router.push('/login');
-    }
-  }, [isReady, isUserAuthenticated, router]);
-
-  if (!isReady) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-white dark:bg-black">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] mb-4"></div>
-          <p className="text-zinc-600 dark:text-zinc-400 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isUserAuthenticated()) {
-    return null;
-  }
+  }, [userId]);
 
   return (
-    <SessionsProvider userId={getUserId()}>
+    <SessionsProvider userId={getUserId()} children={children}>
       <div className="flex h-screen bg-white dark:bg-black">
         {/* Mobile backdrop overlay */}
         {isMobileMenuOpen && (
