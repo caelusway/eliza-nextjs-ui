@@ -26,9 +26,17 @@ export async function POST(request: NextRequest) {
 
     try {
       // Create DM channel for this session using get-or-create with sessionId
-      const dmChannelUrl = `${API_BASE_URL}/api/dm-channel/get-or-create`;
-      console.log(`[API] Calling DM channel API: ${dmChannelUrl}`);
-      const dmChannelResponse = await fetch(dmChannelUrl, {
+      // Use relative URL for internal API calls in Vercel
+      const dmChannelUrl = `/api/dm-channel/get-or-create`;
+      console.log(`[API] Calling DM channel API internally: ${dmChannelUrl}`);
+      
+      // For Vercel, use the request host for internal calls
+      const host = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const fullUrl = `${protocol}://${host}${dmChannelUrl}`;
+      
+      console.log(`[API] Full DM channel URL: ${fullUrl}`);
+      const dmChannelResponse = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
