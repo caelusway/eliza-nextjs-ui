@@ -7,8 +7,37 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     inlineCss: true,
+    // Optimize bundling for faster builds
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
-  webpack: (config) => {
+  // Turbopack is now stable, moved from experimental.turbo
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
+  webpack: (config, { dev, isServer }) => {
+    // Performance optimizations for development
+    if (dev) {
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+      };
+      
+      // Reduce bundle analysis overhead
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
+      };
+    }
+
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^pg-native$|^cloudflare:sockets$/,
@@ -19,13 +48,22 @@ const nextConfig: NextConfig = {
           // Ignore anything within the elizaos directory
           return /elizaos\//.test(context);
         },
+      }),
+      // Ignore aubrai-old-ui for faster builds
+      new webpack.IgnorePlugin({
+        checkResource(resource, context) {
+          return /aubrai-old-ui\//.test(context);
+        },
       })
     );
+    
     // Return modified config
     return {
       ...config,
       resolve: {
         ...config.resolve,
+        // Speed up module resolution
+        symlinks: false,
         fallback: {
           ...config.resolve?.fallback,
           fs: false,

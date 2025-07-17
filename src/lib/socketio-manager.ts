@@ -14,6 +14,36 @@ enum SOCKET_MESSAGE_TYPE {
   CONTROL = 6,
 }
 
+// Debug tracking types
+interface PendingRequest {
+  id: string;
+  type: string;
+  startTime: number;
+  channelId?: string;
+  roomId?: string;
+  message?: string;
+}
+
+interface PerformanceMetrics {
+  averageResponseTime: number;
+  totalRequests: number;
+  totalResponses: number;
+  pendingRequests: number;
+  slowestRequest: number;
+  fastestRequest: number;
+  connectionTime?: number;
+  lastActivity: number;
+}
+
+interface DebugEvent {
+  timestamp: number;
+  type: 'sent' | 'received' | 'connection' | 'error' | 'performance';
+  event: string;
+  data?: any;
+  duration?: number;
+  responseTime?: number;
+}
+
 // Direct connection to ElizaOS server for Socket.IO (proxying doesn't work for WebSocket)
 const SOCKET_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 console.log('[SocketIO] Using server URL:', SOCKET_URL);
@@ -160,6 +190,22 @@ class SocketIOManager extends EventAdapter {
   private entityId: string | null = null;
   private serverId: string | null = null;
 
+  // Debug tracking properties
+  private debugEnabled: boolean = process.env.NODE_ENV === 'development';
+  private pendingRequests: Map<string, PendingRequest> = new Map();
+  private debugEvents: DebugEvent[] = [];
+  private maxDebugEvents: number = 1000;
+  private performanceMetrics: PerformanceMetrics = {
+    averageResponseTime: 0,
+    totalRequests: 0,
+    totalResponses: 0,
+    pendingRequests: 0,
+    slowestRequest: 0,
+    fastestRequest: Infinity,
+    lastActivity: Date.now(),
+  };
+  private connectionStartTime: number = 0;
+
   // Public accessor for EVT instances (for advanced usage)
   public get evtMessageBroadcast() {
     return this._getEvt('messageBroadcast') as Evt<MessageBroadcastData>;
@@ -191,6 +237,13 @@ class SocketIOManager extends EventAdapter {
 
   private constructor() {
     super();
+    
+    // Set up periodic performance logging
+    if (this.debugEnabled) {
+      setInterval(() => {
+        this.logPerformanceMetrics();
+      }, 30000); // Log every 30 seconds
+    }
   }
 
   public static getInstance(): SocketIOManager {
@@ -198,6 +251,234 @@ class SocketIOManager extends EventAdapter {
       SocketIOManager.instance = new SocketIOManager();
     }
     return SocketIOManager.instance;
+  }
+
+  // Debug helper methods
+  private logDebugEvent(event: DebugEvent): void {
+    if (!this.debugEnabled) return;
+
+    this.debugEvents.push(event);
+    
+    // Keep only the latest events
+    if (this.debugEvents.length > this.maxDebugEvents) {
+      this.debugEvents = this.debugEvents.slice(-this.maxDebugEvents);
+    }
+
+    // Log to console with color coding
+    const timestamp = new Date(event.timestamp).toISOString();
+    const prefix = `[SocketIO-Debug] ${timestamp}`;
+    
+    switch (event.type) {
+      case 'sent':
+        console.log(`%c${prefix} SENT: ${event.event}`, 'color: #00ff00', event.data);
+        break;
+      case 'received':
+        console.log(`%c${prefix} RECEIVED: ${event.event}`, 'color: #0099ff', event.data, event.responseTime ? `(${event.responseTime}ms)` : '');
+        break;
+      case 'connection':
+        console.log(`%c${prefix} CONNECTION: ${event.event}`, 'color: #ff9900', event.data);
+        break;
+      case 'error':
+        console.error(`%c${prefix} ERROR: ${event.event}`, 'color: #ff0000', event.data);
+        break;
+      case 'performance':
+        console.log(`%c${prefix} PERFORMANCE: ${event.event}`, 'color: #9900ff', event.data);
+        break;
+    }
+  }
+
+  private trackRequest(id: string, type: string, channelId?: string, roomId?: string, message?: string): void {
+    const request: PendingRequest = {
+      id,
+      type,
+      startTime: Date.now(),
+      channelId,
+      roomId,
+      message,
+    };
+    
+    this.pendingRequests.set(id, request);
+    this.performanceMetrics.totalRequests++;
+    this.performanceMetrics.pendingRequests = this.pendingRequests.size;
+    this.performanceMetrics.lastActivity = Date.now();
+
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'sent',
+      event: type,
+      data: { id, channelId, roomId, message: message?.substring(0, 100) + (message && message.length > 100 ? '...' : '') },
+    });
+  }
+
+  private trackResponse(channelId?: string, roomId?: string, eventType?: string, messageId?: string): number | null {
+    const now = Date.now();
+    let responseTime: number | null = null;
+    
+    // First try to find by exact message ID if provided
+    let pendingRequest: PendingRequest | undefined;
+    
+    if (messageId && this.pendingRequests.has(messageId)) {
+      pendingRequest = this.pendingRequests.get(messageId);
+    } else {
+      // Fallback: try to find by channelId/roomId for the most recent request in that channel
+      const channelRequests = Array.from(this.pendingRequests.values()).filter(req => 
+        (channelId && req.channelId === channelId) || (roomId && req.roomId === roomId)
+      );
+      
+      // Get the most recent request for this channel
+      pendingRequest = channelRequests.sort((a, b) => b.startTime - a.startTime)[0];
+    }
+
+    if (pendingRequest) {
+      responseTime = now - pendingRequest.startTime;
+      this.pendingRequests.delete(pendingRequest.id);
+      
+      // Update metrics
+      this.performanceMetrics.totalResponses++;
+      this.performanceMetrics.pendingRequests = this.pendingRequests.size;
+      this.performanceMetrics.lastActivity = now;
+      
+      if (responseTime > this.performanceMetrics.slowestRequest) {
+        this.performanceMetrics.slowestRequest = responseTime;
+      }
+      if (responseTime < this.performanceMetrics.fastestRequest) {
+        this.performanceMetrics.fastestRequest = responseTime;
+      }
+      
+      // Update average response time
+      this.performanceMetrics.averageResponseTime = 
+        (this.performanceMetrics.averageResponseTime * (this.performanceMetrics.totalResponses - 1) + responseTime) / 
+        this.performanceMetrics.totalResponses;
+
+      this.logDebugEvent({
+        timestamp: now,
+        type: 'received',
+        event: eventType || 'response',
+        data: { channelId, roomId, messageId, requestId: pendingRequest.id },
+        responseTime,
+      });
+    } else {
+      this.logDebugEvent({
+        timestamp: now,
+        type: 'received',
+        event: eventType || 'response',
+        data: { channelId, roomId, messageId, note: 'No matching pending request found' },
+      });
+    }
+
+    return responseTime;
+  }
+
+  private logPerformanceMetrics(): void {
+    if (!this.debugEnabled) return;
+
+    const metrics = {
+      ...this.performanceMetrics,
+      pendingRequestsCount: this.pendingRequests.size,
+      oldestPendingRequest: this.pendingRequests.size > 0 ? 
+        Math.max(...Array.from(this.pendingRequests.values()).map(req => Date.now() - req.startTime)) : 0,
+      activeChannels: this.activeChannels.size,
+      activeRooms: this.activeRooms.size,
+      isConnected: this.isConnected,
+    };
+
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'performance',
+      event: 'metrics_report',
+      data: metrics,
+    });
+
+    // Warn about slow or stuck requests
+    if (this.pendingRequests.size > 0) {
+      const now = Date.now();
+      const stuckRequests = Array.from(this.pendingRequests.values()).filter(
+        req => now - req.startTime > 10000 // 10 seconds
+      );
+      
+      if (stuckRequests.length > 0) {
+        console.warn('[SocketIO-Debug] Found stuck requests:', stuckRequests);
+        
+        // Auto-clean very old stuck requests (>60 seconds)
+        const veryOldRequests = stuckRequests.filter(req => now - req.startTime > 60000);
+        if (veryOldRequests.length > 0) {
+          console.warn('[SocketIO-Debug] Auto-cleaning very old requests:', veryOldRequests.length);
+          veryOldRequests.forEach(req => {
+            this.pendingRequests.delete(req.id);
+          });
+          this.performanceMetrics.pendingRequests = this.pendingRequests.size;
+        }
+      }
+    }
+  }
+
+  public enableDebug(enabled: boolean = true): void {
+    this.debugEnabled = enabled;
+    console.log(`[SocketIO-Debug] Debug mode ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  public getDebugEvents(): DebugEvent[] {
+    return [...this.debugEvents];
+  }
+
+  public getPerformanceMetrics(): PerformanceMetrics & { pendingRequestsDetails: PendingRequest[] } {
+    return {
+      ...this.performanceMetrics,
+      pendingRequestsDetails: Array.from(this.pendingRequests.values()),
+    };
+  }
+
+  public clearDebugData(): void {
+    this.debugEvents = [];
+    this.pendingRequests.clear();
+    this.performanceMetrics = {
+      averageResponseTime: 0,
+      totalRequests: 0,
+      totalResponses: 0,
+      pendingRequests: 0,
+      slowestRequest: 0,
+      fastestRequest: Infinity,
+      connectionTime: this.performanceMetrics.connectionTime,
+      lastActivity: Date.now(),
+    };
+    console.log('[SocketIO-Debug] Debug data cleared');
+  }
+
+  public clearStuckRequests(olderThanMs: number = 30000): number {
+    const now = Date.now();
+    const stuckRequests = Array.from(this.pendingRequests.entries()).filter(
+      ([id, req]) => now - req.startTime > olderThanMs
+    );
+    
+    stuckRequests.forEach(([id]) => {
+      this.pendingRequests.delete(id);
+    });
+    
+    this.performanceMetrics.pendingRequests = this.pendingRequests.size;
+    
+    if (stuckRequests.length > 0) {
+      console.log(`[SocketIO-Debug] Cleared ${stuckRequests.length} stuck requests`);
+    }
+    
+    return stuckRequests.length;
+  }
+
+  public clearRequestsForChannel(channelId: string): number {
+    const channelRequests = Array.from(this.pendingRequests.entries()).filter(
+      ([id, req]) => req.channelId === channelId || req.roomId === channelId
+    );
+    
+    channelRequests.forEach(([id]) => {
+      this.pendingRequests.delete(id);
+    });
+    
+    this.performanceMetrics.pendingRequests = this.pendingRequests.size;
+    
+    if (channelRequests.length > 0) {
+      console.log(`[SocketIO-Debug] Cleared ${channelRequests.length} requests for channel ${channelId}`);
+    }
+    
+    return channelRequests.length;
   }
 
   /**
@@ -208,11 +489,19 @@ class SocketIOManager extends EventAdapter {
   public initialize(entityId: string, serverId?: string): void {
     this.entityId = entityId;
     this.serverId = serverId;
+    this.connectionStartTime = Date.now();
 
     if (this.socket) {
       console.warn('[SocketIO] Socket already initialized');
       return;
     }
+
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'connection',
+      event: 'initialize',
+      data: { entityId, serverId, socketUrl: SOCKET_URL },
+    });
 
     // Create a single socket connection
     console.info('connecting to', SOCKET_URL);
@@ -233,10 +522,19 @@ class SocketIOManager extends EventAdapter {
     });
 
     this.socket.on('connect', () => {
+      const connectionTime = Date.now() - this.connectionStartTime;
       console.info('[SocketIO] Connected to server successfully');
       console.info('[SocketIO] Socket ID:', this.socket?.id);
       this.isConnected = true;
+      this.performanceMetrics.connectionTime = connectionTime;
       this.resolveConnect?.();
+
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'connection',
+        event: 'connected',
+        data: { socketId: this.socket?.id, connectionTime },
+      });
 
       // Rejoin any active channels after reconnection
       this.activeChannels.forEach((channelId) => {
@@ -251,9 +549,17 @@ class SocketIOManager extends EventAdapter {
 
     this.socket.on('connection_established', (data) => {
       console.info('[SocketIO] Connection established:', data);
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'connection',
+        event: 'connection_established',
+        data,
+      });
     });
 
     this.socket.on('messageBroadcast', (data) => {
+      // Try to track response using the message ID from the data
+      const responseTime = this.trackResponse(data.channelId, data.roomId, 'messageBroadcast', data.id);
       console.info(`[SocketIO] Message broadcast received:`, data);
 
       // Check if this message is for our active session
@@ -296,6 +602,7 @@ class SocketIOManager extends EventAdapter {
     });
 
     this.socket.on('messageComplete', (data) => {
+      const responseTime = this.trackResponse(data.channelId, data.roomId, 'messageComplete', data.messageId);
       console.info(`[SocketIO] Message complete received:`, data);
 
       // Check if this event is for our active session
@@ -333,6 +640,7 @@ class SocketIOManager extends EventAdapter {
     });
 
     this.socket.on('controlMessage', (data) => {
+      this.trackResponse(data.channelId, data.roomId, 'controlMessage');
       console.info(`[SocketIO] Control message received:`, data);
 
       const isActiveChannel = data.channelId && this.activeChannels.has(data.channelId);
@@ -351,27 +659,43 @@ class SocketIOManager extends EventAdapter {
     });
 
     this.socket.on('messageDeleted', (data) => {
+      this.trackResponse(data.channelId, data.roomId, 'messageDeleted');
       console.info(`[SocketIO] Message deleted:`, data);
       this.emit('messageDeleted', data);
     });
 
     this.socket.on('channelCleared', (data) => {
+      this.trackResponse(data.channelId, data.roomId, 'channelCleared');
       console.info(`[SocketIO] Channel cleared:`, data);
       this.emit('channelCleared', data);
     });
 
     this.socket.on('channelDeleted', (data) => {
+      this.trackResponse(data.channelId, data.roomId, 'channelDeleted');
       console.info(`[SocketIO] Channel deleted:`, data);
       this.emit('channelDeleted', data);
     });
 
     this.socket.on('log_stream', (data) => {
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'received',
+        event: 'log_stream',
+        data,
+      });
       this.emit('logStream', data);
     });
 
     this.socket.on('disconnect', (reason) => {
       console.info(`[SocketIO] Disconnected. Reason: ${reason}`);
       this.isConnected = false;
+
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'connection',
+        event: 'disconnect',
+        data: { reason },
+      });
 
       // Reset connect promise for next connection
       this.connectPromise = new Promise<void>((resolve) => {
@@ -391,7 +715,33 @@ class SocketIOManager extends EventAdapter {
         context: (error as any).context,
         type: (error as any).type,
       });
+
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'error',
+        event: 'connect_error',
+        data: {
+          message: error.message,
+          description: (error as any).description,
+          context: (error as any).context,
+          type: (error as any).type,
+        },
+      });
     });
+
+    // Track all socket events for debugging
+    if (this.debugEnabled && this.socket) {
+      const originalEmit = this.socket.emit.bind(this.socket);
+      this.socket.emit = (event: string, ...args: any[]) => {
+        this.logDebugEvent({
+          timestamp: Date.now(),
+          type: 'sent',
+          event: `emit_${event}`,
+          data: args,
+        });
+        return originalEmit(event, ...args);
+      };
+    }
   }
 
   /**
@@ -410,6 +760,12 @@ class SocketIOManager extends EventAdapter {
       await this.connectPromise;
     }
 
+    // Clear any existing requests for this channel before joining
+    this.clearRequestsForChannel(channelId);
+
+    const requestId = v4();
+    this.trackRequest(requestId, 'joinChannel', channelId);
+
     this.activeChannels.add(channelId);
     this.socket.emit('message', {
       type: SOCKET_MESSAGE_TYPE.ROOM_JOINING,
@@ -417,11 +773,14 @@ class SocketIOManager extends EventAdapter {
         channelId,
         serverId: serverId || this.serverId,
         entityId: this.entityId,
-        metadata: { isDm: false },
+        metadata: { isDm: true }, // Mark as DM channel for proper routing
       },
     });
 
-    console.info(`[SocketIO] Joined channel ${channelId}`);
+    console.info(`[SocketIO] Joined channel ${channelId} (DM session)`);
+    
+    // Give a small delay to ensure channel joining is processed
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   /**
@@ -438,6 +797,9 @@ class SocketIOManager extends EventAdapter {
     if (!this.isConnected) {
       await this.connectPromise;
     }
+
+    const requestId = v4();
+    this.trackRequest(requestId, 'joinRoom', undefined, roomId);
 
     this.activeRooms.add(roomId);
     this.socket.emit('message', {
@@ -461,7 +823,18 @@ class SocketIOManager extends EventAdapter {
       return;
     }
 
+    // Clear any pending requests for this channel
+    this.clearRequestsForChannel(channelId);
+
     this.activeChannels.delete(channelId);
+    
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'sent',
+      event: 'leaveChannel',
+      data: { channelId },
+    });
+
     console.info(`[SocketIO] Left channel ${channelId}`);
   }
 
@@ -476,6 +849,14 @@ class SocketIOManager extends EventAdapter {
     }
 
     this.activeRooms.delete(roomId);
+    
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'sent',
+      event: 'leaveRoom',
+      data: { roomId },
+    });
+
     console.info(`[SocketIO] Left room ${roomId}`);
   }
 
@@ -507,6 +888,8 @@ class SocketIOManager extends EventAdapter {
 
     const messageId = v4();
     const finalChannelId = sessionChannelId || channelId; // Use session channel ID if provided
+
+    this.trackRequest(messageId, 'sendChannelMessage', finalChannelId, undefined, message);
 
     console.info(
       `[SocketIO] Sending message to channel ${channelId} with session ID ${finalChannelId}`
@@ -563,6 +946,8 @@ class SocketIOManager extends EventAdapter {
     const messageId = v4();
     const worldId = '00000000-0000-0000-0000-000000000000';
 
+    this.trackRequest(messageId, 'sendMessage', undefined, roomId, message);
+
     console.info(`[SocketIO] Sending message to room ${roomId}`);
 
     // Emit message to server
@@ -596,6 +981,13 @@ class SocketIOManager extends EventAdapter {
    */
   public subscribeToLogs(): void {
     if (this.socket && this.isConnected) {
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'sent',
+        event: 'subscribeToLogs',
+        data: {},
+      });
+      
       this.socket.emit('subscribe_logs');
       console.info('[SocketIO] Subscribed to log streaming');
     }
@@ -606,6 +998,13 @@ class SocketIOManager extends EventAdapter {
    */
   public unsubscribeFromLogs(): void {
     if (this.socket && this.isConnected) {
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'sent',
+        event: 'unsubscribeFromLogs',
+        data: {},
+      });
+      
       this.socket.emit('unsubscribe_logs');
       console.info('[SocketIO] Unsubscribed from log streaming');
     }
@@ -616,6 +1015,13 @@ class SocketIOManager extends EventAdapter {
    */
   public updateLogFilters(filters: { agentName?: string; level?: string }): void {
     if (this.socket && this.isConnected) {
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'sent',
+        event: 'updateLogFilters',
+        data: filters,
+      });
+      
       this.socket.emit('update_log_filters', filters);
       console.info('[SocketIO] Updated log filters:', filters);
     }
@@ -661,7 +1067,20 @@ class SocketIOManager extends EventAdapter {
    * @param sessionChannelId The session channel ID to filter messages by
    */
   public setActiveSessionChannelId(sessionChannelId: string): void {
+    // Clear stuck requests from previous session
+    if (this.activeSessionChannelId && this.activeSessionChannelId !== sessionChannelId) {
+      this.clearRequestsForChannel(this.activeSessionChannelId);
+    }
+    
     this.activeSessionChannelId = sessionChannelId;
+    
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'connection',
+      event: 'setActiveSessionChannelId',
+      data: { sessionChannelId, clearedOldSession: !!this.activeSessionChannelId },
+    });
+    
     console.info(`[SocketIO] Active session channel set to: ${sessionChannelId}`);
   }
 
@@ -677,6 +1096,14 @@ class SocketIOManager extends EventAdapter {
    */
   public clearActiveSessionChannelId(): void {
     this.activeSessionChannelId = null;
+    
+    this.logDebugEvent({
+      timestamp: Date.now(),
+      type: 'connection',
+      event: 'clearActiveSessionChannelId',
+      data: {},
+    });
+    
     console.info(`[SocketIO] Active session channel cleared`);
   }
 
@@ -685,6 +1112,13 @@ class SocketIOManager extends EventAdapter {
    */
   public disconnect(): void {
     if (this.socket) {
+      this.logDebugEvent({
+        timestamp: Date.now(),
+        type: 'connection',
+        event: 'disconnect',
+        data: { manual: true },
+      });
+      
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;

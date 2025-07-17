@@ -1,0 +1,88 @@
+{
+    "name": "Webflow Form to Google Sheets",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "webflow-form",
+          "options": {},
+          "httpMethod": "POST",
+          "responseMode": "onReceived",
+          "responseData": "allEntries",
+          "responseCode": 200,
+          "responseBody": "OK"
+        },
+        "id": 1,
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [250, 300],
+        "webhookId": "your-webhook-id"
+      },
+      {
+        "parameters": {
+          "keepOnlySet": true,
+          "values": {
+            "string": [
+              {
+                "name": "name",
+                "value": "={{$json[\"body\"][\"name\"]}}"
+              },
+              {
+                "name": "email",
+                "value": "={{$json[\"body\"][\"email\"]}}"
+              }
+            ]
+          }
+        },
+        "id": 2,
+        "name": "Set",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 1,
+        "position": [450, 300]
+      },
+      {
+        "parameters": {
+          "authentication": "oAuth2",
+          "sheetId": "",
+          "range": "Sheet1!A:B",
+          "options": {},
+          "valueInputMode": "USER_ENTERED"
+        },
+        "id": 3,
+        "name": "Append to Google Sheets",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 3,
+        "position": [650, 300]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Set",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set": {
+        "main": [
+          [
+            {
+              "node": "Append to Google Sheets",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {},
+    "id": "your-workflow-id",
+    "createdAt": "2025-07-17T00:00:00.000Z",
+    "updatedAt": "2025-07-17T00:00:00.000Z"
+  }
+  

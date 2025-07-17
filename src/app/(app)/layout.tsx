@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { useUserManager } from '@/lib/user-manager';
 import { AppSidebar } from '@/components/sidebar';
 import { SessionsProvider } from '@/contexts/SessionsContext';
@@ -8,7 +8,7 @@ import { PanelLeft } from 'lucide-react';
 import SocketIOManager from '@/lib/socketio-manager';
 
 interface AppLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -62,51 +62,53 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }, [userId]);
 
   return (
-    <SessionsProvider userId={getUserId()} children={children}>
-      <div className="flex h-screen bg-white dark:bg-black">
-        {/* Mobile backdrop overlay */}
-        {isMobileMenuOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-        )}
-
-        {/* Sidebar */}
-        <div className={`
-          fixed inset-y-0 left-0 z-50 lg:static lg:inset-0
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          transition-transform duration-300 ease-in-out
-        `}>
-          <AppSidebar 
-            isCollapsed={isCollapsed}
-            onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-            isConnected={isConnected}
-            isMobileMenuOpen={isMobileMenuOpen}
-            onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          />
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 min-w-0 relative">
-          {/* Mobile Menu Button - Fixed at top */}
-          {!isMobileMenuOpen && (
-            <div className="lg:hidden fixed top-4 left-4 z-30">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 rounded-md bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors shadow-sm"
-                aria-label="Open mobile menu"
-              >
-                <PanelLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-              </button>
-            </div>
+    <SessionsProvider userId={getUserId()}>
+      <>
+        <div className="flex h-screen bg-white dark:bg-black">
+          {/* Mobile backdrop overlay */}
+          {isMobileMenuOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
           )}
-          
-          <div className="h-full overflow-y-auto">
-            {children}
+
+          {/* Sidebar */}
+          <div className={`
+            fixed inset-y-0 left-0 z-50 lg:static lg:inset-0
+            ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            transition-transform duration-300 ease-in-out
+          `}>
+            <AppSidebar 
+              isCollapsed={isCollapsed}
+              onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+              isConnected={isConnected}
+              isMobileMenuOpen={isMobileMenuOpen}
+              onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 min-w-0 relative">
+            {/* Mobile Menu Button - Fixed at top */}
+            {!isMobileMenuOpen && (
+              <div className="lg:hidden fixed top-4 left-4 z-30">
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2 rounded-md bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors shadow-sm"
+                  aria-label="Open mobile menu"
+                >
+                  <PanelLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                </button>
+              </div>
+            )}
+            
+            <div className="h-full">
+              {children}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     </SessionsProvider>
   );
 }

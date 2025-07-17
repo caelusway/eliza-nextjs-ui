@@ -120,12 +120,14 @@
   "scripts": {
     "start": "next start -p 4000",
     "dev": "next dev -p 4000",
+    "dev:turbo": "next dev -p 4000 --turbo",
     "build": "next build",
     "lint": "prettier --write ./src",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "format:check": "prettier --check ./src",
+    "clean": "rm -rf .next"
   }
 }
