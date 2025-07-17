@@ -10,6 +10,7 @@ import { ChatSessions } from '@/components/chat/chat-sessions';
 import { Button } from '@/components/ui/button';
 import { CHAT_SOURCE } from '@/constants';
 import SocketIOManager, { ControlMessageData, MessageBroadcastData } from '@/lib/socketio-manager';
+import { SocketDebugUtils } from '@/lib/socket-debug-utils';
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
 import { useUserManager } from '@/lib/user-manager';
@@ -86,7 +87,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   
   // Animation safeguards
   const [isWaitingForResponse, setIsWaitingForResponse] = useState<boolean>(false);
-  const [responseTimeoutId, setResponseTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [animationLocked, setAnimationLocked] = useState<boolean>(false);
   const [animationStartTime, setAnimationStartTime] = useState<number | null>(null);
 
@@ -120,12 +120,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       setThinkingStartTime(null);
       setAnimationStartTime(null);
       isCurrentlyThinking.current = false;
-      
-      // Clear timeout
-      if (responseTimeoutId) {
-        clearTimeout(responseTimeoutId);
-        setResponseTimeoutId(null);
-      }
       
       callback?.();
       console.log('[Chat] Animation stopped at:', Date.now());
@@ -291,6 +285,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   useEffect(() => {
     if (!sessionId || !currentUserId || !agentId) return;
 
+    // Clean up stuck requests from previous sessions
+    SocketDebugUtils.clearStuckRequests(10000); // Clear requests older than 10s
+    console.log('[Chat] Cleaned up stuck requests for new session');
+
     // Reset session state for new session
     initStartedRef.current = false;
     setMessages([]);
@@ -352,14 +350,28 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     }
 
     const initializeConnection = async () => {
-      console.log('[Chat] Initializing connection...');
-      setConnectionStatus('connecting');
+              console.log('[Chat] Initializing connection...');
+        setConnectionStatus('connecting');
+
+        // Check for potential URL mismatch issues
+        const socketUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+        const currentOrigin = window.location.origin;
+        console.log('[Chat] Connection URLs:', {
+          socketUrl,
+          currentOrigin,
+          agentId,
+          userId: currentUserId,
+        });
+        
+        if (socketUrl !== currentOrigin && !socketUrl.includes('localhost')) {
+          console.warn('[Chat] ⚠️ Socket URL differs from current origin - this may cause CORS issues');
+        }
 
       try {
-        // Step 1: Add agent to centralized channel
+        // Step 1: Try to add agent to centralized channel (optional)
         const centralChannelId = '00000000-0000-0000-0000-000000000000';
 
-        console.log('[Chat] Adding agent to centralized channel...');
+        console.log('[Chat] Checking agent availability...');
         setAgentStatus('checking');
 
         try {
@@ -381,14 +393,16 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             setAgentStatus('ready');
           } else {
             const errorText = await addAgentResponse.text();
-            console.warn('[Chat] ⚠️ Failed to add agent to channel:', errorText);
-            // Agent might already be in channel, treat as success
+            console.warn('[Chat] ⚠️ Central channel API not available:', errorText);
+            // This is expected if the API endpoint doesn't exist - continue normally
+            console.log('[Chat] ✅ Proceeding with direct channel communication');
             setAgentStatus('ready');
           }
         } catch (error) {
-          console.warn('[Chat] ⚠️ Error adding agent to channel:', error);
-          // Continue anyway but mark as potential issue
-          setAgentStatus('error');
+          console.warn('[Chat] ⚠️ Central channel setup not available:', error);
+          // This is fine - ElizaOS can work without centralized channel setup
+          console.log('[Chat] ✅ Using direct socket communication mode');
+          setAgentStatus('ready');
         }
 
         // Step 2: Initialize socket connection
@@ -435,6 +449,16 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       // Check if this is an agent message by sender ID
       const isAgentMessage = data.senderId === agentId;
+      
+      console.log('[Chat] Message analysis:', {
+        isAgentMessage,
+        senderId: data.senderId,
+        expectedAgentId: agentId,
+        senderName: data.senderName,
+        channelId: data.channelId,
+        activeSession: socketIOManager.getActiveSessionChannelId(),
+        messageLength: data.text?.length || 0,
+      });
 
       const message: ChatMessage = {
         id: data.id || uuidv4(),
@@ -548,13 +572,8 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       socketIOManager.off('messageComplete', handleMessageComplete);
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
-      
-      // Clean up timeout on unmount
-      if (responseTimeoutId) {
-        clearTimeout(responseTimeoutId);
-      }
     };
-  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId, responseTimeoutId]);
+      }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId]);
 
   // --- Send Message Logic ---
   useEffect(() => {
@@ -615,6 +634,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         source: CHAT_SOURCE,
         deepResearch: deepResearchEnabled,
         useInternalKnowledge: options?.useInternalKnowledge ?? true,
+        activeChannels: Array.from(socketIOManager.getActiveChannels()),
+        isConnected: socketIOManager.isSocketConnected(),
+        entityId: socketIOManager.getEntityId(),
       });
 
       socketIOManager.sendChannelMessage(
@@ -626,18 +648,13 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         options
       );
 
-      // Clear any existing timeout
-      if (responseTimeoutId) {
-        clearTimeout(responseTimeoutId);
-      }
+      // Log debug info to help troubleshoot
+      setTimeout(() => {
+        const debugInfo = SocketDebugUtils.getDetailedReport();
+        console.log('[Chat] Debug info after sending message:', debugInfo);
+      }, 1000);
 
-      // Set backup timeout with better logging
-      const timeoutId = setTimeout(() => {
-        console.log('[Chat] Response timeout reached, re-enabling input');
-        safeStopAnimation();
-      }, 60000);
-      
-      setResponseTimeoutId(timeoutId);
+      // Note: No timeout - animation continues until actual response received
     };
   });
 
