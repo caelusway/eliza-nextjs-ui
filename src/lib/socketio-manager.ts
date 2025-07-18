@@ -3,6 +3,7 @@ import { Paper } from '@/types/chat-message';
 import { Evt } from 'evt';
 import { io, type Socket } from 'socket.io-client';
 import { v4 } from 'uuid';
+import { PostHogTracking } from '@/lib/posthog';
 
 // Socket message types from ElizaOS core
 enum SOCKET_MESSAGE_TYPE {
@@ -238,6 +239,12 @@ class SocketIOManager extends EventAdapter {
       this.isConnected = true;
       this.resolveConnect?.();
 
+      // Track successful agent connection
+      const agentId = process.env.NEXT_PUBLIC_AGENT_ID;
+      if (agentId) {
+        PostHogTracking.getInstance().agentConnected(agentId);
+      }
+
       // Rejoin any active channels after reconnection
       this.activeChannels.forEach((channelId) => {
         this.joinChannel(channelId);
@@ -373,6 +380,12 @@ class SocketIOManager extends EventAdapter {
       console.info(`[SocketIO] Disconnected. Reason: ${reason}`);
       this.isConnected = false;
 
+      // Track agent disconnection
+      const agentId = process.env.NEXT_PUBLIC_AGENT_ID;
+      if (agentId) {
+        PostHogTracking.getInstance().agentDisconnected(agentId, reason);
+      }
+
       // Reset connect promise for next connection
       this.connectPromise = new Promise<void>((resolve) => {
         this.resolveConnect = resolve;
@@ -391,6 +404,9 @@ class SocketIOManager extends EventAdapter {
         context: (error as any).context,
         type: (error as any).type,
       });
+      
+      // Track socket connection error
+      PostHogTracking.getInstance().socketConnectionError(error.message || 'Unknown connection error');
     });
   }
 

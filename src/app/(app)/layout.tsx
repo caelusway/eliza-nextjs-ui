@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/sidebar';
 import { SessionsProvider } from '@/contexts/SessionsContext';
 import { PanelLeft } from 'lucide-react';
 import SocketIOManager from '@/lib/socketio-manager';
+import { PostHogTracking } from '@/lib/posthog';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [isConnected, setIsConnected] = useState(false);
 
   const userId = getUserId();
+
+  // Tracked sidebar toggle function
+  const handleSidebarToggle = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    PostHogTracking.getInstance().sidebarToggled(newCollapsedState);
+  };
 
   // Initialize socket connection and track connection state
   useEffect(() => {
@@ -80,7 +88,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         `}>
           <AppSidebar 
             isCollapsed={isCollapsed}
-            onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+            onToggleCollapse={handleSidebarToggle}
             isConnected={isConnected}
             isMobileMenuOpen={isMobileMenuOpen}
             onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

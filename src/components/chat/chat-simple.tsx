@@ -13,6 +13,7 @@ import SocketIOManager, { ControlMessageData, MessageBroadcastData } from '@/lib
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
 import { useUserManager } from '@/lib/user-manager';
+import { PostHogTracking } from '@/lib/posthog';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -452,6 +453,16 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       console.log('[Chat] Adding message:', { isAgentMessage, message });
 
+      // Track agent message received
+      if (isAgentMessage) {
+        const responseTime = thinkingStartTime ? Date.now() - thinkingStartTime : 0;
+        PostHogTracking.getInstance().messageReceived({
+          sessionId: sessionId || 'unknown',
+          responseTime,
+          thinkingTime: responseTime,
+        });
+      }
+
       // If this is an agent message, simulate streaming by adding character by character
       if (isAgentMessage && message.text) {
         // Add the message with empty text first
@@ -596,6 +607,13 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       };
 
       setMessages((prev) => [...prev, userMessage]);
+      
+      // Track message sent
+      PostHogTracking.getInstance().messageSent({
+        sessionId: sessionId || 'unknown',
+        messageType: 'text',
+        messageLength: finalMessageText.length,
+      });
       
       // Start thinking animation with safeguards
       const currentTime = Date.now();

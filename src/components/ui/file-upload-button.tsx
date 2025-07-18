@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui';
 import { useUserManager } from '@/lib/user-manager';
+import { PostHogTracking } from '@/lib/posthog';
 
 interface FileUploadButtonProps {
   onFileUpload: (file: File, uploadResult: any) => void;
@@ -93,6 +94,16 @@ export const FileUploadButton = ({ onFileUpload, disabled, className }: FileUplo
       const result = await response.json();
 
       if (result.success) {
+        // Track media upload
+        PostHogTracking.getInstance().mediaUploaded(file.type, file.size);
+        
+        // Check if this is first time uploading a file
+        const hasUploadedFile = localStorage.getItem('discovered_file_upload');
+        if (!hasUploadedFile) {
+          PostHogTracking.getInstance().featureDiscovered('file_upload');
+          localStorage.setItem('discovered_file_upload', 'true');
+        }
+        
         onFileUpload(file, result.data);
       } else {
         throw new Error(result.error?.message || 'Upload failed');
