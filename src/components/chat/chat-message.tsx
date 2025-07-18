@@ -2,8 +2,7 @@ import { ArrowRightIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react
 import clsx from 'clsx';
 import { memo, useState } from 'react';
 
-import { CodeBlock } from '@/components/ui';
-import { MemoizedMarkdown } from '@/components/ui';
+import { CodeBlock, toast, ChatMarkdown } from '@/components/ui';
 import { PaperCard } from '@/components/ui';
 import { PlaySoundButton } from '@/components/ui';
 import { ChatMessage as ChatMessageType } from '@/types/chat-message';
@@ -77,138 +76,123 @@ export const ChatMessage = memo(function ChatMessage({
   });
 
   return (
-    <div
-      className={clsx(
-        'w-full max-w-full overflow-hidden',
-        isAgentMessage(message) ? 'mb-6' : 'mb-2'
-      )}
-    >
-      <div className={clsx(
-        'flex items-start gap-3',
-        isUserMessage(message) ? 'flex-row-reverse' : 'flex-row'
-      )}>
-
-        <div className={clsx(
-          'flex-1 min-w-0 overflow-hidden',
-          isUserMessage(message) ? 'flex flex-col items-end max-w-[80%]' : 'flex flex-col items-start max-w-[90%]'
-        )}>
-                     <div className={clsx(
-             'font-inter rounded-2xl shadow-sm max-w-full',
-             isUserMessage(message) 
-               ? 'bg-zinc-100 text-white dark:bg-zinc-800 dark:shadow-lg px-4 py-3' 
-               : ' text-zinc-800 dark:text-zinc-200 backdrop-blur-sm dark:shadow-xl px-6 py-6'
-           )}>
-            <div
-              className={clsx(
-                'prose prose-zinc !max-w-full',
-                'prose-headings:mt-0 prose-headings:mb-0 prose-headings:my-0 prose-p:mt-0 prose-p:mb-0',
-                // Use consistent font and sizing
-                'prose-base font-inter',
-                // Override specific elements for better consistency
-                'prose-code:text-sm prose-code:font-mono',
-                'prose-h1:text-lg prose-h1:font-inter prose-h1:font-bold',
-                'prose-h2:text-base prose-h2:font-inter prose-h2:font-bold',
-                'prose-h3:text-base prose-h3:font-inter prose-h3:font-semibold',
-                // Prevent overflow and improve text wrapping
-                'overflow-hidden break-words hyphens-auto',
-                // Color overrides based on message type - using zinc palette
-                isUserMessage(message) 
-                  ? 'prose-invert prose-p:text-white prose-li:text-white prose-headings:text-white prose-strong:text-white prose-em:text-zinc-200'
-                  : 'dark:prose-invert prose-p:text-zinc-900 dark:prose-p:text-zinc-100 prose-li:text-zinc-900 dark:prose-li:text-zinc-100 prose-headings:text-zinc-900 dark:prose-headings:text-zinc-100 prose-strong:text-zinc-900 dark:prose-strong:text-zinc-100 prose-em:text-zinc-700 dark:prose-em:text-zinc-300'
-              )}
-            >
-              <MemoizedMarkdown
-                id={message.id || `msg-${i}-${message.createdAt}`}
-                content={message.text ?? ''}
-                options={markdownOptions}
-              />
+    <div className="w-full max-w-full overflow-hidden mb-6">
+      {isUserMessage(message) ? (
+        // User Message - Right aligned with bubble
+        <div className="flex justify-end mb-4">
+          <div className="flex flex-col items-end max-w-[80%]">
+            <div className="bg-zinc-100 dark:bg-zinc-800 text-white rounded-2xl px-4 py-3 shadow-sm">
+              <div className="text-white">
+                <ChatMarkdown content={message.text ?? ''} />
+              </div>
+            </div>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 px-2">
+              {formattedTime}
             </div>
           </div>
-          
-          {/* Timestamp below the message bubble */}
-          <div className={clsx(
-            'text-xs font-inter text-zinc-500 dark:text-zinc-400 mt-1 px-2',
-            isUserMessage(message) ? 'text-right' : 'text-left'
-          )}>
-            {formattedTime}
-          </div>
-
-          {/* Play Sound Button - only for agent messages */}
-          {isAgentMessage(message) && message.text && message.text.trim() && (
-            <div className="flex items-center gap-2 mt-2">
-              <PlaySoundButton text={message.text} />
-                             <span className="text-xs font-inter text-zinc-500 dark:text-zinc-400">Play audio</span>
-            </div>
-          )}
-
-          {/* Follow-up prompts - only for agent messages */}
-          {isAgentMessage(message) && followUpPrompts?.length > 0 && (
-            <div className="mt-2 w-full">
-              <div className="flex flex-col divide-y divide-zinc-950/5 dark:divide-white/5">
-                {followUpPrompts.map((prompt, index) => (
-                  <button
-                    key={index}
-                    onClick={() => onFollowUpClick?.(prompt)}
-                    className={clsx([
-                      'flex items-center justify-between',
-                      'py-2',
-                      'bg-transparent',
-                                             'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
-                      'font-inter text-base',
-                      'transition-colors',
-                      'group cursor-pointer',
-                      'text-left',
-                      'w-full',
-                    ])}
-                  >
-                    <span>{prompt}</span>
-                    <ArrowRightIcon className="w-3 h-3 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 flex-shrink-0" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Papers Section - only for agent messages */}
-          {isAgentMessage(message) && message.papers && message.papers.length > 0 && (
-            <div className="mt-4 w-full">
-              <div className="flex items-center gap-2 mb-3">
-                                 <span className="text-sm font-inter font-medium text-zinc-900 dark:text-zinc-100">
-                   RELEVANT PAPERS ({message.papers.length})
-                 </span>
-                {message.papers.length > 3 && (
-                  <button
-                    onClick={() => setShowAllPapers(!showAllPapers)}
-                                         className="flex items-center gap-1 text-sm font-inter text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
-                  >
-                    {showAllPapers ? (
-                      <>
-                        <span>Show less</span>
-                        <ChevronUpIcon className="w-3 h-3" />
-                      </>
-                    ) : (
-                      <>
-                        <span>View all</span>
-                        <ChevronDownIcon className="w-3 h-3" />
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-2 max-w-full overflow-hidden">
-                {(showAllPapers ? message.papers : message.papers.slice(0, 3)).map(
-                  (paper, index) => (
-                    <div key={`${paper.doi}-${index}`} className="w-full min-w-0">
-                      <PaperCard paper={paper} />
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      ) : (
+        // Agent Message - ChatGPT-like design
+        <div className="flex items-start gap-4 mb-6">
+
+
+                      {/* Message Content */}
+            <div className="flex-1 min-w-0">
+              <ChatMarkdown content={message.text ?? ''} />
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 mt-3">
+              {/* Play Sound Button */}
+              {message.text && message.text.trim() && (
+                <div className="flex items-center gap-1">
+                  <PlaySoundButton text={message.text} />
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">Play audio</span>
+                </div>
+              )}
+
+                             {/* Copy Button */}
+               <button
+                 onClick={() => {
+                   if (message.text) {
+                     navigator.clipboard.writeText(message.text);
+                     toast.success('Copied to clipboard');
+                   }
+                 }}
+                 className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+               >
+                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                 </svg>
+                 <span>Copy</span>
+               </button>
+
+            </div>
+
+            {/* Follow-up prompts */}
+            {followUpPrompts?.length > 0 && (
+              <div className="mt-4">
+                <div className="text-xs text-zinc-600 dark:text-zinc-400 mb-2 font-medium">
+                  Suggested follow-ups:
+                </div>
+                                 <div className="flex flex-wrap gap-2">
+                   {followUpPrompts.map((prompt, index) => (
+                     <button
+                       key={index}
+                       onClick={() => onFollowUpClick?.(prompt)}
+                       className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-full transition-colors border border-zinc-300 dark:border-zinc-600"
+                     >
+                       <span>{prompt}</span>
+                       <ArrowRightIcon className="w-3 h-3" />
+                     </button>
+                   ))}
+                 </div>
+              </div>
+            )}
+
+            {/* Papers Section */}
+            {message.papers && message.papers.length > 0 && (
+              <div className="mt-4 border-t border-zinc-200 dark:border-zinc-700 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                    Research Papers ({message.papers.length})
+                  </span>
+                  {message.papers.length > 3 && (
+                                         <button
+                       onClick={() => setShowAllPapers(!showAllPapers)}
+                       className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                     >
+                      {showAllPapers ? (
+                        <>
+                          <span>Show less</span>
+                          <ChevronUpIcon className="w-3 h-3" />
+                        </>
+                      ) : (
+                        <>
+                          <span>View all</span>
+                          <ChevronDownIcon className="w-3 h-3" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {(showAllPapers ? message.papers : message.papers.slice(0, 3)).map(
+                    (paper, index) => (
+                      <div key={`${paper.doi}-${index}`} className="w-full min-w-0">
+                        <PaperCard paper={paper} />
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 });

@@ -939,11 +939,11 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     return (
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
         <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
-          <h2 className="text-xl font-semibold font-inter mb-4 text-gray-900 dark:text-white">Configuration Error</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-base font-inter mb-4 leading-relaxed">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Configuration Error</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-base mb-4 leading-relaxed">
             NEXT_PUBLIC_AGENT_ID is not configured in environment variables.
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 font-inter leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-gray-500 leading-relaxed">
             Please check your .env file and ensure NEXT_PUBLIC_AGENT_ID is set.
           </p>
         </div>
@@ -956,8 +956,8 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     return (
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
         <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
-          <h2 className="text-xl font-semibold font-inter mb-4 text-gray-900 dark:text-white">Loading...</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-base font-inter leading-relaxed">Initializing authentication...</p>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Loading...</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Initializing authentication...</p>
         </div>
       </div>
     );
@@ -969,19 +969,19 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
               <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
-            <h1 className="text-xl font-bold font-inter text-gray-900 dark:text-white leading-tight">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
               {sessionData ? sessionData.title : <span className="animate-pulse">Loading session...</span>}
             </h1>
             {sessionData ? (
               <div className="flex items-center gap-3 mt-2">
-                <div className="text-gray-600 dark:text-gray-400 text-sm font-inter">
+                <div className="text-gray-600 dark:text-gray-400 text-sm">
                   {currentMessageCount} messages • Last activity{' '}
                   {lastActivity ? formatTimeAgo(lastActivity) : 'Never'}
                   {/* timeUpdateTrigger is used to force re-render of time display */}
                   {timeUpdateTrigger > 0 && ''}
                   {/* Real-time indicator */}
                 </div>
-                <div className="text-sm font-inter">
+                <div className="text-sm">
                   {renderConnectionStatus()}
                 </div>
               </div>
@@ -1002,7 +1002,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center gap-3">
                 <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 font-inter text-base">Connecting to agent...</span>
+                <span className="text-gray-600 dark:text-gray-400 text-base">Connecting to agent...</span>
               </div>
             </div>
           )}
@@ -1012,7 +1012,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center gap-3">
                 <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 font-inter text-base">{agentReadinessMessage}</span>
+                <span className="text-gray-600 dark:text-gray-400 text-base">{agentReadinessMessage}</span>
               </div>
             </div>
           )}
@@ -1021,10 +1021,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           {connectionStatus === 'error' && !isWaitingForAgent && (
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
-                <div className="text-red-500 dark:text-red-400 font-inter text-base mb-2">
+                <div className="text-red-500 dark:text-red-400 text-base mb-2">
                   ⚠️ Connection Error
                 </div>
-                <div className="text-gray-600 dark:text-gray-400 font-inter text-sm">
+                <div className="text-gray-600 dark:text-gray-400 text-sm">
                   Unable to connect to the agent. Please try refreshing the page.
                 </div>
               </div>
@@ -1036,7 +1036,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center gap-3">
                 <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 font-inter text-base">Loading conversation history...</span>
+                <span className="text-gray-600 dark:text-gray-400 text-base">Loading conversation history...</span>
               </div>
             </div>
           )}
@@ -1055,7 +1055,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
               {isShowingAnimation && (
                 <div className="flex items-center gap-3 py-6 text-gray-600 dark:text-gray-400">
                   <LoadingSpinner />
-                  <span className="font-inter text-base">
+                  <span className="text-base">
                     {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'} is fetching science knowledge...
                   </span>
                 </div>

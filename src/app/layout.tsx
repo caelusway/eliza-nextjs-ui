@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { siteConfig } from '@/app/shared/constants';
-import { inter } from '@/app/shared/fonts';
+import { fontVariables } from '@/app/shared/fonts';
 import '@/app/globals.css';
 import { ProgressBar } from '@/app/core/progress-bar';
 import { Toaster } from '@/app/core/toaster';
@@ -79,8 +79,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning lang="en" className={inter.className}>
-      <body className="min-h-dvh antialiased bg-white text-black scheme-light dark:bg-[#171717] dark:text-white dark:scheme-dark selection:!bg-[#fff0dd] dark:selection:!bg-[#3d2b15] overscroll-none">
+    <html suppressHydrationWarning lang="en" className={fontVariables}>
+      <body className="min-h-dvh antialiased bg-white text-black scheme-light dark:bg-[#171717] dark:text-white dark:scheme-dark selection:!bg-[#fff0dd] dark:selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
           <div className="flex grow flex-col size-full min-h-dvh">
             <ThemeProvider

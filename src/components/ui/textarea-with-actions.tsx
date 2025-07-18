@@ -54,7 +54,7 @@ const ChatForm = function ChatForm({
           className={clsx([
             'size-full',
             'relative block size-full appearance-none',
-            'font-inter text-white dark:text-white',
+            'text-white dark:text-white',
             'placeholder:text-gray-400 dark:placeholder:text-gray-400',
             'bg-transparent',
             'resize-none',
@@ -80,11 +80,16 @@ const ChatForm = function ChatForm({
                 onMouseEnter={() => setHoveredButton('file-upload')}
                 onMouseLeave={() => setHoveredButton(null)}
               >
-                <FileUploadButton onFileUpload={onFileUpload} disabled={disabled || isLoading} />
+                <div className={clsx(
+                  "transition-all duration-200",
+                  disabled || isLoading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
+                )}>
+                  <FileUploadButton onFileUpload={onFileUpload} disabled={disabled || isLoading} />
+                </div>
               </div>
               {hoveredButton === 'file-upload' && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  Upload files, images, or documents
+                  {disabled || isLoading ? 'File upload disabled' : 'Upload files, images, or documents'}
                 </div>
               )}
             </div>
@@ -98,15 +103,21 @@ const ChatForm = function ChatForm({
                 onMouseEnter={() => setHoveredButton('deep-research')}
                 onMouseLeave={() => setHoveredButton(null)}
               >
-                <DeepResearchButton
-                  isActive={deepResearchEnabled || false}
-                  onToggle={onDeepResearchToggle}
-                  disabled={disabled || isLoading}
-                />
+                <div className={clsx(
+                  "",
+                  disabled || isLoading ? "cursor-not-allowed opacity-40" : "",
+                )}>
+                  <DeepResearchButton
+                    isActive={deepResearchEnabled || false}
+                    onToggle={onDeepResearchToggle}
+                    disabled={disabled || isLoading}
+                  />
+                </div>
               </div>
               {hoveredButton === 'deep-research' && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {deepResearchEnabled ? 'Disable deep research mode' : 'Enable deep research for comprehensive analysis'}
+                  {disabled || isLoading ? 'Deep research disabled' : 
+                   deepResearchEnabled ? 'Deep research enabled - Click to disable' : 'Click to enable deep research for comprehensive analysis'}
                 </div>
               )}
             </div>
@@ -118,11 +129,16 @@ const ChatForm = function ChatForm({
                 onMouseEnter={() => setHoveredButton('speech-to-text')}
                 onMouseLeave={() => setHoveredButton(null)}
               >
-                <SpeechToTextButton onTranscript={onTranscript} disabled={disabled || isLoading} />
+                <div className={clsx(
+                  "transition-all duration-200",
+                  disabled || isLoading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:scale-105"
+                )}>
+                  <SpeechToTextButton onTranscript={onTranscript} disabled={disabled || isLoading} />
+                </div>
               </div>
               {hoveredButton === 'speech-to-text' && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  Click and speak to convert speech to text
+                  {disabled || isLoading ? 'Speech input disabled' : 'Click and speak to convert speech to text'}
                 </div>
               )}
             </div>
@@ -135,24 +151,32 @@ const ChatForm = function ChatForm({
               onMouseEnter={() => setHoveredButton('submit')}
               onMouseLeave={() => setHoveredButton(null)}
               className={clsx(
-                "size-10 transition-all duration-200 hover:scale-105",
+                "size-10 transition-all duration-200",
                 "rounded-md flex items-center justify-center",
-                "border border-zinc-700 dark:border-zinc-700",
-                input 
-                  ? "bg-brand hover:bg-brand/90 text-white border-brand hover:border-brand/90 shadow-lg shadow-brand/25" 
-                  : "bg-zinc-950 hover:bg-zinc-900 dark:bg-zinc-950 dark:hover:bg-zinc-900 text-zinc-400 dark:text-zinc-500",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
+                "border",
+                // Enhanced states for submit button using brand colors
+                input && !disabled && !isLoading
+                  ? "bg-brand hover:bg-brand-hover text-white border-brand hover:border-brand-hover shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105" 
+                  : disabled || isLoading
+                  ? "bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed opacity-50"
+                  : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300",
+                "disabled:hover:scale-100 disabled:hover:shadow-none"
               )}
             >
               {isLoading ? (
-                <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin" />
+                <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin text-brand" />
               ) : (
-                <ArrowUpIcon className="!h-5 !w-5 !shrink-0" />
+                <ArrowUpIcon className={clsx(
+                  "!h-5 !w-5 !shrink-0 transition-transform duration-200",
+                  input && !disabled ? "text-white" : "text-zinc-400"
+                )} />
               )}
             </button>
             {hoveredButton === 'submit' && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                {isLoading ? 'Processing your message...' : input ? 'Send message (Enter)' : 'Type a message to send'}
+                {isLoading ? 'Processing your message...' : 
+                 disabled ? 'Submit disabled' :
+                 input ? 'Send message (Enter)' : 'Type a message to send'}
               </div>
             )}
           </div>
