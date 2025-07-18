@@ -8,8 +8,8 @@ import { ChatMessages } from '@/components/chat/chat-messages';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
 import { ChatSessions } from '@/components/chat/chat-sessions';
 import { Button } from '@/components/ui/button';
-import { CHAT_SOURCE } from '@/constants';
-import SocketIOManager, { ControlMessageData, MessageBroadcastData } from '@/lib/socketio-manager';
+import { CHAT_SOURCE, MESSAGE_STATE_MESSAGES } from '@/constants';
+import SocketIOManager, { ControlMessageData, MessageBroadcastData, MessageStateData } from '@/lib/socketio-manager';
 import { SocketDebugUtils } from '@/lib/socket-debug-utils';
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
@@ -78,6 +78,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
   const [isAgentThinking, setIsAgentThinking] = useState<boolean>(false);
   const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
+  const [agentMessageState, setAgentMessageState] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>(
     'connecting'
   );
@@ -127,6 +128,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     setThinkingStartTime(null);
     setAnimationStartTime(null);
     isCurrentlyThinking.current = false;
+    setAgentMessageState(null); // Reset message state
     
     callback?.();
     console.log('[Chat] Animation stopped at:', Date.now());
@@ -459,6 +461,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       setAnimationStartTime(currentTime);
       setInputDisabled(true);
       isCurrentlyThinking.current = true;
+      setAgentMessageState(null); // Reset message state for new request
       
       console.log('[Chat] Started thinking animation at:', currentTime);
 
@@ -472,6 +475,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         isConnected: socketIOManager.isSocketConnected(),
         entityId: socketIOManager.getEntityId(),
       });
+      console.log('[Chat] Current Channel ID for this message:', channelId);
 
       socketIOManager.sendChannelMessage(
         finalMessageText,
@@ -652,6 +656,14 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     // Message broadcast handler
     const handleMessageBroadcast = (data: MessageBroadcastData) => {
       console.log('[Chat] Received message broadcast:', data);
+      console.log('[Chat] Message Channel Info:', {
+        messageChannelId: data.channelId,
+        messageRoomId: data.roomId,
+        currentChannelId: channelId,
+        activeSession: socketIOManager.getActiveSessionChannelId(),
+        senderId: data.senderId,
+        isAgent: data.senderId === agentId
+      });
 
       // Skip our own messages to avoid duplicates
       if (data.senderId === currentUserId) {
@@ -766,10 +778,28 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       safeStopAnimation();
     };
 
+    // Message state handler
+    const handleMessageState = (data: MessageStateData) => {
+      console.log('[Chat] Message state received:', data);
+      console.log('[Chat] Message State Channel Info:', {
+        stateChannelId: data.channelId,
+        stateRoomId: data.roomId,
+        currentChannelId: channelId,
+        state: data.state,
+        willProcess: data.roomId === channelId || data.channelId === channelId
+      });
+      
+      // Only update state if this is for our active channel
+      if (data.roomId === channelId || data.channelId === channelId) {
+        setAgentMessageState(data.state);
+      }
+    };
+
     // Attach event listeners
     socketIOManager.on('messageBroadcast', handleMessageBroadcast);
     socketIOManager.on('controlMessage', handleControlMessage);
     socketIOManager.on('messageComplete', handleMessageComplete);
+    socketIOManager.on('messageState', handleMessageState);
 
     // Join the session channel
     socketIOManager.joinChannel(channelId, serverId);
@@ -777,6 +807,12 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     // Set the active session channel ID for message filtering
     socketIOManager.setActiveSessionChannelId(channelId);
     console.log('[Chat] Set active session channel ID:', channelId);
+    console.log('[Chat] Channel ID Debug Info:', {
+      channelId,
+      sessionId,
+      activeChannels: Array.from(socketIOManager.getActiveChannels()),
+      activeSession: socketIOManager.getActiveSessionChannelId()
+    });
 
     // Setup new session if needed
     setupNewSession();
@@ -786,6 +822,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       socketIOManager.off('messageBroadcast', handleMessageBroadcast);
       socketIOManager.off('controlMessage', handleControlMessage);
       socketIOManager.off('messageComplete', handleMessageComplete);
+      socketIOManager.off('messageState', handleMessageState);
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
     };
@@ -1070,7 +1107,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                 <div className="flex items-center gap-3 py-3 text-gray-600 dark:text-gray-400">
                   <LoadingSpinner />
                   <span className="text-base">
-                    {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'} is fetching science knowledge...
+                    {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'}{' '}
+                    {agentMessageState && MESSAGE_STATE_MESSAGES[agentMessageState as keyof typeof MESSAGE_STATE_MESSAGES]
+                      ? MESSAGE_STATE_MESSAGES[agentMessageState as keyof typeof MESSAGE_STATE_MESSAGES]
+                      : MESSAGE_STATE_MESSAGES.DEFAULT}
                   </span>
                 </div>
               )}
