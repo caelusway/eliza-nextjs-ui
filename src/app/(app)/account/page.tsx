@@ -187,10 +187,10 @@ export default function AccountPage() {
   const getStatusBadge = (invite: InviteCode) => {
     const status = invite.status || 'pending';
     const colors = {
-      pending: 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border-yellow-400/30 shadow-yellow-400/20',
-      email_sent: 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-400/30 shadow-blue-400/20',
-      accepted: 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-400/30 shadow-green-400/20',
-      expired: 'bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 border-red-400/30 shadow-red-400/20'
+      pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-400/30',
+      email_sent: 'bg-blue-500/20 text-blue-400 border-blue-400/30',
+      accepted: 'bg-green-500/20 text-green-400 border-green-400/30',
+      expired: 'bg-red-500/20 text-red-400 border-red-400/30'
     };
     
     return (
@@ -230,7 +230,7 @@ export default function AccountPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-8 sm:mt-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#FF6E71] to-[#FF5A5F] flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#FF6E71]/50">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#FF6E71] flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#FF6E71]/50">
               <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
@@ -241,7 +241,7 @@ export default function AccountPage() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 rounded-xl transition-all duration-300 disabled:opacity-50 hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-xl transition-all duration-300 disabled:opacity-50 hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm"
           >
             <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             <span className="sm:inline">Refresh</span>
@@ -249,7 +249,7 @@ export default function AccountPage() {
         </div>
 
         {/* User Information */}
-        <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-xl hover:shadow-black/10 border border-white/10">
+        <div className="bg-card backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-xl hover:shadow-black/10 border border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
               <Settings className="w-5 h-5 text-muted-foreground" />
@@ -257,7 +257,7 @@ export default function AccountPage() {
             </h2>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/10 to-red-500/5 hover:from-red-500/20 hover:to-red-500/10 text-red-400 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 self-start sm:self-auto shadow-lg backdrop-blur-sm border border-red-400/20"
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 self-start sm:self-auto shadow-lg backdrop-blur-sm border border-red-400/20"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -265,8 +265,8 @@ export default function AccountPage() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-3 sm:p-4 bg-gradient-to-r from-secondary/50 to-secondary/30 rounded-xl transition-all duration-300 hover:from-secondary/70 hover:to-secondary/50 backdrop-blur-sm shadow-inner">
-              <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg">
+            <div className="flex items-center gap-3 p-3 sm:p-4 bg-secondary/50 rounded-xl transition-all duration-300 hover:bg-secondary/70 backdrop-blur-sm shadow-inner">
+              <div className="p-2 bg-blue-500/20 rounded-lg">
                 <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
               </div>
               <div className="min-w-0 flex-1">
@@ -275,8 +275,8 @@ export default function AccountPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 p-3 sm:p-4 bg-gradient-to-r from-secondary/50 to-secondary/30 rounded-xl transition-all duration-300 hover:from-secondary/70 hover:to-secondary/50 backdrop-blur-sm shadow-inner">
-              <div className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
+            <div className="flex items-center gap-3 p-3 sm:p-4 bg-secondary/50 rounded-xl transition-all duration-300 hover:bg-secondary/70 backdrop-blur-sm shadow-inner">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
                 <User className="w-5 h-5 text-purple-400 flex-shrink-0" />
               </div>
               <div className="min-w-0 flex-1">
@@ -288,14 +288,14 @@ export default function AccountPage() {
         </div>
 
         {/* Invite Management */}
-        <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-xl hover:shadow-black/10 border border-white/10">
+        <div className="bg-card backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-xl hover:shadow-black/10 border border-white/10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-muted-foreground" />
               Invite Management
             </h2>
             {inviteStats && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-gradient-to-r from-secondary/50 to-secondary/30 px-4 py-2 rounded-full backdrop-blur-sm shadow-inner">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-4 py-2 rounded-full backdrop-blur-sm shadow-inner">
                 <Badge className="w-4 h-4 text-blue-400" />
                 <span className="font-semibold">{inviteStats.remaining_codes}</span>
                 <span className="hidden sm:inline">codes remaining</span>
@@ -310,16 +310,16 @@ export default function AccountPage() {
           ) : inviteStats ? (
             <div className="space-y-4">
               {inviteStats.invites.map((invite) => (
-                <div key={invite.id} className="group bg-gradient-to-r from-secondary/30 to-secondary/20 backdrop-blur-sm rounded-xl p-4 transition-all duration-300 hover:from-secondary/50 hover:to-secondary/30 hover:shadow-lg shadow-inner border border-white/5">
+                <div key={invite.id} className="group bg-secondary/30 rounded-xl p-4 transition-all duration-300 hover:bg-secondary/50  border border-white/5">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-                        <code className="px-3 py-1.5 bg-gradient-to-r from-secondary to-secondary/80 rounded-lg text-sm font-mono break-all backdrop-blur-sm shadow-inner border border-white/10">
+                        <code className="px-3 py-1.5 bg-secondary rounded-lg text-sm font-mono break-all shadow-inner border border-white/10">
                           {invite.code}
                         </code>
                         {getStatusBadge(invite)}
                         {invite.is_legacy && (
-                          <span className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-violet-500/20 text-purple-400 rounded-lg text-xs transition-all duration-300 backdrop-blur-sm shadow-lg border border-purple-400/20">
+                          <span className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs transition-all duration-300 backdrop-blur-sm shadow-lg border border-purple-400/20">
                             Legacy
                           </span>
                         )}
@@ -350,7 +350,7 @@ export default function AccountPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => copyToClipboard(invite.code, 'Invite code copied!')}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm border border-white/10"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm border border-white/10"
                       >
                         <Copy className="w-3 h-3" />
                         <span className="hidden sm:inline">Copy</span>
@@ -361,7 +361,7 @@ export default function AccountPage() {
                           `${window.location.origin}/login?invite=${invite.code}`, 
                           'Invite link copied!'
                         )}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/90 hover:to-secondary/70 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm border border-white/10"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm border border-white/10"
                       >
                         <Link className="w-3 h-3" />
                         <span className="hidden sm:inline">Link</span>
@@ -370,7 +370,7 @@ export default function AccountPage() {
                       {invite.status !== 'accepted' && (
                         <button
                           onClick={() => setEmailDialogInvite(invite)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-[#FF6E71] to-[#FF5A5F] hover:from-[#FF6E71]/90 hover:to-[#FF5A5F]/90 text-white rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg shadow-[#FF6E71]/30"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-brand hover:bg-[#FF6E71]/90 text-white rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95"
                         >
                           <Send className="w-3 h-3" />
                           <span className="hidden sm:inline">Send</span>
@@ -383,7 +383,7 @@ export default function AccountPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-secondary/30 to-secondary/20 rounded-2xl flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-secondary/30 rounded-2xl flex items-center justify-center">
                 <UserPlus className="w-8 h-8 opacity-50" />
               </div>
               <p className="text-lg font-medium">No invite codes available</p>
@@ -393,7 +393,7 @@ export default function AccountPage() {
 
         {/* Invited Users */}
         {inviteStats && inviteStats.invited_users.length > 0 && (
-          <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/5 border border-white/5">
+          <div className="bg-card backdrop-blur-sm rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/5 border border-white/5">
             <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-muted-foreground" />
               Invited Users ({inviteStats.invited_users.length})
@@ -401,9 +401,9 @@ export default function AccountPage() {
             
             <div className="space-y-3">
               {inviteStats.invited_users.map((invitedUser, index) => (
-                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-gradient-to-r from-secondary/30 to-secondary/20 rounded-xl transition-all duration-300 hover:from-secondary/50 hover:to-secondary/30 backdrop-blur-sm shadow-inner border border-white/5">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-secondary/30 rounded-xl transition-all duration-300 hover:bg-secondary/50 backdrop-blur-sm shadow-inner border border-white/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#FF6E71] to-[#FF5A5F] flex items-center justify-center transition-all duration-300 hover:scale-105 flex-shrink-0 shadow-lg shadow-[#FF6E71]/30">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FF6E71] flex items-center justify-center transition-all duration-300 hover:scale-105 flex-shrink-0 shadow-lg shadow-[#FF6E71]/30">
                       <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -432,7 +432,7 @@ export default function AccountPage() {
       {/* Email Dialog */}
       {emailDialogInvite && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100 shadow-2xl border border-white/10">
+          <div className="bg-card backdrop-blur-sm rounded-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100 shadow-2xl border border-white/10">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Send Invite</h3>
               <button

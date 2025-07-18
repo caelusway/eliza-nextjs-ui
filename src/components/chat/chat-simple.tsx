@@ -964,7 +964,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717]">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717] mt-8 sm:mt-5">
       {/* Fixed Header Section */}
               <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl mx-auto">
@@ -1053,7 +1053,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                 }}
               />
               {isShowingAnimation && (
-                <div className="flex items-center gap-3 py-6 text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-3 py-3 text-gray-600 dark:text-gray-400">
                   <LoadingSpinner />
                   <span className="text-base">
                     {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'} is fetching science knowledge...
