@@ -21,6 +21,8 @@ const ChatForm = function ChatForm({
   onDeepResearchToggle,
   onFileUpload,
   disabled,
+  isFileUploading,
+  onFileUploadStateChange,
 }: {
   input: string;
   onInputChange: (e: { target: { value: string } }) => void;
@@ -32,6 +34,8 @@ const ChatForm = function ChatForm({
   onDeepResearchToggle?: () => void;
   onFileUpload?: (file: File, uploadResult: any) => void;
   disabled?: boolean;
+  isFileUploading?: boolean;
+  onFileUploadStateChange?: (isUploading: boolean) => void;
 }) {
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
   const handleKeyDown = (e: { key: string; shiftKey: boolean; preventDefault: () => void }) => {
@@ -50,7 +54,7 @@ const ChatForm = function ChatForm({
           value={input}
           onChange={onInputChange}
           placeholder={placeholder || 'Ask a follow up...'}
-          disabled={disabled}
+          disabled={disabled || isFileUploading}
           className={clsx([
             'size-full',
             'relative block size-full appearance-none',
@@ -66,7 +70,7 @@ const ChatForm = function ChatForm({
             'field-sizing-content resize-none',
             'scrollbar-thin scrollbar-thumb-rounded-md',
             'max-h-[48vh]',
-            disabled && 'opacity-30 cursor-not-allowed',
+            (disabled || isFileUploading) && 'opacity-30 cursor-not-allowed',
           ])}
           onKeyDown={handleKeyDown}
         />
@@ -82,14 +86,21 @@ const ChatForm = function ChatForm({
               >
                 <div className={clsx(
                   "transition-all duration-200",
-                  disabled || isLoading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
+                  disabled || isLoading || isFileUploading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
                 )}>
-                  <FileUploadButton onFileUpload={onFileUpload} disabled={disabled || isLoading} />
+                  <FileUploadButton 
+                    onFileUpload={onFileUpload} 
+                    disabled={disabled || isLoading || isFileUploading} 
+                    isUploading={isFileUploading}
+                    onUploadStateChange={onFileUploadStateChange}
+                  />
                 </div>
               </div>
               {hoveredButton === 'file-upload' && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {disabled || isLoading ? 'File upload disabled' : 'Upload files, images, or documents'}
+                  {isFileUploading ? 'Uploading file...' : 
+                   disabled || isLoading ? 'File upload disabled' : 
+                   'Upload files, images, or documents'}
                 </div>
               )}
             </div>
@@ -105,18 +116,18 @@ const ChatForm = function ChatForm({
               >
                 <div className={clsx(
                   "",
-                  disabled || isLoading ? "cursor-not-allowed opacity-40" : "",
+                  disabled || isLoading || isFileUploading ? "cursor-not-allowed opacity-40" : "",
                 )}>
                   <DeepResearchButton
                     isActive={deepResearchEnabled || false}
                     onToggle={onDeepResearchToggle}
-                    disabled={disabled || isLoading}
+                    disabled={disabled || isLoading || isFileUploading}
                   />
                 </div>
               </div>
               {hoveredButton === 'deep-research' && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {disabled || isLoading ? 'Deep research disabled' : 
+                  {disabled || isLoading || isFileUploading ? 'Deep research disabled' : 
                    deepResearchEnabled ? 'Deep research enabled - Click to disable' : 'Click to enable deep research for comprehensive analysis'}
                 </div>
               )}
@@ -131,14 +142,14 @@ const ChatForm = function ChatForm({
               >
                 <div className={clsx(
                   "transition-all duration-200",
-                  disabled || isLoading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:scale-105"
+                  disabled || isLoading || isFileUploading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:scale-105"
                 )}>
-                  <SpeechToTextButton onTranscript={onTranscript} disabled={disabled || isLoading} />
+                  <SpeechToTextButton onTranscript={onTranscript} disabled={disabled || isLoading || isFileUploading} />
                 </div>
               </div>
               {hoveredButton === 'speech-to-text' && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {disabled || isLoading ? 'Speech input disabled' : 'Click and speak to convert speech to text'}
+                  {disabled || isLoading || isFileUploading ? 'Speech input disabled' : 'Click and speak to convert speech to text'}
                 </div>
               )}
             </div>
@@ -146,7 +157,7 @@ const ChatForm = function ChatForm({
           <div className="relative">
             <button
               type="submit"
-              disabled={!input || disabled || isLoading}
+              disabled={!input || disabled || isLoading || isFileUploading}
               aria-label="Submit"
               onMouseEnter={() => setHoveredButton('submit')}
               onMouseLeave={() => setHoveredButton(null)}
@@ -155,26 +166,27 @@ const ChatForm = function ChatForm({
                 "rounded-md flex items-center justify-center",
                 "border",
                 // Enhanced states for submit button using brand colors
-                input && !disabled && !isLoading
+                input && !disabled && !isLoading && !isFileUploading
                   ? "bg-brand hover:bg-brand-hover text-white border-brand hover:border-brand-hover shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105" 
-                  : disabled || isLoading
+                  : disabled || isLoading || isFileUploading
                   ? "bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed opacity-50"
                   : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300",
                 "disabled:hover:scale-100 disabled:hover:shadow-none"
               )}
             >
-              {isLoading ? (
+              {isLoading || isFileUploading ? (
                 <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin text-brand" />
               ) : (
                 <ArrowUpIcon className={clsx(
                   "!h-5 !w-5 !shrink-0 transition-transform duration-200",
-                  input && !disabled ? "text-white" : "text-zinc-400"
+                  input && !disabled && !isFileUploading ? "text-white" : "text-zinc-400"
                 )} />
               )}
             </button>
             {hoveredButton === 'submit' && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                {isLoading ? 'Processing your message...' : 
+                {isFileUploading ? 'Uploading file...' :
+                 isLoading ? 'Processing your message...' : 
                  disabled ? 'Submit disabled' :
                  input ? 'Send message (Enter)' : 'Type a message to send'}
               </div>
@@ -197,6 +209,8 @@ export const TextareaWithActions = function TextareaWithActions({
   onDeepResearchToggle,
   onFileUpload,
   disabled,
+  isFileUploading,
+  onFileUploadStateChange,
 }: {
   input: string;
   onInputChange: (e: { target: { value: string } }) => void;
@@ -208,6 +222,8 @@ export const TextareaWithActions = function TextareaWithActions({
   onDeepResearchToggle?: () => void;
   onFileUpload?: (file: File, uploadResult: any) => void;
   disabled?: boolean;
+  isFileUploading?: boolean;
+  onFileUploadStateChange?: (isUploading: boolean) => void;
 }) {
   return (
     <div className="flex flex-col w-full">
@@ -246,7 +262,9 @@ export const TextareaWithActions = function TextareaWithActions({
             deepResearchEnabled={deepResearchEnabled}
             onDeepResearchToggle={onDeepResearchToggle}
             onFileUpload={onFileUpload}
-            disabled={disabled}
+            disabled={disabled || isFileUploading}
+            isFileUploading={isFileUploading}
+            onFileUploadStateChange={onFileUploadStateChange}
           />
         </div>
       </span>

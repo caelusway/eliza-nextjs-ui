@@ -20,12 +20,12 @@ export function ChatOptions({
   onPrivateChat 
 }: ChatOptionsProps) {
   return (
-    <div className="px-4 py-2 space-y-1">
+    <div className="px-4 py-1 space-y-1">
       {/* Public Chat */}
       <button
         onClick={onPublicChat}
         className={cn(
-          "w-full flex items-center gap-3 p-3 rounded-lg transition-colors",
+          "w-full flex items-center gap-3 p-2 rounded-lg transition-colors",
           currentChannel === 'public-chat' 
             ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" 
             : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
@@ -52,7 +52,7 @@ export function ChatOptions({
       <button
         onClick={onPrivateChat}
         className={cn(
-          "w-full flex items-center gap-3 p-3 rounded-lg transition-colors",
+          "w-full flex items-center gap-3 p-2 rounded-lg transition-colors",
           currentChannel === `private-${userId}` 
             ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" 
             : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
