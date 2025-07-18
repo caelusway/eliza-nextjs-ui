@@ -225,7 +225,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
       <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 mt-6 lg:pt-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-8 sm:mt-0">

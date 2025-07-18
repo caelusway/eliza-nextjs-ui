@@ -122,11 +122,20 @@ export const FileUploadButton = ({ onFileUpload, disabled, className }: FileUplo
         type="button"
         onClick={handleButtonClick}
         disabled={disabled || isUploading}
-        color="dark"
         aria-label="Upload file"
-        className={clsx('size-10', className)}
+        className={clsx(
+          'size-10',
+          isUploading && !disabled
+            ? ' border text-brand hover:border-brand-hover text-white shadow-lg'
+            : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300 hover:border-brand/30',
+          disabled && 'opacity-50 cursor-not-allowed',
+          className
+        )}
       >
-        <PaperClipIcon className="!h-5 !w-5 !shrink-0" />
+        <PaperClipIcon className={clsx(
+          "!h-5 !w-5 !shrink-0 transition-all duration-200",
+          isUploading && !disabled ? "text-white animate-pulse" : "text-zinc-400"
+        )} />
       </Button>
 
       <input
