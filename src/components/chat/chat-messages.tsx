@@ -113,7 +113,7 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 font-inter">
+    <div className="flex flex-col gap-4">
       {messages.map((message, i) => {
         assert(
           message && typeof message === 'object',

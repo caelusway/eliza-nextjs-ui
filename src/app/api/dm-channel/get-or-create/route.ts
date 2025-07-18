@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+const ELIZA_SERVER_URL = process.env.ELIZA_SERVER_URL || process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 
 interface GetOrCreateDMChannelRequest {
   userId: string;
@@ -91,65 +91,86 @@ export async function POST(request: NextRequest) {
       metadata.initialMessage = initialMessage;
     }
 
-    // Create the DM channel via ElizaOS API
-    const createChannelResponse = await fetch(
-      `${ELIZA_SERVER_URL}/api/messaging/central-channels`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: finalChannelId,
-          name: channelName,
-          server_id: '00000000-0000-0000-0000-000000000000', // Required server ID
-          participantCentralUserIds: [userId, agentId],
-          type: 'DM', // Channel type
-          metadata: metadata,
-        }),
-      }
-    );
-
-    if (!createChannelResponse.ok) {
-      const errorText = await createChannelResponse.text();
-      console.error('[DM Channel API] Failed to create channel:', errorText);
-      return NextResponse.json(
-        { error: 'Failed to create DM channel', details: errorText },
-        { status: 500 }
-      );
-    }
-
-    const channelData = await createChannelResponse.json();
-
-    // Add agent to the channel as a participant
+    // Try to create the DM channel via ElizaOS API, with fallback for production
+    let channelData;
     try {
-      const addAgentResponse = await fetch(
-        `${ELIZA_SERVER_URL}/api/messaging/central-channels/${finalChannelId}/agents`,
+      console.log(`[DM Channel API] Attempting to create channel via ElizaOS: ${ELIZA_SERVER_URL}`);
+      const createChannelResponse = await fetch(
+        `${ELIZA_SERVER_URL}/api/messaging/central-channels`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            agentId: agentId,
+            id: finalChannelId,
+            name: channelName,
+            server_id: '00000000-0000-0000-0000-000000000000', // Required server ID
+            participantCentralUserIds: [userId, agentId],
+            type: 'DM', // Channel type
+            metadata: metadata,
           }),
         }
       );
 
-      if (!addAgentResponse.ok) {
-        const errorText = await addAgentResponse.text();
-        console.warn('[DM Channel API] Failed to add agent to channel:', errorText);
-        // Continue anyway - agent might already be a participant
-      } else {
-        console.log('[DM Channel API] ✅ Agent successfully added to new channel');
+      if (!createChannelResponse.ok) {
+        const errorText = await createChannelResponse.text();
+        console.warn('[DM Channel API] ElizaOS channel creation failed, using fallback:', errorText);
+        throw new Error(`ElizaOS API failed: ${errorText}`);
       }
+
+      channelData = await createChannelResponse.json();
+      console.log('[DM Channel API] ✅ Channel created via ElizaOS successfully');
     } catch (error) {
-      console.warn('[DM Channel API] Error adding agent to channel:', error);
-      // Continue anyway
+      console.warn('[DM Channel API] ElizaOS not accessible, using local fallback:', error);
+      // Fallback: create a mock channel object for the frontend to use
+      channelData = {
+        id: finalChannelId,
+        name: channelName,
+        type: 'DM',
+        server_id: '00000000-0000-0000-0000-000000000000',
+        participantCentralUserIds: [userId, agentId],
+        metadata: metadata,
+        createdAt: new Date().toISOString(),
+        fallback: true, // Indicate this was created as fallback
+      };
     }
 
-    // Give the agent a moment to register the new channel
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Add agent to the channel as a participant (only if not using fallback)
+    if (!channelData.fallback) {
+      try {
+        const addAgentResponse = await fetch(
+          `${ELIZA_SERVER_URL}/api/messaging/central-channels/${finalChannelId}/agents`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              agentId: agentId,
+            }),
+          }
+        );
+
+        if (!addAgentResponse.ok) {
+          const errorText = await addAgentResponse.text();
+          console.warn('[DM Channel API] Failed to add agent to channel:', errorText);
+          // Continue anyway - agent might already be a participant
+        } else {
+          console.log('[DM Channel API] ✅ Agent successfully added to new channel');
+        }
+      } catch (error) {
+        console.warn('[DM Channel API] Error adding agent to channel:', error);
+        // Continue anyway
+      }
+    } else {
+      console.log('[DM Channel API] Skipping agent addition for fallback channel');
+    }
+
+    // Give the agent a brief moment to register the new channel (reduced for serverless)
+    if (!channelData.fallback) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
 
     return NextResponse.json({
       success: true,

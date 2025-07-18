@@ -92,8 +92,14 @@ export default function SpeechToTextButton({
       onClick={handleClick}
       disabled={disabled || isTranscribing}
       aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-      className={clsx('size-10', className)}
-      color={(isRecording ? 'red' : 'dark') as 'red' | 'dark'}
+      className={clsx(
+        'size-10 transition-all duration-200',
+        isRecording && !disabled
+          ? 'bg-brand hover:bg-brand-hover border-brand hover:border-brand-hover text-white shadow-lg shadow-brand/25 animate-pulse'
+          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+        disabled && 'opacity-50 cursor-not-allowed',
+        className
+      )}
     >
       {isTranscribing ? (
         <div className="flex space-x-0.5">
@@ -111,7 +117,10 @@ export default function SpeechToTextButton({
           />
         </div>
       ) : (
-        <MicrophoneIcon className="!h-5 !w-5 !shrink-0" />
+        <MicrophoneIcon className={clsx(
+          "!h-5 !w-5 !shrink-0 transition-all duration-200",
+          isRecording && !disabled ? "text-white" : "text-zinc-400"
+        )} />
       )}
     </Button>
   );

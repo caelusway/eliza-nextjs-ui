@@ -9,6 +9,7 @@ export { ResizableTextarea } from './resizable-textarea';
 export { TextareaWithActions } from './textarea-with-actions';
 export { CodeBlock } from './code-block';
 export { MemoizedMarkdown } from './memoized-markdown';
+export { ChatMarkdown } from './chat-markdown';
 export { Link } from './link';
 export { Logo } from './logo';
 export { PaperCard } from './paper-card';
