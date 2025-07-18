@@ -7,6 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import ChatPreviewSlider from '@/components/login/chat-preview-slider';
 import LoginForm from '@/components/login/login-form';
 import { PostHogTracking } from '@/lib/posthog';
+import { useUserManager } from '@/lib/user-manager';
 
 interface InviteValidationResult {
   valid: boolean;
@@ -23,6 +24,7 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, logout, authenticated, ready, user } = usePrivy();
+  const { getUserId } = useUserManager();
   
   const [inviteCode, setInviteCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
@@ -75,7 +77,7 @@ function LoginPageContent() {
           // Track user sign in
           PostHogTracking.getInstance().userSignIn({
             email: user.email?.address,
-            userId: user.id,
+            userId: getUserId(),
           });
           
           // Check for return URL parameter
@@ -226,10 +228,10 @@ function LoginPageContent() {
         console.log('Redeem success:', data);
         
         // Track invite redemption and user signup
-        PostHogTracking.getInstance().inviteRedeemed(inviteCode, user.id);
+        PostHogTracking.getInstance().inviteRedeemed(inviteCode, getUserId());
         PostHogTracking.getInstance().userSignUp({
           email: user.email?.address,
-          userId: user.id,
+          userId: getUserId(),
           inviteCode,
         });
         
