@@ -3,6 +3,7 @@
 import { PaperClipIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { useRef, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useUserManager } from '@/lib/user-manager';
 
@@ -10,6 +11,8 @@ interface FileUploadButtonProps {
   onFileUpload: (file: File, uploadResult: any) => void;
   disabled?: boolean;
   className?: string;
+  isUploading?: boolean;
+  onUploadStateChange?: (isUploading: boolean) => void;
 }
 
 const SUPPORTED_MIME_TYPES = [
@@ -29,10 +32,19 @@ const SUPPORTED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-export const FileUploadButton = ({ onFileUpload, disabled, className }: FileUploadButtonProps) => {
+export const FileUploadButton = ({ 
+  onFileUpload, 
+  disabled, 
+  className, 
+  isUploading: externalIsUploading, 
+  onUploadStateChange 
+}: FileUploadButtonProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [internalIsUploading, setInternalIsUploading] = useState(false);
   const { getUserId } = useUserManager();
+
+  // Use external state if provided, otherwise use internal state
+  const isUploading = externalIsUploading !== undefined ? externalIsUploading : internalIsUploading;
 
   const handleButtonClick = () => {
     if (disabled || isUploading) return;
@@ -58,7 +70,12 @@ export const FileUploadButton = ({ onFileUpload, disabled, className }: FileUplo
       return;
     }
 
-    setIsUploading(true);
+    // Set uploading state
+    if (onUploadStateChange) {
+      onUploadStateChange(true);
+    } else {
+      setInternalIsUploading(true);
+    }
 
     try {
       const agentId = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -101,7 +118,12 @@ export const FileUploadButton = ({ onFileUpload, disabled, className }: FileUplo
       console.error('File upload error:', error);
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setIsUploading(false);
+      // Clear uploading state
+      if (onUploadStateChange) {
+        onUploadStateChange(false);
+      } else {
+        setInternalIsUploading(false);
+      }
     }
   };
 
@@ -121,10 +143,14 @@ export const FileUploadButton = ({ onFileUpload, disabled, className }: FileUplo
           className
         )}
       >
-        <PaperClipIcon className={clsx(
-          "!h-5 !w-5 !shrink-0 transition-all duration-200",
-          isUploading && !disabled ? "text-white animate-pulse" : "text-zinc-400"
-        )} />
+        {isUploading && !disabled ? (
+          <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin text-white" />
+        ) : (
+          <PaperClipIcon className={clsx(
+            "!h-5 !w-5 !shrink-0 transition-all duration-200",
+            "text-zinc-400"
+          )} />
+        )}
       </Button>
 
       <input
