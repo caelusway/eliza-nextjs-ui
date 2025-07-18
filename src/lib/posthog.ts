@@ -38,9 +38,8 @@ export class PostHogTracking {
     const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (posthogKey) {
       posthog.init(posthogKey, {
-        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.posthog.com',
-        capture_pageview: false,
-        capture_pageleave: false,
+        api_host: "/relay-cAnL",
+        ui_host: 'https://eu.posthog.com',
       });
       this._enabled = true;
       this.postHogClient = posthog;
