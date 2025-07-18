@@ -86,6 +86,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [agentStatus, setAgentStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
   
+  // File upload state
+  const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
+  
   // Real-time session tracking
   const [currentMessageCount, setCurrentMessageCount] = useState<number>(0);
   const [lastActivity, setLastActivity] = useState<string | null>(null);
@@ -417,6 +420,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         !currentUserId ||
         !channelId ||
         inputDisabled ||
+        isFileUploading ||
         connectionStatus !== 'connected'
       ) {
         console.warn('[Chat] Cannot send message (stale state prevented):', {
@@ -424,6 +428,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           hasUserId: !!currentUserId,
           hasChannelId: !!channelId,
           inputDisabled,
+          isFileUploading,
           connectionStatus,
         });
         return;
@@ -920,7 +925,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const handleSubmit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
-      if (!input.trim() || !currentUserId || inputDisabled) return;
+      if (!input.trim() || !currentUserId || inputDisabled || isFileUploading) return;
 
       const messageToSend = input.trim();
       setInput('');
@@ -938,7 +943,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       
       sendMessage(messageToSend);
     },
-    [input, currentUserId, inputDisabled, sendMessage]
+    [input, currentUserId, inputDisabled, isFileUploading, sendMessage]
   );
 
   // --- Handle Speech-to-Text ---
@@ -958,6 +963,15 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const handleDeepResearchToggle = useCallback(() => {
     setDeepResearchEnabled((prev) => !prev);
   }, []);
+
+  // --- Handle File Upload State Change ---
+  const handleFileUploadStateChange = useCallback(
+    (isUploading: boolean) => {
+      console.log('[Chat] File upload state changed:', isUploading);
+      setIsFileUploading(isUploading);
+    },
+    []
+  );
 
   // --- Handle File Upload ---
   const handleFileUpload = useCallback(
@@ -1001,7 +1015,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717]">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717] mt-8 sm:mt-5">
       {/* Fixed Header Section */}
               <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl mx-auto">
@@ -1090,7 +1104,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                 }}
               />
               {isShowingAnimation && (
-                <div className="flex items-center gap-3 py-6 text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-3 py-3 text-gray-600 dark:text-gray-400">
                   <LoadingSpinner />
                   <span className="text-base">
                     {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'}{' '}
@@ -1118,17 +1132,21 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
               placeholder={
                 !isUserAuthenticated()
                   ? 'Please login to start a chat..'
-                  : isWaitingForAgent
-                    ? 'Setting up agent...'
-                    : connectionStatus === 'connected'
-                      ? 'Type your message...'
-                      : 'Connecting...'
+                  : isFileUploading
+                    ? 'Uploading file...'
+                    : isWaitingForAgent
+                      ? 'Setting up agent...'
+                      : connectionStatus === 'connected'
+                        ? 'Type your message...'
+                        : 'Connecting...'
               }
               onTranscript={handleTranscript}
               deepResearchEnabled={deepResearchEnabled}
               onDeepResearchToggle={handleDeepResearchToggle}
               onFileUpload={handleFileUpload}
               disabled={!isUserAuthenticated()}
+              isFileUploading={isFileUploading}
+              onFileUploadStateChange={handleFileUploadStateChange}
             />
           </div>
         </div>

@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
-import { useSessions } from '@/contexts/SessionsContext';
 
 interface NewChatWelcomeProps {
   userId: string;
@@ -18,14 +17,17 @@ const SUGGESTED_PROMPTS = [
 
 export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const router = useRouter();
-  const { addNewSession } = useSessions();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clickedPrompt, setClickedPrompt] = useState<string | null>(null);
 
+
+
   const handlePromptClick = async (prompt: string) => {
     if (!userId || isLoading) return;
 
+    // Show the prompt in the input box first
+    setInput(prompt);
     setClickedPrompt(prompt);
     setIsLoading(true);
 
@@ -47,27 +49,16 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         throw new Error(data.error || 'Failed to create chat session');
       }
 
-      // Add new session to sidebar immediately without API call
-      const newSession = {
-        id: data.data.sessionId,
-        channelId: data.data.channelId,
-        title: prompt,
-        messageCount: 0,
-        lastActivity: new Date().toISOString(),
-        preview: prompt.substring(0, 100),
-        isFromAgent: false,
-        metadata: {
-          initialMessage: prompt,
-        },
-      };
-      addNewSession(newSession);
-
-      // Redirect to the new session
+      // Clean the input box before redirecting
+      setInput('');
+      
+      // Redirect to the new session (same as new-chat-button.tsx)
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
       console.error('[NewChatWelcome] Error creating session:', err);
       setIsLoading(false);
       setClickedPrompt(null);
+      // Keep the prompt in input on error so user can retry
     }
   };
 
@@ -96,22 +87,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         throw new Error(data.error || 'Failed to create chat session');
       }
 
-      // Add new session to sidebar immediately without API call
-      const newSession = {
-        id: data.data.sessionId,
-        channelId: data.data.channelId,
-        title: input.trim(),
-        messageCount: 0,
-        lastActivity: new Date().toISOString(),
-        preview: input.trim().substring(0, 100),
-        isFromAgent: false,
-        metadata: {
-          initialMessage: input.trim(),
-        },
-      };
-      addNewSession(newSession);
-
-      // Redirect to the new session
+      // Redirect to the new session (same as new-chat-button.tsx)
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
       console.error('[NewChatWelcome] Error creating session:', err);
@@ -147,7 +123,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
                   key={index}
                   onClick={() => handlePromptClick(prompt)}
                   disabled={isLoading}
-                  className={`group relative p-3 sm:p-4 lg:p-5 text-left bg-white dark:bg-zinc-800 rounded-lg sm:rounded-xl border border-zinc-200 dark:border-zinc-600 transition-all duration-200 cursor-pointer ${
+                  className={`group relative p-4 sm:p-5 lg:p-6 text-left bg-white dark:bg-zinc-800 rounded-lg sm:rounded-xl  dark:border-zinc-600 transition-all duration-200 cursor-pointer ${
                     isLoading
                       ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:shadow-md hover:border-brand/30'
@@ -191,7 +167,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
           {isLoading && (
             <div className="flex items-center justify-center gap-2 text-brand text-sm">
               <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
-              <span>Creating your chat session...</span>
+              <span>Creating chat session...</span>
             </div>
           )}
         </div>
