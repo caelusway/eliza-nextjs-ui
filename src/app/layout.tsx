@@ -1,40 +1,75 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
-import { siteConfig } from '@/app/constants';
-import { inter } from '@/app/fonts';
+import { siteConfig } from '@/app/shared/constants';
+import { fontVariables } from '@/app/shared/fonts';
 import '@/app/globals.css';
-import { ProgressBar } from '@/app/progress-bar';
-import { Toaster } from '@/app/toaster';
-import { Header } from '@/components/header';
-import { PrivyClientProvider } from './privy-client-provider';
+import { ProgressBar } from '@/app/core/progress-bar';
+import { Toaster } from '@/app/core/toaster';
+import { ConditionalHeader } from '@/components/layout/conditional-header';
+import { PrivyClientProvider } from './core/privy-client-provider';
+import { AuthWrapper } from '@/components/auth/auth-wrapper';
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: 'white',
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
-  title: `${siteConfig.name}`,
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
   description: siteConfig.description,
+  keywords: siteConfig.keywords,
+  authors: [{ name: siteConfig.creator }],
+  creator: siteConfig.creator,
+  publisher: siteConfig.creator,
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    siteName: siteConfig.name,
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [siteConfig.ogImage],
-    type: 'website',
     url: siteConfig.url,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      },
+    ],
     locale: 'en_US',
+    type: 'website',
   },
   icons: siteConfig.icons,
   twitter: {
     card: 'summary_large_image',
-    site: siteConfig.name,
     title: siteConfig.name,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
     creator: siteConfig.creator,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -44,8 +79,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning lang="en" className={inter.className}>
-      <body className="min-h-dvh antialiased bg-white text-black scheme-light dark:bg-black dark:text-white dark:scheme-dark selection:!bg-[#fff0dd] dark:selection:!bg-[#3d2b15] overscroll-none">
+    <html suppressHydrationWarning lang="en" className={fontVariables}>
+      <body className="min-h-dvh antialiased bg-white text-black scheme-light dark:bg-[#171717] dark:text-white dark:scheme-dark selection:!bg-[#fff0dd] dark:selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
           <div className="flex grow flex-col size-full min-h-dvh">
             <ThemeProvider
@@ -55,8 +90,10 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <PrivyClientProvider>
-                <Header />
-                {children}
+                <AuthWrapper>
+                  <ConditionalHeader />
+                  {children}
+                </AuthWrapper>
               </PrivyClientProvider>
             </ThemeProvider>
           </div>

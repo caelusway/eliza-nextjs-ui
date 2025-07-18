@@ -22,8 +22,23 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    // Performance optimizations
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "composite": false
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "elizaos/**/*"]
+  "exclude": [
+    "node_modules", 
+    "elizaos/**/*", 
+    "aubrai-old-ui/**/*",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/.git/**"
+  ],
+  "ts-node": {
+    "esm": true
+  }
 }
