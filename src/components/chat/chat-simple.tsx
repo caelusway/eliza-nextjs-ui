@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, FormEvent, useLayoutEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ChatMessages } from '@/components/chat/chat-messages';
@@ -73,6 +73,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [inputDisabled, setInputDisabled] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(propSessionId || null);
   const [sessionData, setSessionData] = useState<ChatSession | null>(propSessionData || null);
+  const [followUpQues, setFollowUpQues] = useState<string[] | undefined>([])
   
   const [channelId, setChannelId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
@@ -477,7 +478,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       });
       console.log('[Chat] Current Channel ID for this message:', channelId);
 
-      socketIOManager.sendChannelMessage(
+      socketIOManager.sendChannelMessage( // sending message logic
         finalMessageText,
         channelId,
         CHAT_SOURCE,
@@ -503,6 +504,20 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     },
     []
   );
+
+  // scroll to view once follow up questions have been loaded
+  useEffect(() => {
+    if (followUpQues?.length) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [followUpQues]);
+
+  useEffect(() => {
+    const questions = localStorage.getItem("questions")
+    if (questions)
+      console.log(questions)
+      setFollowUpQues(JSON.parse(questions))
+  }, [])
 
   // --- Set up Socket Event Listeners ---
   useEffect(() => {
@@ -748,6 +763,17 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             // Stop animation immediately when streaming is complete - this is the actual response
             console.log('[Chat] Agent response streaming complete, stopping animation');
             safeStopAnimation();
+            // Fetch follow up questions after streaming stops
+            const body = {
+              prompt: fullText
+            }
+            fetch('/api/recommended-questions', {
+              body: JSON.stringify(body),
+              method: "POST"
+            }).then(res => res.json()).then(res => {
+              setFollowUpQues(res.questions)
+              localStorage.setItem("questions", JSON.stringify(res.questions))
+            })
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
       } else {
@@ -923,8 +949,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
   // --- Form submission handler ---
   const handleSubmit = useCallback(
-    (e: FormEvent) => {
-      e.preventDefault();
+    (e?: FormEvent) => {
+      setFollowUpQues([]);
+      if (e) e.preventDefault();
       if (!input.trim() || !currentUserId || inputDisabled || isFileUploading) return;
 
       const messageToSend = input.trim();
@@ -1097,9 +1124,8 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             <>
               <ChatMessages
                 messages={messages}
-                followUpPromptsMap={{}}
+                followUpPromptsMap={{[messages.length / 2 - 1]: followUpQues}}
                 onFollowUpClick={(prompt) => {
-                  // Handle follow-up prompts by setting as new input
                   setInput(prompt);
                 }}
               />
