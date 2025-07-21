@@ -767,7 +767,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             const body = {
               prompt: fullText
             }
-            fetch('/api/recommended-questions', {
+            fetch('/api/followup-questions', {
               body: JSON.stringify(body),
               method: "POST"
             }).then(res => res.json()).then(res => {
