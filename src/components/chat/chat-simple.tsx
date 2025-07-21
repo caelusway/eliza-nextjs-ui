@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, FormEvent, useLayoutEffect } from 'react';
+import { useCallback, useEffect, useRef, useState, FormEvent } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ChatMessages } from '@/components/chat/chat-messages';
