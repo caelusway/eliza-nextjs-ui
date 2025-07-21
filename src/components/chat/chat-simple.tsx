@@ -1126,6 +1126,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                 messages={messages}
                 followUpPromptsMap={{[messages.length / 2 - 1]: followUpQues}}
                 onFollowUpClick={(prompt) => {
+                  // Handle follow-up prompts by setting as new input
                   setInput(prompt);
                 }}
               />
