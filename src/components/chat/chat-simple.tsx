@@ -8,6 +8,7 @@ import { ChatMessages } from '@/components/chat/chat-messages';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
 import { ChatSessions } from '@/components/chat/chat-sessions';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui';
 import { CHAT_SOURCE, MESSAGE_STATE_MESSAGES } from '@/constants';
 import SocketIOManager, { ControlMessageData, MessageBroadcastData, MessageStateData } from '@/lib/socketio-manager';
 import { SocketDebugUtils } from '@/lib/socket-debug-utils';
@@ -976,13 +977,42 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   // --- Handle File Upload ---
   const handleFileUpload = useCallback(
     (file: File, uploadResult: any) => {
-      console.log('[Chat] File uploaded:', file.name, uploadResult);
+      console.log('[Chat] File upload result:', file.name, uploadResult);
 
-      // Create a message indicating the file was uploaded and enable internal knowledge
-      const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
-      sendMessage(fileMessage, { useInternalKnowledge: true });
+      // Check if upload was successful
+      if (uploadResult && uploadResult.success) {
+        console.log('[Chat] ✅ Upload successful, sending message to agent...');
+        console.log('[Chat] Current state before sending:', {
+          currentUserId,
+          channelId,
+          inputDisabled,
+          isFileUploading,
+          connectionStatus,
+          sendMessageRef: !!sendMessageRef.current
+        });
+        
+        // Create a message indicating the file was uploaded and enable internal knowledge
+        const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
+        console.log('[Chat] Message to send:', fileMessage);
+        
+        // Small delay to ensure upload state is cleared before sending message
+        setTimeout(() => {
+          console.log('[Chat] Sending message after short delay...');
+          sendMessage(fileMessage, { useInternalKnowledge: true });
+        }, 100);
+      } else {
+        // Handle upload failure
+        console.error('[Chat] File upload failed:', uploadResult);
+        
+        // Show error message to user via toast
+        const errorMessage = uploadResult?.error?.message || 'Failed to upload file';
+        toast.error(`Failed to upload "${file.name}": ${errorMessage}. Please try uploading the file again.`);
+        
+        // Make sure animation is stopped since no agent response is expected
+        safeStopAnimation();
+      }
     },
-    [sendMessage]
+    [sendMessage, channelId]
   );
 
   // Check if environment is properly configured

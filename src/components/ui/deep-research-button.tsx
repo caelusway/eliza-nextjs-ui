@@ -24,10 +24,10 @@ export default function DeepResearchButton({
       disabled={disabled}
       aria-label={isActive ? 'Disable deep research' : 'Enable deep research'}
       className={clsx(
-        'size-10 rounded-md border focus:outline-none',
+        'size-10',
         isActive && !disabled
-        ? 'bg-zinc-900 border border-[#FF6E71] text-white'
-        : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+          ? ' text-white shadow-lg shadow-brand/25 animate-pulse'
+          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}

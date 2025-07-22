@@ -76,7 +76,7 @@ const ChatForm = function ChatForm({
         />
       </div>
       <div className="flex w-full items-center justify-between px-3 pb-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {onFileUpload && (
             <div className="relative">
               <div 
@@ -85,28 +85,52 @@ const ChatForm = function ChatForm({
                 onMouseLeave={() => setHoveredButton(null)}
               >
                 <div className={clsx(
-                  "transition-all duration-200",
-                  disabled || isLoading || isFileUploading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
+                  "relative rounded-lg group",
+                  disabled || isLoading || isFileUploading 
+                    ? "opacity-60 cursor-not-allowed" 
+                    : "opacity-100"
                 )}>
                   <FileUploadButton 
                     onFileUpload={onFileUpload} 
                     disabled={disabled || isLoading || isFileUploading} 
                     isUploading={isFileUploading}
                     onUploadStateChange={onFileUploadStateChange}
+                    className={clsx(
+                      "border relative overflow-hidden",
+                      isFileUploading && !disabled
+                        ? "bg-zinc-900 border-brand text-white"
+                        : disabled || isLoading
+                        ? "bg-zinc-900 border-zinc-700 text-zinc-500"
+                        : "bg-zinc-900 border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white"
+                    )}
                   />
+                  {/* Active indicator */}
+                  {isFileUploading && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand rounded-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    </div>
+                  )}
+
                 </div>
               </div>
               {hoveredButton === 'file-upload' && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {isFileUploading ? 'Uploading file...' : 
-                   disabled || isLoading ? 'File upload disabled' : 
-                   'Upload files, images, or documents'}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 text-xs text-zinc-200 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-xl border border-zinc-700 backdrop-blur-sm">
+                  {isFileUploading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Uploading file...
+                    </span>
+                  ) : disabled || isLoading ? (
+                    <span className="text-zinc-400">File upload disabled</span>
+                  ) : (
+                    <span>Upload files, images, or documents</span>
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {onDeepResearchToggle && (
             <div className="relative">
               <div 
@@ -115,20 +139,45 @@ const ChatForm = function ChatForm({
                 onMouseLeave={() => setHoveredButton(null)}
               >
                 <div className={clsx(
-                  "",
-                  disabled || isLoading || isFileUploading ? "cursor-not-allowed opacity-40" : "",
+                  "relative rounded-lg",
+                  disabled || isLoading || isFileUploading 
+                    ? "opacity-60 cursor-not-allowed" 
+                    : "opacity-100 hover:shadow-lg hover:shadow-zinc-900/25"
                 )}>
-                  <DeepResearchButton
-                    isActive={deepResearchEnabled || false}
-                    onToggle={onDeepResearchToggle}
-                    disabled={disabled || isLoading || isFileUploading}
-                  />
+                  <div className={clsx(
+                    "relative",
+                    deepResearchEnabled && !disabled && !isLoading && !isFileUploading
+                      ? "ring-2 ring-brand/40 rounded-lg shadow-lg shadow-brand/20"
+                      : ""
+                  )}>
+                    <DeepResearchButton
+                      isActive={deepResearchEnabled || false}
+                      onToggle={onDeepResearchToggle}
+                      disabled={disabled || isLoading || isFileUploading}
+                    />
+                    {/* Active indicator */}
+                    {deepResearchEnabled && !disabled && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand rounded-full flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      </div>
+                    )}
+                    {/* Subtle glow effect when enabled but not active */}
+
+                  </div>
                 </div>
               </div>
               {hoveredButton === 'deep-research' && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {disabled || isLoading || isFileUploading ? 'Deep research disabled' : 
-                   deepResearchEnabled ? 'Deep research enabled - Click to disable' : 'Click to enable deep research for comprehensive analysis'}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 text-xs text-zinc-200 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-xl border border-zinc-700 backdrop-blur-sm max-w-xs">
+                  {disabled || isLoading || isFileUploading ? (
+                    <span className="text-zinc-400">Deep research disabled</span>
+                  ) : deepResearchEnabled ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-brand rounded-full"></div>
+                      Deep research enabled - Click to disable
+                    </span>
+                  ) : (
+                    <span>Click to enable deep research for comprehensive analysis</span>
+                  )}
                 </div>
               )}
             </div>
@@ -141,54 +190,110 @@ const ChatForm = function ChatForm({
                 onMouseLeave={() => setHoveredButton(null)}
               >
                 <div className={clsx(
-                  "transition-all duration-200",
-                  disabled || isLoading || isFileUploading ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:scale-105"
+                  "relative rounded-lg group",
+                  disabled || isLoading || isFileUploading 
+                    ? "opacity-60 cursor-not-allowed" 
+                    : "opacity-100"
                 )}>
-                  <SpeechToTextButton onTranscript={onTranscript} disabled={disabled || isLoading || isFileUploading} />
+                                                        <div className={clsx(
+                    "rounded-lg relative overflow-hidden",
+                    disabled || isLoading || isFileUploading
+                      ? "bg-zinc-900 border border-zinc-700"
+                      : "bg-zinc-900 border border-zinc-600 hover:border-zinc-400"
+                  )}>
+                      <SpeechToTextButton 
+                        onTranscript={onTranscript} 
+                        disabled={disabled || isLoading || isFileUploading}
+                        className={clsx(
+                          disabled || isLoading || isFileUploading
+                            ? "text-zinc-500"
+                            : "text-zinc-300 hover:text-white"
+                        )}
+                      />
+
+                  </div>
                 </div>
               </div>
               {hoveredButton === 'speech-to-text' && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                  {disabled || isLoading || isFileUploading ? 'Speech input disabled' : 'Click and speak to convert speech to text'}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 text-xs text-zinc-200 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-xl border border-zinc-700 backdrop-blur-sm">
+                  {disabled || isLoading || isFileUploading ? (
+                    <span className="text-zinc-400">Speech input disabled</span>
+                  ) : (
+                    <span>Click and speak to convert speech to text</span>
+                  )}
                 </div>
               )}
             </div>
           )}
           <div className="relative">
-            <button
-              type="submit"
-              disabled={!input || disabled || isLoading || isFileUploading}
-              aria-label="Submit"
-              onMouseEnter={() => setHoveredButton('submit')}
-              onMouseLeave={() => setHoveredButton(null)}
-              className={clsx(
-                "size-10 transition-all duration-200",
-                "rounded-md flex items-center justify-center",
-                "border",
-                // Enhanced states for submit button using brand colors
-                input && !disabled && !isLoading && !isFileUploading
-                  ? "bg-brand hover:bg-brand-hover text-white border-brand hover:border-brand-hover shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105" 
-                  : disabled || isLoading || isFileUploading
-                  ? "bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed opacity-50"
-                  : "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300",
-                "disabled:hover:scale-100 disabled:hover:shadow-none"
-              )}
-            >
-              {isLoading || isFileUploading ? (
-                <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin text-brand" />
-              ) : (
-                <ArrowUpIcon className={clsx(
-                  "!h-5 !w-5 !shrink-0 transition-transform duration-200",
-                  input && !disabled && !isFileUploading ? "text-white" : "text-zinc-400"
-                )} />
-              )}
-            </button>
+            <div className={clsx(
+              "relative rounded-lg group"
+            )}>
+              <button
+                type="submit"
+                disabled={!input || disabled || isLoading || isFileUploading}
+                aria-label="Submit"
+                onMouseEnter={() => setHoveredButton('submit')}
+                onMouseLeave={() => setHoveredButton(null)}
+                className={clsx(
+                  "size-10 relative z-10",
+                  "rounded-lg flex items-center justify-center",
+                  "border group overflow-hidden",
+                  input && !disabled && !isLoading && !isFileUploading
+                    ? "bg-zinc-900 border-brand text-white"
+                    : disabled || isLoading || isFileUploading || !input
+                    ? "bg-zinc-900 border-zinc-700 text-zinc-500 cursor-not-allowed opacity-60"
+                    : "bg-zinc-900 border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white",
+                  "focus:outline-none focus:ring-2 focus:ring-brand/50 focus:ring-offset-2 focus:ring-offset-zinc-800"
+                )}
+              >
+                {isLoading || isFileUploading ? (
+                  <Loader2 className={clsx(
+                    "!h-5 !w-5 !shrink-0 animate-spin",
+                    isFileUploading ? "text-red-400" : "text-zinc-300"
+                  )} />
+                ) : (
+                  <ArrowUpIcon className={clsx(
+                    "!h-5 !w-5 !shrink-0",
+                    input && !disabled && !isFileUploading 
+                      ? "text-white" 
+                      : "text-zinc-500"
+                  )} />
+                )}
+                
+                {/* Ready indicator when input is present */}
+                {input && !disabled && !isLoading && !isFileUploading && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand rounded-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                  </div>
+                )}
+              </button>
+              
+
+            </div>
+            
             {hoveredButton === 'submit' && (
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-950 dark:bg-zinc-950 text-xs text-zinc-200 dark:text-zinc-200 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-800">
-                {isFileUploading ? 'Uploading file...' :
-                 isLoading ? 'Processing your message...' : 
-                 disabled ? 'Submit disabled' :
-                 input ? 'Send message (Enter)' : 'Type a message to send'}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-zinc-900 text-xs text-zinc-200 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-xl border border-zinc-700 backdrop-blur-sm">
+                {isFileUploading ? (
+                  <span className="flex items-center gap-2 text-blue-300">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Uploading file...
+                  </span>
+                ) : isLoading ? (
+                  <span className="flex items-center gap-2 text-brand">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Processing your message...
+                  </span>
+                ) : disabled ? (
+                  <span className="text-zinc-400">Submit disabled</span>
+                ) : input ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-brand rounded-full animate-pulse"></div>
+                    Send message (Enter)
+                  </span>
+                ) : (
+                  <span className="text-zinc-400">Type a message to send</span>
+                )}
               </div>
             )}
           </div>
