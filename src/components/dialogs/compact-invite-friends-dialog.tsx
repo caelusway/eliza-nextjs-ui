@@ -281,7 +281,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
           <DialogPrimitive.Content 
-            className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] focus:outline-none overflow-visible"
+            className="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] bg-zinc-50 dark:bg-zinc-800 rounded-3xl shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] focus:outline-none overflow-hidden"
             >
             <DialogPrimitive.Title className="sr-only">
               Invite friends to AUBRAI
@@ -291,9 +291,9 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
             </DialogPrimitive.Description>
             
             {/* Header */}
-            <div className="p-6 pb-4 relative border-b border-zinc-200 dark:border-zinc-800">
+            <div className="p-8 pb-6 relative border-b border-zinc-200/60 dark:border-zinc-700/60">
               <DialogPrimitive.Close
-                className="absolute right-6 top-6 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
+                className="absolute right-8 top-8 p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-opacity-50"
                 aria-label="Close dialog"
               >
                 <X className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
@@ -309,8 +309,8 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
             </div>
 
             {/* Stats Bar */}
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <div className="px-8 py-6">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-700/50">
                 <div className="flex gap-8">
                   <div>
                     <div className="text-lg font-semibold text-zinc-900 dark:text-white">{availableCodesCount}</div>
@@ -328,7 +328,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
             </div>
 
             {/* Invite List */}
-            <div className="px-6 pb-6">
+            <div className="px-8 pb-8">
               <div className="space-y-3 max-h-[320px] overflow-y-auto overflow-x-visible">
                 {/* Invite Rows */}
                 {isLoading ? (
@@ -347,7 +347,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                     return (
                       <div
                         key={invite.id}
-                        className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors bg-white dark:bg-zinc-900/50"
+                        className="p-4 border border-zinc-200/60 dark:border-zinc-700/60 rounded-xl hover:border-zinc-300/80 dark:hover:border-zinc-600/80 transition-all duration-200 hover:shadow-sm"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 flex-1">
@@ -363,13 +363,13 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                 onClick={() => copyToClipboard(invite.code, 'code')}
                                 onMouseEnter={() => setHoveredButton(`copy-${invite.id}`)}
                                 onMouseLeave={() => setHoveredButton(null)}
-                                className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none"
+                                className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 focus:outline-none"
                                 aria-label="Copy invite code"
                               >
                                 <Copy className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                               </button>
                               {hoveredButton === `copy-${invite.id}` && (
-                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg overflow-visible">
+                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-lg overflow-visible">
                                   Copy code
                                 </div>
                               )}
@@ -381,13 +381,13 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                 onClick={() => copyToClipboard(`${window.location.origin}/login?invite=${invite.code}`, 'link')}
                                 onMouseEnter={() => setHoveredButton(`share-${invite.id}`)}
                                 onMouseLeave={() => setHoveredButton(null)}
-                                className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none"
+                                className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 focus:outline-none"
                                 aria-label="Copy invite link"
                               >
                                 <Link className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                               </button>
                               {hoveredButton === `share-${invite.id}` && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg">
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-lg">
                                   Share link
                                 </div>
                               )}
@@ -400,7 +400,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                   onClick={() => setEmailDialogInvite(invite)}
                                   onMouseEnter={() => setHoveredButton(`send-${invite.id}`)}
                                   onMouseLeave={() => setHoveredButton(null)}
-                                  className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none"
+                                  className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 focus:outline-none"
                                   disabled={isSending === invite.id}
                                   aria-label="Send invite via email"
                                 >
@@ -411,7 +411,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                                   )}
                                 </button>
                                 {hoveredButton === `send-${invite.id}` && (
-                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded whitespace-nowrap pointer-events-none z-[100] shadow-lg">
+                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-lg">
                                     Send invite
                                   </div>
                                 )}
@@ -435,7 +435,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
           <DialogPrimitive.Portal>
             <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
             <DialogPrimitive.Content 
-              className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
+              className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] bg-zinc-50 dark:bg-zinc-800 rounded-3xl p-8 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
               >
               <DialogPrimitive.Title className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Send Invite via Email</DialogPrimitive.Title>
               <DialogPrimitive.Description className="sr-only">Send an invite code to a friend via email</DialogPrimitive.Description>
@@ -448,7 +448,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     placeholder="friend@example.com"
-                    className="w-full mt-1 px-3 py-2 border rounded-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                    className="w-full mt-1 px-3 py-2 border rounded-xl border-zinc-200/60 dark:border-zinc-700/60 text-zinc-900 dark:text-white focus:outline-none focus:border-brand/80 focus:ring-2 focus:ring-brand/20 transition-all duration-200"
                     onKeyPress={(e) => e.key === 'Enter' && emailInput.trim() && sendInviteEmail(emailDialogInvite)}
                   />
                 </div>
@@ -460,12 +460,12 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full mt-1 px-3 py-2 border rounded-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+                    className="w-full mt-1 px-3 py-2 border rounded-xl border-zinc-200/60 dark:border-zinc-700/60 text-zinc-900 dark:text-white focus:outline-none focus:border-brand/80 focus:ring-2 focus:ring-brand/20 transition-all duration-200"
                     onKeyPress={(e) => e.key === 'Enter' && emailInput.trim() && sendInviteEmail(emailDialogInvite)}
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-3 pt-6">
                   <button
                     onClick={() => setEmailDialogInvite(null)}
                     className="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
@@ -475,7 +475,7 @@ export default function CompactInviteFriendsDialog({ isOpen, onClose }: CompactI
                   <button
                     onClick={() => sendInviteEmail(emailDialogInvite)}
                     disabled={!emailInput.trim() || isSending === emailDialogInvite.id}
-                    className="px-4 py-2 bg-brand text-white text-sm rounded-lg hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-brand text-white text-sm rounded-xl hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-sm"
                   >
                     {isSending === emailDialogInvite.id ? 'Sending...' : 'Send Invite'}
                   </button>

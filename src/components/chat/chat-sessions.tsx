@@ -144,7 +144,7 @@ export const ChatSessions = ({
               >
                 <div className="flex-1 flex items-center px-3 py-2 text-sm text-zinc-900 dark:text-white text-left min-w-0">
                   <div className="flex-1 min-w-0">
-                    <div className="truncate font-medium">
+                    <div className="truncate font-normal">
                       {session.title || 'New conversation'}
                     </div>
                     

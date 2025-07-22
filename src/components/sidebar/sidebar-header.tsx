@@ -31,7 +31,7 @@ export function SidebarHeader({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
+    <div className="flex items-center justify-between p-4 dark:border-zinc-700">
       {!isCollapsed && (
         <button
           onClick={handleLogoClick}

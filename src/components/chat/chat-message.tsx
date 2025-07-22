@@ -76,13 +76,13 @@ export const ChatMessage = memo(function ChatMessage({
   });
 
   return (
-    <div className="w-full max-w-full overflow-hidden mb-6">
+    <div className="w-full max-w-full overflow-hidden mb-3">
       {isUserMessage(message) ? (
         // User Message - Right aligned with bubble
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-2">
           <div className="flex flex-col items-end max-w-[80%]">
             <div className="bg-zinc-100 dark:bg-zinc-800 text-white rounded-2xl px-4 py-3 shadow-sm">
-              <div className="text-white">
+              <div className="text-white text-sm">
                 <ChatMarkdown content={message.text ?? ''} />
               </div>
             </div>
@@ -93,11 +93,11 @@ export const ChatMessage = memo(function ChatMessage({
         </div>
       ) : (
         // Agent Message - ChatGPT-like design
-        <div className="flex items-start gap-4 mb-6">
+        <div className="flex items-start gap-4 mb-3">
 
 
                       {/* Message Content */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-sm">
               <ChatMarkdown content={message.text ?? ''} />
 
             {/* Action Buttons */}
