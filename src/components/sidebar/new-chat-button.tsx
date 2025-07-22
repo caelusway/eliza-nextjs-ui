@@ -33,7 +33,7 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
         },
         body: JSON.stringify({
           userId,
-          initialMessage: 'Hello! I would like to chat with you.',
+          initialMessage: "I'm AUBRAI, here to help with longevity research and biological aging interventions. What research question can I explore for you today?",
         }),
       });
 

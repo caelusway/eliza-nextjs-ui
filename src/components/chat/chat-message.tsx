@@ -1,15 +1,21 @@
-import { ArrowRightIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, ChevronDownIcon, ChevronUpIcon, HandThumbUpIcon, HandThumbDownIcon } from '@heroicons/react/24/outline';
+import { HandThumbUpIcon as HandThumbUpIconSolid, HandThumbDownIcon as HandThumbDownIconSolid } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 
 import { CodeBlock, toast, ChatMarkdown } from '@/components/ui';
 import { PaperCard } from '@/components/ui';
 import { PlaySoundButton } from '@/components/ui';
 import { ChatMessage as ChatMessageType } from '@/types/chat-message';
 import { assert } from '@/utils/assert';
+import { useUserManager } from '@/lib/user-manager';
+import { getUserRowIdByPrivyId } from '@/services/user-service';
+import { getVoteStats, getUserVote, toggleVote } from '@/services/vote-service';
+import { VoteStats } from '@/lib/supabase/types';
 
 // Get agent ID from environment
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
+console.log('[ChatMessage] AGENT_ID loaded:', AGENT_ID);
 
 // Helper function to check if message is from agent
 const isAgentMessage = (message: ChatMessageType) => {
@@ -35,6 +41,104 @@ export const ChatMessage = memo(function ChatMessage({
   onFollowUpClick,
 }: ChatMessageProps) {
   const [showAllPapers, setShowAllPapers] = useState(false);
+  
+  // Voting state
+  const [vote, setVote] = useState<'up' | 'down' | null>(message.userVote || null);
+  const [isVoting, setIsVoting] = useState(false);
+  const [voteStats, setVoteStats] = useState<VoteStats | null>(null);
+  const [loadingVotes, setLoadingVotes] = useState(false);
+  
+  // User management
+  const { getUserId, isUserAuthenticated } = useUserManager();
+  const [userRowId, setUserRowId] = useState<string | null>(null);
+  
+  const userId = getUserId();
+  const authenticated = isUserAuthenticated();
+  const responseId = message.responseId || message.id; // Use responseId if available, fallback to message id
+  
+  // Debug logging
+  console.log('[ChatMessage] Render:', { 
+    messageId: message.id, 
+    senderId: message.senderId, 
+    isAgent: isAgentMessage(message), 
+    authenticated, 
+    userId,
+    userRowId 
+  });
+
+  // Get user's database row ID for voting
+  useEffect(() => {
+    const fetchUserRowId = async () => {
+      console.log('[ChatMessage] fetchUserRowId called:', { authenticated, userId });
+      if (authenticated && userId) {
+        try {
+          console.log('[ChatMessage] Fetching user row ID for userId:', userId);
+          const rowId = await getUserRowIdByPrivyId(userId);
+          console.log('[ChatMessage] Got user row ID:', rowId);
+          
+          if (!rowId) {
+            console.log('[ChatMessage] No user row ID found, attempting to create user in Supabase...');
+            // Import ensureSupabaseUser dynamically to avoid circular dependencies
+            const { ensureSupabaseUser } = await import('@/services/user-service');
+            
+            try {
+              await ensureSupabaseUser(userId);
+              console.log('[ChatMessage] User created in Supabase, retrying rowId fetch...');
+              
+              // Retry getting the row ID after user creation
+              const newRowId = await getUserRowIdByPrivyId(userId);
+              console.log('[ChatMessage] New user row ID:', newRowId);
+              setUserRowId(newRowId);
+            } catch (createError) {
+              console.error('[ChatMessage] Failed to create user in Supabase:', createError);
+              // Continue without voting functionality
+              setUserRowId(null);
+            }
+          } else {
+            setUserRowId(rowId);
+          }
+        } catch (error) {
+          console.error('[ChatMessage] Failed to get user row ID:', error);
+          setUserRowId(null);
+        }
+      } else {
+        console.log('[ChatMessage] Not fetching user row ID - conditions not met');
+        setUserRowId(null);
+      }
+    };
+    
+    fetchUserRowId();
+  }, [authenticated, userId]);
+
+  // Load vote data when component mounts
+  useEffect(() => {
+    const loadVoteData = async () => {
+      if (!isAgentMessage(message) || !responseId) return;
+      
+      setLoadingVotes(true);
+      try {
+        // Load vote statistics
+        const stats = await getVoteStats(responseId);
+        if (stats) {
+          setVoteStats(stats);
+        }
+
+        // Load user's existing vote if authenticated
+        if (authenticated && userRowId) {
+          const userVoteData = await getUserVote(userRowId, responseId);
+          if (userVoteData?.exists && userVoteData.vote) {
+            setVote(userVoteData.vote.value === 1 ? 'up' : 'down');
+          }
+        }
+      } catch (error) {
+        console.error('[ChatMessage] Failed to load vote data:', error);
+      } finally {
+        setLoadingVotes(false);
+      }
+    };
+
+    loadVoteData();
+  }, [message, responseId, authenticated, userRowId]);
 
   assert(
     message && typeof message === 'object',
@@ -58,6 +162,77 @@ export const ChatMessage = memo(function ChatMessage({
     !onFollowUpClick || typeof onFollowUpClick === 'function',
     `[ChatMessage Render] Invalid 'onFollowUpClick' prop type: ${typeof onFollowUpClick}`
   );
+
+  // Voting handlers
+  const handleThumbsUp = async () => {
+    if (!authenticated || isVoting || !userRowId || !responseId) {
+      if (!authenticated) toast.error('Please log in to vote');
+      else if (!userRowId) toast.error('Unable to load user profile. Please refresh and try again.');
+      return;
+    }
+
+    setIsVoting(true);
+
+    try {
+      const result = await toggleVote(userRowId, responseId, 1);
+      
+      if (result.success) {
+        // Update local state based on result
+        if (result.stats) {
+          setVoteStats(prev => prev ? { ...prev, ...result.stats! } : null);
+        }
+        
+        // Toggle vote state
+        setVote(vote === 'up' ? null : 'up');
+        
+        if (vote !== 'up') {
+          toast.success('Thank you for your feedback!');
+        }
+      } else {
+        toast.error(result.error || 'Failed to record vote. Please try again.');
+      }
+    } catch (error) {
+      console.error('[ChatMessage] Failed to toggle upvote:', error);
+      toast.error('Failed to record vote. Please try again.');
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
+  const handleThumbsDown = async () => {
+    if (!authenticated || isVoting || !userRowId || !responseId) {
+      if (!authenticated) toast.error('Please log in to vote');
+      else if (!userRowId) toast.error('Unable to load user profile. Please refresh and try again.');
+      return;
+    }
+
+    setIsVoting(true);
+
+    try {
+      const result = await toggleVote(userRowId, responseId, -1);
+      
+      if (result.success) {
+        // Update local state based on result
+        if (result.stats) {
+          setVoteStats(prev => prev ? { ...prev, ...result.stats! } : null);
+        }
+        
+        // Toggle vote state
+        setVote(vote === 'down' ? null : 'down');
+        
+        if (vote !== 'down') {
+          toast.success('Thank you for your feedback!');
+        }
+      } else {
+        toast.error(result.error || 'Failed to record vote. Please try again.');
+      }
+    } catch (error) {
+      console.error('[ChatMessage] Failed to toggle downvote:', error);
+      toast.error('Failed to record vote. Please try again.');
+    } finally {
+      setIsVoting(false);
+    }
+  };
 
   const markdownOptions = {
     forceBlock: true,
@@ -126,7 +301,60 @@ export const ChatMessage = memo(function ChatMessage({
                  <span>Copy</span>
                </button>
 
+               {/* Voting buttons - only show for authenticated users with valid userRowId and agent messages */}
+               {authenticated && userRowId && isAgentMessage(message) && (
+                 <>
+                   <button
+                     onClick={handleThumbsUp}
+                     disabled={isVoting || loadingVotes}
+                     className={clsx(
+                       "flex items-center gap-1 text-xs transition-colors p-1 rounded",
+                       vote === 'up' 
+                         ? "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20" 
+                         : "text-zinc-500 hover:text-green-600 dark:text-zinc-400 dark:hover:text-green-400 hover:bg-zinc-200 dark:hover:bg-zinc-700",
+                       (isVoting || loadingVotes) && "opacity-50 cursor-not-allowed"
+                     )}
+                     title={`Helpful${voteStats?.upvotes ? ` (${voteStats.upvotes})` : ''}`}
+                   >
+                     {vote === 'up' ? (
+                       <HandThumbUpIconSolid className="w-3 h-3" />
+                     ) : (
+                       <HandThumbUpIcon className="w-3 h-3" />
+                     )}
+                     <span>Helpful</span>
+                     {voteStats && voteStats.upvotes > 1 && (
+                       <span className="ml-1 text-xs opacity-75">({voteStats.upvotes})</span>
+                     )}
+                   </button>
+                   
+                   <button
+                     onClick={handleThumbsDown}
+                     disabled={isVoting || loadingVotes}
+                     className={clsx(
+                       "flex items-center gap-1 text-xs transition-colors p-1 rounded",
+                       vote === 'down' 
+                         ? "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20" 
+                         : "text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-zinc-200 dark:hover:bg-zinc-700",
+                       (isVoting || loadingVotes) && "opacity-50 cursor-not-allowed"
+                     )}
+                     title={`Not helpful${voteStats?.downvotes ? ` (${voteStats.downvotes})` : ''}`}
+                   >
+                     {vote === 'down' ? (
+                       <HandThumbDownIconSolid className="w-3 h-3" />
+                     ) : (
+                       <HandThumbDownIcon className="w-3 h-3" />
+                     )}
+                     <span>Not helpful</span>
+                     {voteStats && voteStats.downvotes > 1 && (
+                       <span className="ml-1 text-xs opacity-75">({voteStats.downvotes})</span>
+                     )}
+                   </button>
+                 </>
+               )}
+
             </div>
+
+
 
             {/* Follow-up prompts */}
             {followUpPrompts?.length > 0 && (
