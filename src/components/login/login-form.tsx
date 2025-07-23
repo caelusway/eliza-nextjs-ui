@@ -5,6 +5,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePrivy } from '@privy-io/react-auth';
+import { getAgentConfig } from '@/lib/agent-config';
 
 interface LoginFormProps {
   onInviteSubmit: (code: string) => void;
@@ -26,6 +27,7 @@ export default function LoginForm({
   const [inviteCode, setInviteCode] = useState('');
   const [showExistingUserMode, setShowExistingUserMode] = useState(false);
   const { login, ready, authenticated } = usePrivy();
+  const agentConfig = getAgentConfig();
 
   const formatInviteCode = (value: string) => {
     // Remove non-alphanumeric characters and convert to uppercase
@@ -70,7 +72,8 @@ export default function LoginForm({
       {/* Checking User State */}
       {isCheckingUser && (
         <div className="flex items-center justify-center gap-2 py-6 sm:py-8">
-          <Loader2 className="w-4 h-4 animate-spin text-[#FF6E71]" />
+          <Loader2 className="w-4 h-4 animate-spin text-[#FF6E71]" 
+                   style={{ color: agentConfig.theme.primaryColor }} />
           <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Verifying your account...</span>
         </div>
       )}
@@ -80,6 +83,7 @@ export default function LoginForm({
         <button
           onClick={handleExistingUserLogin}
           disabled={isAuthenticating || !ready}
+          style={{ '--tw-ring-color': agentConfig.theme.primaryColor } as React.CSSProperties}
           className={cn(
             "w-full flex items-center justify-center gap-2 px-4 py-3 sm:py-4",
             "bg-zinc-900 border border-zinc-800 rounded-lg",
@@ -122,6 +126,7 @@ export default function LoginForm({
               value={inviteCode}
               onChange={handleInviteChange}
               placeholder="Enter your invite code"
+              style={{ '--tw-ring-color': agentConfig.theme.primaryColor } as React.CSSProperties}
               className={cn(
                 "w-full px-3 py-3 sm:py-4 rounded-lg text-sm sm:text-base",
                 "bg-white dark:bg-zinc-950 border text-zinc-900 dark:text-white",
@@ -142,6 +147,9 @@ export default function LoginForm({
           <button
             type="submit"
             disabled={!inviteCode || isValidating || isAuthenticating || !ready}
+            style={{ backgroundColor: agentConfig.theme.primaryColor }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = agentConfig.theme.secondaryColor || agentConfig.theme.primaryColor}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = agentConfig.theme.primaryColor}
             className={cn(
               "w-full min-h-[48px] sm:min-h-[52px] text-sm sm:text-base font-semibold rounded-lg",
               "bg-[#FF6E71] hover:bg-[#E55A5D] text-white",
@@ -165,10 +173,13 @@ export default function LoginForm({
       {/* Terms */}
       <div className="pt-4 sm:pt-5">
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 text-center leading-relaxed">
-          By continuing, you acknowledge AUBRAI&apos;s{' '}
+          By continuing, you acknowledge {agentConfig.name}&apos;s{' '}
           <a 
             href="/privacy" 
             className="text-[#FF6E71] hover:text-[#E55A5D] dark:hover:text-[#FF8A8D] underline underline-offset-2 font-medium transition-colors"
+            style={{ color: agentConfig.theme.primaryColor }}
+            onMouseEnter={(e) => e.currentTarget.style.color = agentConfig.theme.secondaryColor || agentConfig.theme.primaryColor}
+            onMouseLeave={(e) => e.currentTarget.style.color = agentConfig.theme.primaryColor}
           >
             Privacy Policy
           </a>

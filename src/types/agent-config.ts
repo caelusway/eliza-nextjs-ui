@@ -115,6 +115,8 @@ export interface AgentEnvironmentVariables {
   // Login Page Content
   NEXT_PUBLIC_LOGIN_HEADLINE?: string;
   NEXT_PUBLIC_LOGIN_SUBTITLE?: string;
+  NEXT_PUBLIC_LOGIN_WELCOME_TITLE?: string;
+  NEXT_PUBLIC_LOGIN_WELCOME_MESSAGE?: string;
 
   // Social Links
   NEXT_PUBLIC_AGENT_X_USERNAME?: string;
