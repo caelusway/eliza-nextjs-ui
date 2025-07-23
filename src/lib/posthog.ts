@@ -67,11 +67,12 @@ export class PostHogTracking {
     posthog.alias(email, id);
   }
 
-  public setUserProperties(properties: object) {
+  public setUserProperties(properties: object, setOnceProperties?: object) {
     if (!this._enabled) {
       return;
     }
-    posthog.people.set(properties);
+    // Use setPersonProperties with $set and $set_once
+    posthog.setPersonProperties(properties, setOnceProperties || {});
   }
 
   public pageView(currentUrl: string, previousUrl: string | null | undefined) {
@@ -96,16 +97,24 @@ export class PostHogTracking {
     if (userData.email) {
       this.alias(userData.email, userData.userId);
     }
+    const now = new Date().toISOString();
     this.track('user_signup', { 
       email: userData.email,
       userId: userData.userId,
       inviteCode: userData.inviteCode,
+      first_login: now,
+      signup_date: now,
     });
-    this.setUserProperties({ 
-      '$email': userData.email,
-      '$first_login': new Date().toISOString(),
-      'signup_date': new Date().toISOString(),
-    });
+    // Set email always, but first_login and signup_date only once
+    this.setUserProperties(
+      { 
+        email: userData.email,
+      },
+      {
+        first_login: now,
+        signup_date: now,
+      }
+    );
   }
 
   public userSignIn(userData: { 
@@ -116,12 +125,16 @@ export class PostHogTracking {
       return;
     }
     this.identify(userData.userId);
+    const now = new Date().toISOString();
     this.track('user_signin', { 
       email: userData.email,
       userId: userData.userId,
+      last_login: now,
     });
+    // Always update email and last_login
     this.setUserProperties({ 
-      '$last_login': new Date().toISOString(),
+      email: userData.email,
+      last_login: now,
     });
   }
 
@@ -133,16 +146,6 @@ export class PostHogTracking {
     posthog.reset();
   }
 
-  // Invite Events
-  public inviteValidated(inviteCode: string, isValid: boolean) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('invite_validated', {
-      inviteCode,
-      isValid,
-    });
-  }
 
   public inviteRedeemed(inviteCode: string, userId: string) {
     if (!this._enabled) {
@@ -153,8 +156,8 @@ export class PostHogTracking {
       userId,
     });
     this.setUserProperties({
-      'used_invite_code': inviteCode,
-      'invite_redeemed_at': new Date().toISOString(),
+      used_invite_code: inviteCode,
+      invite_redeemed_at: new Date().toISOString(),
     });
   }
 
@@ -369,7 +372,7 @@ export class PostHogTracking {
     if (email) {
       this.alias(email, userId);
       this.setUserProperties({
-        '$email': email,
+        email: email,
       });
     }
   }

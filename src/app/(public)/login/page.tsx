@@ -137,18 +137,15 @@ function LoginPageContent() {
       if (response.ok && result.valid) {
         setValidationResult(result);
         setError('');
-        PostHogTracking.getInstance().inviteValidated(code, true);
         return true;
       } else {
         setError(result.error || 'Invalid invite code');
         setValidationResult({ valid: false });
-        PostHogTracking.getInstance().inviteValidated(code, false);
         return false;
       }
     } catch (err) {
       setError('Failed to validate invite code');
       setValidationResult({ valid: false });
-      PostHogTracking.getInstance().inviteValidated(code, false);
       return false;
     } finally {
       setIsValidating(false);
