@@ -413,14 +413,14 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   useEffect(() => {
     sendMessageRef.current = (
       messageText: string,
-      options?: { useInternalKnowledge?: boolean }
+      options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }
     ) => {
       if (
         !messageText.trim() ||
         !currentUserId ||
         !channelId ||
         inputDisabled ||
-        isFileUploading ||
+        (isFileUploading && !options?.bypassFileUploadCheck) ||
         connectionStatus !== 'connected'
       ) {
         console.warn('[Chat] Cannot send message (stale state prevented):', {
@@ -498,7 +498,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
   // This is a stable function that we can pass as a prop
   const sendMessage = useCallback(
-    (messageText: string, options?: { useInternalKnowledge?: boolean }) => {
+    (messageText: string, options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }) => {
       sendMessageRef.current?.(messageText, options);
     },
     []
@@ -980,7 +980,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       // Create a message indicating the file was uploaded and enable internal knowledge
       const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
-      sendMessage(fileMessage, { useInternalKnowledge: true });
+      sendMessage(fileMessage, { useInternalKnowledge: true, bypassFileUploadCheck: true });
     },
     [sendMessage]
   );
