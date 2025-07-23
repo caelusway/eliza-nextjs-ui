@@ -272,6 +272,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     sessionSetupDone.current = null; // Clear session setup tracking
     setMessages([]);
     setIsLoadingHistory(true);
+
     
     // Safe reset of thinking states
     if (!isCurrentlyThinking.current) {
@@ -912,7 +913,12 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     loadMessageHistory()
       .then((loadedMessages) => {
         console.log(`[Chat] Loaded ${loadedMessages.length} messages from history`);
+        console.log(`[Chat] Session data:`, sessionData);
+        console.log(`[Chat] Session messageCount:`, sessionData?.messageCount);
+        console.log(`[Chat] LoadedMessages length:`, loadedMessages.length);
+        
         setMessages(loadedMessages);
+        
         
         // Note: Initial message sending is now handled in the socket event listeners setup
         // This prevents race conditions between history loading and message sending

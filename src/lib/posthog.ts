@@ -47,10 +47,19 @@ export class PostHogTracking {
   }
 
   public track(event: string, properties: object = {}) {
+    console.log('[PostHog] track() called:', { event, properties, enabled: this._enabled });
+    
     if (!this._enabled) {
+      console.warn('[PostHog] PostHog is not enabled, skipping event:', event);
       return;
     }
-    posthog.capture(event, properties);
+    
+    try {
+      posthog.capture(event, properties);
+      console.log('[PostHog] Event captured successfully:', event);
+    } catch (error) {
+      console.error('[PostHog] Error capturing event:', error);
+    }
   }
 
   public identify(id: string) {
@@ -161,27 +170,6 @@ export class PostHogTracking {
     });
   }
 
-  // Chat Events
-  public chatSessionCreated(sessionData: {
-    sessionId: string;
-    userId: string;
-    channelId?: string;
-    initialMessage?: string;
-  }) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('chat_session_created', {
-      sessionId: sessionData.sessionId,
-      userId: sessionData.userId,
-      channelId: sessionData.channelId,
-      hasInitialMessage: !!sessionData.initialMessage,
-    });
-    this.setUserProperties({
-      'last_chat_session': sessionData.sessionId,
-      'total_sessions': posthog.get_property('total_sessions') + 1 || 1,
-    });
-  }
 
   public messageSent(messageData: {
     sessionId: string;

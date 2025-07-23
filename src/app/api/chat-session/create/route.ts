@@ -65,14 +65,6 @@ export async function POST(request: NextRequest) {
 
       console.log(`[API] Created DM channel: ${channelId} for session: ${sessionId}`);
 
-      // Track chat session creation
-      PostHogTracking.getInstance().chatSessionCreated({
-        sessionId,
-        userId,
-        channelId,
-        initialMessage,
-      });
-
       return NextResponse.json({
         success: true,
         data: {
