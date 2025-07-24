@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       invites: {
@@ -122,12 +122,78 @@ export type Database = {
           }
         ]
       }
+      response_votes: {
+        Row: {
+          id: string
+          voter_id: string
+          response_id: string
+          value: number
+          comment: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          voter_id: string
+          response_id: string
+          value: number
+          comment?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          voter_id?: string
+          response_id?: string
+          value?: number
+          comment?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "response_votes_voter_id_fkey"
+            columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cast_vote: {
+        Args: {
+          _voter_id: string
+          _response_id: string
+          _value: number
+          _comment?: string
+        }
+        Returns: Json
+      }
+      get_vote_stats: {
+        Args: {
+          _response_id: string
+        }
+        Returns: Json
+      }
+      get_user_vote: {
+        Args: {
+          _voter_id: string
+          _response_id: string
+        }
+        Returns: Json
+      }
+      remove_vote: {
+        Args: {
+          _voter_id: string
+          _response_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
@@ -136,6 +202,54 @@ export type Database = {
       [_ in never]: never
     }
   }
+}
+
+// Helper types for voting
+export type VoteValue = 1 | -1;
+
+export interface VoteStats {
+  response_id: string;
+  upvotes: number;
+  downvotes: number;
+  total: number;
+  last_updated: string | null;
+}
+
+export interface UserVote {
+  id: string;
+  voter_id: string;
+  response_id: string;
+  value: VoteValue;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CastVoteResponse {
+  success: boolean;
+  vote?: UserVote;
+  stats?: {
+    upvotes: number;
+    downvotes: number;
+    total: number;
+  };
+  error?: string;
+  code?: string;
+}
+
+export interface GetUserVoteResponse {
+  exists: boolean;
+  vote: UserVote | null;
+}
+
+export interface RemoveVoteResponse {
+  success: boolean;
+  deleted: boolean;
+  stats: {
+    upvotes: number;
+    downvotes: number;
+    total: number;
+  };
 }
 
 type DefaultSchema = Database[Extract<keyof Database, "public">]
