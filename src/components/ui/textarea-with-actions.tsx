@@ -131,7 +131,7 @@ const ChatForm = function ChatForm({
           )}
         </div>
         <div className="flex items-center gap-2">
-          {onDeepResearchToggle && (
+          {false && onDeepResearchToggle && (
             <div className="relative">
               <div 
                 className="inline-block"
