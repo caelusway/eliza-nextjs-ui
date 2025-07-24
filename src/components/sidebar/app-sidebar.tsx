@@ -12,6 +12,7 @@ import { ChatOptions } from './chat-options';
 import { NavigationMenu } from './navigation-menu';
 import { ChatSessionsList } from './chat-sessions-list';
 import { UserProfile } from './user-profile';
+import { PostHogTracking } from '@/lib/posthog';
 
 interface AppSidebarProps {
   isCollapsed: boolean;
@@ -36,6 +37,8 @@ export function AppSidebar({
   const userId = getUserId();
 
   const handleLogout = useCallback(() => {
+    // Track sign out event before logging out
+    PostHogTracking.getInstance().userSignOut();
     logout();
     router.push('/login');
   }, [logout, router]);
