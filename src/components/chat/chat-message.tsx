@@ -138,7 +138,7 @@ export const ChatMessage = memo(function ChatMessage({
     };
 
     loadVoteData();
-  }, [message, responseId, authenticated, userRowId]);
+  }, [responseId, authenticated, userRowId]);
 
   assert(
     message && typeof message === 'object',
@@ -300,7 +300,7 @@ export const ChatMessage = memo(function ChatMessage({
                </button>
 
                {/* Voting buttons - only show for authenticated users with valid userRowId and agent messages */}
-               {authenticated && userRowId && isAgentMessage(message) && (
+               { isAgentMessage(message) && message.text && message.text.trim() && (
                  <>
                    <button
                      onClick={handleThumbsUp}
