@@ -86,18 +86,16 @@ export const ChatMessage = memo(function ChatMessage({
                 <ChatMarkdown content={message.text ?? ''} />
               </div>
             </div>
-            <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 px-2">
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 px-2 font-medium">
               {formattedTime}
             </div>
           </div>
         </div>
       ) : (
-        // Agent Message - ChatGPT-like design
-        <div className="flex items-start gap-4 mb-3">
-
-
-                      {/* Message Content */}
-            <div className="flex-1 min-w-0 text-sm">
+        // Agent Message - Aligned with header
+        <div className="mb-3">
+          {/* Message Content */}
+          <div className="text-sm">
               <ChatMarkdown content={message.text ?? ''} />
 
             {/* Action Buttons */}

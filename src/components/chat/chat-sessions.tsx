@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useSessions } from '@/contexts/SessionsContext';
+import { PostHogTracking } from '@/lib/posthog';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -96,6 +97,9 @@ export const ChatSessions = ({
   const handleSessionClick = (session: any) => {
     // Set current session in context
     setCurrentSession(session);
+    
+    // Track session selection
+    PostHogTracking.getInstance().sessionSelected(session.id, session.messageCount);
     
     // Navigate to the chat session page
     router.push(`/chat/${session.id}`);

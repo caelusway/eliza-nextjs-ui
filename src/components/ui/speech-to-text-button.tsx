@@ -3,6 +3,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { MicrophoneIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
 import clsx from 'clsx';
+import { PostHogTracking } from '@/lib/posthog';
 
 interface SpeechToTextButtonProps {
   onTranscript: (text: string) => void;
@@ -19,6 +20,7 @@ export default function SpeechToTextButton({
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const recordingStartTimeRef = useRef<number | null>(null);
 
   const transcribeAudio = useCallback(async (audioBlob: Blob) => {
     setIsTranscribing(true);
@@ -66,6 +68,7 @@ export default function SpeechToTextButton({
 
       mediaRecorder.start();
       setIsRecording(true);
+      recordingStartTimeRef.current = Date.now();
     } catch (error) {
       console.error('Error starting recording:', error);
     }
@@ -73,8 +76,22 @@ export default function SpeechToTextButton({
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
+      const duration = recordingStartTimeRef.current 
+        ? Date.now() - recordingStartTimeRef.current 
+        : 0;
+      
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      // Track voice message recording
+      PostHogTracking.getInstance().voiceMessageRecorded(duration);
+      
+      // Check if this is first time using voice feature
+      const hasUsedVoice = localStorage.getItem('discovered_voice_recording');
+      if (!hasUsedVoice) {
+        PostHogTracking.getInstance().featureDiscovered('voice_recording');
+        localStorage.setItem('discovered_voice_recording', 'true');
+      }
     }
   }, [isRecording]);
 
@@ -93,9 +110,9 @@ export default function SpeechToTextButton({
       disabled={disabled || isTranscribing}
       aria-label={isRecording ? 'Stop recording' : 'Start recording'}
       className={clsx(
-        'size-10 transition-all duration-200',
+        'size-10 rounded-lg border focus:outline-none transition-colors duration-200 relative',
         isRecording && !disabled
-          ? 'bg-brand hover:bg-brand-hover border-brand hover:border-brand-hover text-white shadow-lg shadow-brand/25 animate-pulse'
+          ? 'bg-brand hover:bg-brand-hover border-brand text-white shadow-md shadow-brand/20'
           : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
         disabled && 'opacity-50 cursor-not-allowed',
         className
@@ -103,24 +120,22 @@ export default function SpeechToTextButton({
     >
       {isTranscribing ? (
         <div className="flex space-x-0.5">
-          <div
-            className="w-1 h-1 bg-current rounded-full animate-bounce"
-            style={{ animationDelay: '0ms' }}
-          />
-          <div
-            className="w-1 h-1 bg-current rounded-full animate-bounce"
-            style={{ animationDelay: '150ms' }}
-          />
-          <div
-            className="w-1 h-1 bg-current rounded-full animate-bounce"
-            style={{ animationDelay: '300ms' }}
-          />
+          <div className="w-1 h-1 bg-current rounded-full opacity-60" />
+          <div className="w-1 h-1 bg-current rounded-full opacity-80" />
+          <div className="w-1 h-1 bg-current rounded-full" />
         </div>
       ) : (
         <MicrophoneIcon className={clsx(
-          "!h-5 !w-5 !shrink-0 transition-all duration-200",
-          isRecording && !disabled ? "text-white" : "text-zinc-400"
+          "!h-5 !w-5 !shrink-0",
+          isRecording && !disabled 
+            ? "text-white" 
+            : "text-zinc-400"
         )} />
+      )}
+      
+      {/* Clean recording indicator */}
+      {isRecording && !disabled && (
+        <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
       )}
     </Button>
   );

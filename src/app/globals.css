@@ -415,27 +415,49 @@
   backdrop-filter: blur(4px);
 }
 
-/* Custom scrollbar for better consistency */
+/* Enhanced custom scrollbar for better consistency */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 3px;
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.8);
+  background: rgba(156, 163, 175, 0.7);
 }
 
-/* Dark mode scrollbar */
+::-webkit-scrollbar-thumb:active {
+  background: rgba(156, 163, 175, 0.9);
+}
+
+/* Enhanced dark mode scrollbar */
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.5);
+  background: rgba(75, 85, 99, 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb:active {
+  background: rgba(75, 85, 99, 0.9);
+}
+
+/* Corner styling */
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
