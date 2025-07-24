@@ -6,8 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
-import { ChatSessions } from '@/components/chat/chat-sessions';
-import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui';
 import { CHAT_SOURCE, MESSAGE_STATE_MESSAGES } from '@/constants';
 import SocketIOManager, { ControlMessageData, MessageBroadcastData, MessageStateData } from '@/lib/socketio-manager';
