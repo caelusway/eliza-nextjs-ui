@@ -46,7 +46,7 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
       // Call the onNewChat callback if provided
       onNewChat?.();
 
-      // Redirect to the new session
+      // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
       console.error('[NewChatButton] Error creating session:', err);

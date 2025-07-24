@@ -52,7 +52,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
       // Clean the input box before redirecting
       setInput('');
       
-      // Redirect to the new session (same as new-chat-button.tsx)
+      // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
       console.error('[NewChatWelcome] Error creating session:', err);
@@ -87,7 +87,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         throw new Error(data.error || 'Failed to create chat session');
       }
 
-      // Redirect to the new session (same as new-chat-button.tsx)
+      // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
       console.error('[NewChatWelcome] Error creating session:', err);
