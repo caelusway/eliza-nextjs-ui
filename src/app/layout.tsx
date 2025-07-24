@@ -78,6 +78,11 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
+      {/* BugHerd Bug Tracking - loads in head */}
+      <Script
+        src="https://www.bugherd.com/sidebarv2.js?apikey=eueujerg3pkawdagajobfq"
+        strategy="beforeInteractive"
+      />
       <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
           <div className="flex grow flex-col size-full min-h-dvh">
@@ -98,13 +103,6 @@ export default function RootLayout({
         </div>
         <ProgressBar />
         <Toaster />
-        
-        {/* BugHerd Bug Tracking */}
-        <Script
-          src="https://www.bugherd.com/sidebarv2.js?apikey=eueujerg3pkawdagajobfq"
-          strategy="afterInteractive"
-          async
-        />
       </body>
     </html>
   );
