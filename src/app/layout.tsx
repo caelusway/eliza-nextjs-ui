@@ -14,10 +14,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-  ],
+  themeColor: '#000000',
 };
 
 export const metadata: Metadata = {
@@ -79,14 +76,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning lang="en" className={fontVariables}>
-      <body className="min-h-dvh antialiased bg-white text-black scheme-light dark:bg-[#171717] dark:text-white dark:scheme-dark selection:!bg-[#fff0dd] dark:selection:!bg-[#3d2b15] overscroll-none font-geist">
+    <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
+      <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
           <div className="flex grow flex-col size-full min-h-dvh">
             <ThemeProvider
               attribute="class"
-              defaultTheme="system"
-              enableSystem
+              defaultTheme="dark"
+              enableSystem={false}
               disableTransitionOnChange
             >
               <PrivyClientProvider>
