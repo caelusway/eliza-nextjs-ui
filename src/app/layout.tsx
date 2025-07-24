@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { siteConfig } from '@/app/shared/constants';
 import { fontVariables } from '@/app/shared/fonts';
@@ -97,6 +98,13 @@ export default function RootLayout({
         </div>
         <ProgressBar />
         <Toaster />
+        
+        {/* BugHerd Bug Tracking */}
+        <Script
+          src="https://www.bugherd.com/sidebarv2.js?apikey=eueujerg3pkawdagajobfq"
+          strategy="afterInteractive"
+          async
+        />
       </body>
     </html>
   );
