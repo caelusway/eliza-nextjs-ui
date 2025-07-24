@@ -76,7 +76,7 @@ const ChatForm = function ChatForm({
         />
       </div>
       <div className="flex w-full items-center justify-between px-3 pb-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {onFileUpload && (
             <div className="relative">
               <div 
@@ -95,22 +95,43 @@ const ChatForm = function ChatForm({
                     disabled={disabled || isLoading || isFileUploading} 
                     isUploading={isFileUploading}
                     onUploadStateChange={onFileUploadStateChange}
+                    className={clsx(
+                      "border relative overflow-hidden",
+                      isFileUploading && !disabled
+                        ? "bg-zinc-900 border-brand text-white"
+                        : disabled || isLoading
+                        ? "bg-zinc-900 border-zinc-700 text-zinc-500"
+                        : "bg-zinc-900 border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white"
+                    )}
                   />
+                  {/* Active indicator */}
+                  {isFileUploading && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand rounded-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    </div>
+                  )}
+
                 </div>
               </div>
               {hoveredButton === 'file-upload' && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-zinc-900/95 dark:bg-zinc-900/95 backdrop-blur-sm text-xs text-zinc-100 dark:text-zinc-100 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-lg border border-zinc-700/50">
-                  {isFileUploading ? 'Uploading file...' : 
-                   disabled || isLoading ? 'File upload disabled' : 
-                   'Upload files, images, or documents'}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-zinc-900/95 dark:bg-zinc-900/95 rotate-45 border-r border-b border-zinc-700/50"></div>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-zinc-900 text-xs text-zinc-200 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-xl border border-zinc-700 backdrop-blur-sm">
+                  {isFileUploading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Uploading file...
+                    </span>
+                  ) : disabled || isLoading ? (
+                    <span className="text-zinc-400">File upload disabled</span>
+                  ) : (
+                    <span>Upload files, images, or documents</span>
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          {onDeepResearchToggle && (
+        <div className="flex items-center gap-2">
+          {false && onDeepResearchToggle && (
             <div className="relative">
               <div 
                 className="inline-block"

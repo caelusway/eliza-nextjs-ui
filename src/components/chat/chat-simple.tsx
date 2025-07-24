@@ -6,13 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
+import { toast } from '@/components/ui';
 import { CHAT_SOURCE, MESSAGE_STATE_MESSAGES } from '@/constants';
 import SocketIOManager, { ControlMessageData, MessageBroadcastData, MessageStateData } from '@/lib/socketio-manager';
 import { SocketDebugUtils } from '@/lib/socket-debug-utils';
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
 import { useUserManager } from '@/lib/user-manager';
-import { PostHogTracking } from '@/lib/posthog';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -284,7 +284,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     sessionSetupDone.current = null; // Clear session setup tracking
     setMessages([]);
     setIsLoadingHistory(true);
-
     
     // Safe reset of thinking states
     if (!isCurrentlyThinking.current) {
@@ -406,9 +405,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           if (socketIOManager.isSocketConnected()) {
             console.log('[Chat] ✅ Socket connected successfully');
             setConnectionStatus('connected');
-            
-            // Track agent connection
-            PostHogTracking.getInstance().agentConnected(agentId);
           } else {
             setTimeout(checkConnection, 1000); // Check again in 1 second
           }
@@ -418,11 +414,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       } catch (error) {
         console.error('[Chat] ❌ Failed to initialize connection:', error);
         setConnectionStatus('error');
-        
-        // Track socket connection error
-        PostHogTracking.getInstance().socketConnectionError(
-          error instanceof Error ? error.message : 'Unknown connection error'
-        );
       }
     };
 
@@ -484,7 +475,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       setAgentMessageState(null); // Reset message state for new request
       
       console.log('[Chat] Started thinking animation at:', currentTime);
-      console.log('[Chat] Set thinkingStartTime to:', currentTime);
 
       console.log('[Chat] Sending message to session channel:', {
         messageText: finalMessageText,
@@ -506,13 +496,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         undefined,
         options
       );
-
-      // Track message sent event
-      PostHogTracking.getInstance().messageSent({
-        sessionId: sessionId || channelId,
-        messageType: 'text',
-        messageLength: finalMessageText.length,
-      });
 
       // Log debug info to help troubleshoot
       setTimeout(() => {
@@ -775,20 +758,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             
             // Stop animation immediately when streaming is complete - this is the actual response
             console.log('[Chat] Agent response streaming complete, stopping animation');
-            
-            // Fallback: Track message received if messageComplete event didn't fire
-            const currentTime = Date.now();
-            const responseTime = thinkingStartTime ? currentTime - thinkingStartTime : 0;
-            console.log('[Chat] Streaming complete - Response time fallback:', responseTime + 'ms');
-            
-            if (responseTime > 0) {
-              PostHogTracking.getInstance().messageReceived({
-                sessionId: sessionId || channelId || '',
-                responseTime: responseTime,
-                thinkingTime: responseTime,
-              });
-            }
-            
             safeStopAnimation();
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
@@ -816,20 +785,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     // Message complete handler
     const handleMessageComplete = () => {
       console.log('[Chat] Message complete - stopping animation immediately');
-      
-      // Track message received event BEFORE stopping animation (which resets thinkingStartTime)
-      const currentTime = Date.now();
-      const responseTime = thinkingStartTime ? currentTime - thinkingStartTime : 0;
-      console.log('[Chat] Message complete - Response time:', responseTime + 'ms');
-      
-      if (responseTime > 0) {
-        PostHogTracking.getInstance().messageReceived({
-          sessionId: sessionId || channelId || '',
-          responseTime: responseTime,
-          thinkingTime: responseTime,
-        });
-      }
-      
       // Stop animation immediately when message is complete - this means agent is done
       safeStopAnimation();
     };
@@ -882,7 +837,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
     };
-  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId, sessionData, sendMessage, sessionId, thinkingStartTime]);
+  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId, sessionData, sendMessage]);
 
   // --- Load Message History (Simplified) ---
   useEffect(() => {
@@ -925,12 +880,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     loadMessageHistory()
       .then((loadedMessages) => {
         console.log(`[Chat] Loaded ${loadedMessages.length} messages from history`);
-        console.log(`[Chat] Session data:`, sessionData);
-        console.log(`[Chat] Session messageCount:`, sessionData?.messageCount);
-        console.log(`[Chat] LoadedMessages length:`, loadedMessages.length);
-        
         setMessages(loadedMessages);
-        
         
         // Note: Initial message sending is now handled in the socket event listeners setup
         // This prevents race conditions between history loading and message sending
@@ -1015,16 +965,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       if (transcribedText.trim()) {
         sendMessage(transcribedText.trim());
         setInput(''); // Clear the input field after sending
-        
-        // Track voice message
-        PostHogTracking.getInstance().messageSent({
-          sessionId: sessionId || channelId || '',
-          messageType: 'voice',
-          messageLength: transcribedText.length,
-        });
       }
     },
-    [sendMessage, sessionId, channelId]
+    [sendMessage]
   );
 
   // --- Handle Deep Research Toggle ---
@@ -1044,20 +987,42 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   // --- Handle File Upload ---
   const handleFileUpload = useCallback(
     (file: File, uploadResult: any) => {
-      console.log('[Chat] File uploaded:', file.name, uploadResult);
+      console.log('[Chat] File upload result:', file.name, uploadResult);
 
-      // Create a message indicating the file was uploaded and enable internal knowledge
-      const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
-      sendMessage(fileMessage, { useInternalKnowledge: true });
-      
-      // Track file upload as a message
-      PostHogTracking.getInstance().messageSent({
-        sessionId: sessionId || channelId || '',
-        messageType: 'image',
-        messageLength: fileMessage.length,
-      });
+      // Check if upload was successful
+      if (uploadResult && uploadResult.success) {
+        console.log('[Chat] ✅ Upload successful, sending message to agent...');
+        console.log('[Chat] Current state before sending:', {
+          currentUserId,
+          channelId,
+          inputDisabled,
+          isFileUploading,
+          connectionStatus,
+          sendMessageRef: !!sendMessageRef.current
+        });
+        
+        // Create a message indicating the file was uploaded and enable internal knowledge
+        const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
+        console.log('[Chat] Message to send:', fileMessage);
+        
+        // Small delay to ensure upload state is cleared before sending message
+        setTimeout(() => {
+          console.log('[Chat] Sending message after short delay...');
+          sendMessage(fileMessage, { useInternalKnowledge: true });
+        }, 100);
+      } else {
+        // Handle upload failure
+        console.error('[Chat] File upload failed:', uploadResult);
+        
+        // Show error message to user via toast
+        const errorMessage = uploadResult?.error?.message || 'Failed to upload file';
+        toast.error(`Failed to upload "${file.name}": ${errorMessage}. Please try uploading the file again.`);
+        
+        // Make sure animation is stopped since no agent response is expected
+        safeStopAnimation();
+      }
     },
-    [sendMessage, sessionId, channelId]
+    [sendMessage, channelId]
   );
 
   // Check if environment is properly configured

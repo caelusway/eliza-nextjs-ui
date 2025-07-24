@@ -6,7 +6,6 @@ import { useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useUserManager } from '@/lib/user-manager';
-import { PostHogTracking } from '@/lib/posthog';
 
 interface FileUploadButtonProps {
   onFileUpload: (file: File, uploadResult: any) => void;
@@ -17,11 +16,11 @@ interface FileUploadButtonProps {
 }
 
 const SUPPORTED_MIME_TYPES = [
-  // Text files
+  // Text files (all text/* MIME types are supported via UTF-8 decoding)
   'text/plain',
-  'text/markdown',
+  'text/markdown', 
   'text/html',
-  'text/csv',
+  'text/csv', // ✅ Supported by document processor (contentType.includes('text/'))
   // Documents
   'application/pdf',
   'application/msword',
@@ -110,24 +109,24 @@ export const FileUploadButton = ({
 
       const result = await response.json();
 
-      if (result.success) {
-        // Track media upload
-        PostHogTracking.getInstance().mediaUploaded(file.type, file.size);
-        
-        // Check if this is first time uploading a file
-        const hasUploadedFile = localStorage.getItem('discovered_file_upload');
-        if (!hasUploadedFile) {
-          PostHogTracking.getInstance().featureDiscovered('file_upload');
-          localStorage.setItem('discovered_file_upload', 'true');
-        }
-        
-        onFileUpload(file, result.data);
-      } else {
-        throw new Error(result.error?.message || 'Upload failed');
-      }
+      // Always call the callback with the result (success or failure)
+      onFileUpload(file, result);
+
+      // If upload failed, the parent will handle error display
+      
     } catch (error) {
       console.error('File upload error:', error);
-      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Create an error result object and pass it to the callback
+      const errorResult = {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        }
+      };
+      
+      onFileUpload(file, errorResult);
     } finally {
       // Clear uploading state
       if (onUploadStateChange) {
@@ -155,7 +154,7 @@ export const FileUploadButton = ({
         )}
       >
         {isUploading && !disabled ? (
-          <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin text-white" />
+          <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin" />
         ) : (
           <PaperClipIcon className={clsx(
             "!h-5 !w-5 !shrink-0",
@@ -174,51 +173,6 @@ export const FileUploadButton = ({
         type="file"
         accept={[
           ...SUPPORTED_MIME_TYPES,
-          // Add file extensions for better UX
-          '.txt',
-          '.md',
-          '.markdown',
-          '.log',
-          '.ini',
-          '.cfg',
-          '.conf',
-          '.env',
-          '.js',
-          '.jsx',
-          '.ts',
-          '.tsx',
-          '.py',
-          '.java',
-          '.c',
-          '.cpp',
-          '.cs',
-          '.php',
-          '.rb',
-          '.go',
-          '.rs',
-          '.swift',
-          '.kt',
-          '.scala',
-          '.html',
-          '.css',
-          '.vue',
-          '.svelte',
-          '.pdf',
-          '.doc',
-          '.docx',
-          '.json',
-          '.xml',
-          '.yaml',
-          '.yml',
-          '.csv',
-          '.tsv',
-          '.sh',
-          '.bash',
-          '.zsh',
-          '.fish',
-          '.ps1',
-          '.bat',
-          '.cmd',
         ].join(',')}
         onChange={handleFileChange}
         className="hidden"
