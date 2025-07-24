@@ -64,7 +64,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const serverId = '00000000-0000-0000-0000-000000000000'; // Default server ID from ElizaOS
 
   // --- User Management ---
-  const { getUserId, getUserName, isUserAuthenticated, isReady } = useUserManager();
+  const { getUserId, getUserName, getUserEmail, isUserAuthenticated, isReady } = useUserManager();
 
   // --- State ---
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -112,6 +112,18 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
   // --- Derived Values ---
   const currentUserId = getUserId();
+
+  // Debug userId generation
+  useEffect(() => {
+    console.log('[Chat] 🔍 User Debug Info:', {
+      currentUserId,
+      userEmail: getUserEmail(),
+      isAuthenticated: isUserAuthenticated(),
+      isReady,
+      userIdLength: currentUserId?.length,
+      userIdFormat: currentUserId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i) ? 'Valid UUID v5' : 'Invalid format'
+    });
+  }, [currentUserId, getUserEmail, isUserAuthenticated, isReady]);
   
   // Combined loading state with safeguards
   const isShowingAnimation = isAgentThinking || isWaitingForResponse || animationLocked;
@@ -421,14 +433,14 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   useEffect(() => {
     sendMessageRef.current = (
       messageText: string,
-      options?: { useInternalKnowledge?: boolean }
+      options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }
     ) => {
       if (
         !messageText.trim() ||
         !currentUserId ||
         !channelId ||
         inputDisabled ||
-        isFileUploading ||
+        (isFileUploading && !options?.bypassFileUploadCheck) ||
         connectionStatus !== 'connected'
       ) {
         console.warn('[Chat] Cannot send message (stale state prevented):', {
@@ -514,7 +526,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
   // This is a stable function that we can pass as a prop
   const sendMessage = useCallback(
-    (messageText: string, options?: { useInternalKnowledge?: boolean }) => {
+    (messageText: string, options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }) => {
       sendMessageRef.current?.(messageText, options);
     },
     []
@@ -1078,10 +1090,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717] mt-8 sm:mt-5">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717] mt-6 sm:mt-4 md:mt-6 lg:mt-8">
       {/* Fixed Header Section */}
-              <div className="flex-shrink-0 px-4 sm:px-6 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
-        <div className="max-w-4xl mx-auto">
+              <div className="flex-shrink-0 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
+        <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-4">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
               {sessionData ? sessionData.title : <span className="animate-pulse">Loading session...</span>}
@@ -1110,7 +1122,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       {/* Scrollable Chat Messages */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           {/* Connection status loading */}
           {connectionStatus === 'connecting' && !isWaitingForAgent && (
             <div className="flex items-center justify-center h-32">
@@ -1184,8 +1196,8 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       </div>
 
       {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 p-3 bg-white dark:bg-[#171717]">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-shrink-0 py-3 bg-white dark:bg-[#171717]">
+        <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
                       <div className="bg-white dark:bg-[#171717]">
             <TextareaWithActions
               input={input}

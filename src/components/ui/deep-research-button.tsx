@@ -24,10 +24,8 @@ export default function DeepResearchButton({
       disabled={disabled}
       aria-label={isActive ? 'Disable deep research' : 'Enable deep research'}
       className={clsx(
-        'size-10 rounded-md border focus:outline-none',
-        isActive && !disabled
-        ? 'bg-zinc-900 border border-[#FF6E71] text-white'
-        : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+        'size-10 rounded-lg border focus:outline-none transition-colors duration-200 relative',
+        'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
@@ -40,9 +38,9 @@ export default function DeepResearchButton({
         strokeWidth={1.5}
         stroke="currentColor"
         className={clsx(
-          "w-6 h-6",
+          "w-5 h-5",
           "!shrink-0",
-          isActive && !disabled ? "text-zinc-400" : "text-zinc-400 opacity-70"
+          "text-zinc-400"
         )}
       >
         <path
@@ -56,6 +54,11 @@ export default function DeepResearchButton({
           d="M9 12h6m-6-3h6m-6 6h3"
         />
       </svg>
+      
+      {/* Red circle indicator when enabled */}
+      {isActive && !disabled && (
+        <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+      )}
     </Button>
   );
 }
