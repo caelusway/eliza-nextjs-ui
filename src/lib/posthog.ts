@@ -193,16 +193,14 @@ export class PostHogTracking {
 
   public messageReceived(messageData: {
     sessionId: string;
-    responseTime: number;
-    thinkingTime?: number;
+    generationTime: number;
   }) {
     if (!this._enabled) {
       return;
     }
     this.track('message_received', {
       sessionId: messageData.sessionId,
-      responseTime: messageData.responseTime,
-      thinkingTime: messageData.thinkingTime,
+      generationTime: messageData.generationTime,
     });
   }
 
