@@ -1047,6 +1047,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           sendMessageRef: !!sendMessageRef.current
         });
         
+        // Track media upload event
+        const posthog = PostHogTracking.getInstance();
+        posthog.mediaUploaded(file.type || 'unknown', file.size);
+        
         // Create a message indicating the file was uploaded and enable internal knowledge
         const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
         console.log('[Chat] Message to send:', fileMessage);
