@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { siteConfig } from '@/app/shared/constants';
 import { fontVariables } from '@/app/shared/fonts';
@@ -8,6 +9,7 @@ import { Toaster } from '@/app/core/toaster';
 import { ConditionalHeader } from '@/components/layout/conditional-header';
 import { PrivyClientProvider } from './core/privy-client-provider';
 import { AuthWrapper } from '@/components/auth/auth-wrapper';
+import { BugHerdScript } from '@/components/bugherd-script';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -68,6 +70,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+
 };
 
 export default function RootLayout({
@@ -77,6 +80,9 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
+      <head>
+      <script type="text/javascript" src="https://www.bugherd.com/sidebarv2.js?apikey=eueujerg3pkawdagajobfq" async={true}></script>
+      </head>
       <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
           <div className="flex grow flex-col size-full min-h-dvh">

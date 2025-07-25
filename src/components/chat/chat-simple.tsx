@@ -13,6 +13,7 @@ import { SocketDebugUtils } from '@/lib/socket-debug-utils';
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
 import { useUserManager } from '@/lib/user-manager';
+import { PostHogTracking } from '@/lib/posthog';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -77,7 +78,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [channelId, setChannelId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
   const [isAgentThinking, setIsAgentThinking] = useState<boolean>(false);
-  const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [agentMessageState, setAgentMessageState] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>(
     'connecting'
@@ -137,7 +137,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     setIsWaitingForResponse(false);
     setAnimationLocked(false);
     setInputDisabled(false);
-    setThinkingStartTime(null);
     setAnimationStartTime(null);
     isCurrentlyThinking.current = false;
     setAgentMessageState(null); // Reset message state
@@ -464,12 +463,19 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       setMessages((prev) => [...prev, userMessage]);
       
+      // Track message sent event
+      const posthog = PostHogTracking.getInstance();
+      posthog.messageSent({
+        sessionId: sessionId || 'unknown',
+        messageType: 'text',
+        messageLength: finalMessageText.length
+      });
+      
       // Start thinking animation with safeguards
       const currentTime = Date.now();
       setIsAgentThinking(true);
       setIsWaitingForResponse(true);
       setAnimationLocked(true);
-      setThinkingStartTime(currentTime);
       setAnimationStartTime(currentTime);
       setInputDisabled(true);
       isCurrentlyThinking.current = true;
@@ -513,7 +519,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     (messageText: string, options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }) => {
       sendMessageRef.current?.(messageText, options);
     },
-    []
+    [sessionId]
   );
 
   // scroll to view once follow up questions have been loaded
@@ -739,6 +745,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       // If this is an agent message, simulate streaming by adding character by character
       if (isAgentMessage && message.text) {
+        // Track when we start receiving the response
+        const streamStartTime = Date.now();
+        
         // Add the message with empty text first
         const streamingMessage = { ...message, text: '' };
         setMessages((prev) => [...prev, streamingMessage]);
@@ -770,6 +779,16 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
           } else {
             clearInterval(streamInterval);
+            
+            // Track message received event with generation time (in seconds)
+            const streamEndTime = Date.now();
+            const generationTime = streamEndTime - streamStartTime;
+            
+            const posthog = PostHogTracking.getInstance();
+            posthog.messageReceived({
+              sessionId: sessionId || 'unknown',
+              generationTime: generationTime / 1000 // Convert to seconds
+            });
             
             // Stop animation immediately when streaming is complete - this is the actual response
             console.log('[Chat] Agent response streaming complete, stopping animation');
@@ -1027,6 +1046,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           connectionStatus,
           sendMessageRef: !!sendMessageRef.current
         });
+        
+        // Track media upload event
+        const posthog = PostHogTracking.getInstance();
+        posthog.mediaUploaded(file.type || 'unknown', file.size);
         
         // Create a message indicating the file was uploaded and enable internal knowledge
         const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
