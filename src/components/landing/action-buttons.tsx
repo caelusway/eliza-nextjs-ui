@@ -28,17 +28,17 @@ export const ActionButtons = ({ className = '' }: ActionButtonsProps) => {
       >
         LAUNCH AUBRAI _
       </Button>
-      
+
       <Button
         onClick={handleJoinFundraise}
         color="dark"
         className="px-6 py-3 text-sm sm:text-base font-medium min-w-[160px] flex items-center gap-2"
       >
-        <svg 
-          width="12" 
-          height="12" 
-          viewBox="0 0 12 12" 
-          fill="none" 
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="flex-shrink-0"
         >
@@ -54,4 +54,4 @@ export const ActionButtons = ({ className = '' }: ActionButtonsProps) => {
       </Button>
     </div>
   );
-}; 
+};

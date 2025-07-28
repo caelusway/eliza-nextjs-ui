@@ -22,6 +22,6 @@ export const MESSAGE_STATE_MESSAGES = {
   [MESSAGE_STATE.KNOWLEDGE]: 'is querying internal notes...',
   [MESSAGE_STATE.KNOWLEDGE_GRAPH]: 'is analyzing knowledge graph...',
   [MESSAGE_STATE.REPLYING]: 'is preparing response...',
-  [MESSAGE_STATE.DONE]: 'is sending answer...',
+  [MESSAGE_STATE.DONE]: '', // Hide status when streaming (redundant)
   DEFAULT: 'is preparing to answer...',
 } as const;

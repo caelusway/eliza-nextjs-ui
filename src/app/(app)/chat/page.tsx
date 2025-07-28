@@ -4,10 +4,14 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { NewChatWelcome } from '@/components/chat';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 export default function ChatPage() {
   const router = useRouter();
   const { getUserId, isUserAuthenticated, isReady } = useUserManager();
+
+  const statusConfig = useUIConfigSection('status');
+  const brandingConfig = useUIConfigSection('branding');
 
   const userId = getUserId();
 
@@ -22,8 +26,11 @@ export default function ChatPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] mb-4"></div>
-          <p className="text-zinc-600 dark:text-zinc-400 text-sm">Loading...</p>
+          <div
+            className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 mb-4"
+            style={{ borderColor: brandingConfig.primaryColor }}
+          ></div>
+          <p className="text-zinc-600 dark:text-zinc-400 text-sm">{statusConfig.loadingText}</p>
         </div>
       </div>
     );
@@ -34,4 +41,4 @@ export default function ChatPage() {
   }
 
   return <NewChatWelcome userId={userId} />;
-} 
+}

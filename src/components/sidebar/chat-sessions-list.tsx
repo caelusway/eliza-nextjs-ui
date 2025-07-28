@@ -13,15 +13,10 @@ export function ChatSessionsList({ userId, onMobileMenuClose }: ChatSessionsList
 
   return (
     <div className="px-4 pb-4">
-      <div className="mb-3">
-      </div>
+      <div className="mb-3"></div>
       <div>
-        <ChatSessions 
-          userId={userId} 
-          showSidebar={true} 
-          onMobileMenuClose={onMobileMenuClose}
-        />
+        <ChatSessions userId={userId} showSidebar={true} onMobileMenuClose={onMobileMenuClose} />
       </div>
     </div>
   );
-} 
+}

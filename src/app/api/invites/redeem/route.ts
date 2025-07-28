@@ -26,10 +26,11 @@ export async function POST(request: NextRequest) {
       console.log('User creation result:', username);
     } catch (userError) {
       console.error('Error in ensureSupabaseUser:', userError);
-      const errorDetails = userError instanceof Error 
-        ? { message: userError.message, stack: userError.stack }
-        : { raw: JSON.stringify(userError) };
-      
+      const errorDetails =
+        userError instanceof Error
+          ? { message: userError.message, stack: userError.stack }
+          : { raw: JSON.stringify(userError) };
+
       return NextResponse.json(
         { error: 'Failed to create user record', details: errorDetails },
         { status: 500 }
@@ -38,10 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (!username) {
       console.log('User creation failed - no username returned');
-      return NextResponse.json(
-        { error: 'Failed to create user record' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create user record' }, { status: 500 });
     }
 
     // Step 1.5: Check if user has already completed invite flow
@@ -58,13 +56,13 @@ export async function POST(request: NextRequest) {
     } else if (existingUser?.used_invite_code) {
       console.log('User has already completed invite flow, skipping redemption:', {
         usedCode: existingUser.used_invite_code,
-        invitedBy: existingUser.invited_by
+        invitedBy: existingUser.invited_by,
       });
       // User has already gone through invite flow - just return success
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'Welcome back! Redirecting to your account.',
-        alreadyCompleted: true
+        alreadyCompleted: true,
       });
     }
 
@@ -100,26 +98,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Add cache-busting headers to ensure fresh data after redemption
-    const response = NextResponse.json({ 
-      success: true, 
+    const response = NextResponse.json({
+      success: true,
       message: 'Invite code redeemed successfully! Welcome to AUBRAI.',
-      newUser: true 
+      newUser: true,
     });
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
-    
+
     return response;
   } catch (error) {
     console.error('Error redeeming invite code:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
-        type: error?.constructor?.name
+        type: error?.constructor?.name,
       },
       { status: 500 }
     );
   }
-} 
+}

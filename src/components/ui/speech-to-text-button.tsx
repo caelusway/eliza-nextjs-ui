@@ -22,30 +22,33 @@ export default function SpeechToTextButton({
   const chunksRef = useRef<Blob[]>([]);
   const recordingStartTimeRef = useRef<number | null>(null);
 
-  const transcribeAudio = useCallback(async (audioBlob: Blob) => {
-    setIsTranscribing(true);
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.wav');
+  const transcribeAudio = useCallback(
+    async (audioBlob: Blob) => {
+      setIsTranscribing(true);
+      try {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.wav');
 
-      const res = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
+        const res = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData,
+        });
 
-      const data = await res.json();
-      const transcript = data.text || data.transcript || '';
-      console.log('Received transcript:', transcript);
+        const data = await res.json();
+        const transcript = data.text || data.transcript || '';
+        console.log('Received transcript:', transcript);
 
-      if (transcript) {
-        onTranscript(transcript);
+        if (transcript) {
+          onTranscript(transcript);
+        }
+      } catch (error) {
+        console.error('Error transcribing audio:', error);
+      } finally {
+        setIsTranscribing(false);
       }
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-    } finally {
-      setIsTranscribing(false);
-    }
-  }, [onTranscript]);
+    },
+    [onTranscript]
+  );
 
   const startRecording = useCallback(async () => {
     try {
@@ -76,16 +79,16 @@ export default function SpeechToTextButton({
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
-      const duration = recordingStartTimeRef.current 
-        ? Date.now() - recordingStartTimeRef.current 
+      const duration = recordingStartTimeRef.current
+        ? Date.now() - recordingStartTimeRef.current
         : 0;
-      
+
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       // Track voice message recording
       PostHogTracking.getInstance().voiceMessageRecorded(duration);
-      
+
       // Check if this is first time using voice feature
       const hasUsedVoice = localStorage.getItem('discovered_voice_recording');
       if (!hasUsedVoice) {
@@ -125,14 +128,14 @@ export default function SpeechToTextButton({
           <div className="w-1 h-1 bg-current rounded-full" />
         </div>
       ) : (
-        <MicrophoneIcon className={clsx(
-          "!h-5 !w-5 !shrink-0",
-          isRecording && !disabled 
-            ? "text-white" 
-            : "text-zinc-400"
-        )} />
+        <MicrophoneIcon
+          className={clsx(
+            '!h-5 !w-5 !shrink-0',
+            isRecording && !disabled ? 'text-white' : 'text-zinc-400'
+          )}
+        />
       )}
-      
+
       {/* Clean recording indicator */}
       {isRecording && !disabled && (
         <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />

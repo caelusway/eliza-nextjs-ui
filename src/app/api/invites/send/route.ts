@@ -6,33 +6,24 @@ export async function POST(request: NextRequest) {
     const { code, email, senderName } = await request.json();
 
     if (!code || !email) {
-      return NextResponse.json(
-        { error: 'Code and email are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Code and email are required' }, { status: 400 });
     }
 
     console.log('Sending invite email:', { code, email, senderName });
-    
+
     const result = await sendInviteEmail({
       code,
       email,
-      senderName: senderName || 'Someone'
+      senderName: senderName || 'Someone',
     });
 
     if (result.success) {
       return NextResponse.json({ success: true, message: 'Invite sent successfully' });
     } else {
-      return NextResponse.json(
-        { error: result.error || 'Failed to send invite' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error || 'Failed to send invite' }, { status: 400 });
     }
   } catch (error) {
     console.error('Error sending invite:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+}

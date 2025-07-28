@@ -39,7 +39,7 @@ export interface UserInviteStats {
 export async function validateInviteCode(code: string): Promise<InviteValidationResult> {
   try {
     console.log('🔍 [InviteService] Validating invite code:', code);
-    
+
     // Use case-insensitive search and handle multiple results - force fresh data
     const { data: invites, error } = await supabase
       .from('invites')
@@ -84,7 +84,7 @@ export async function validateInviteCode(code: string): Promise<InviteValidation
 export async function redeemInviteCode(code: string, userId: string): Promise<boolean> {
   try {
     console.log('🔄 [InviteService] redeemInviteCode called with:', { code, userId });
-    
+
     const { data: invites, error: fetchError } = await supabase
       .from('invites')
       .select('*')
@@ -138,10 +138,10 @@ export async function redeemInviteCode(code: string, userId: string): Promise<bo
     // Update user's invited_by field AND store the invite code used
     const { error: userUpdateError } = await supabase
       .from('users')
-      .update({ 
+      .update({
         invited_by: invite.created_by,
         used_invite_code: code, // Store the actual invite code used
-        has_completed_invite_flow: true // Mark as completed
+        has_completed_invite_flow: true, // Mark as completed
       })
       .eq('id', userRecord.id); // Use internal UUID for the WHERE clause too
 
@@ -149,10 +149,10 @@ export async function redeemInviteCode(code: string, userId: string): Promise<bo
       console.error('Error updating user invited_by and used_invite_code:', userUpdateError);
       // Don't fail the whole operation for this
     } else {
-      console.log('Successfully updated user with invite relationship:', { 
-        userId: userRecord.id, 
-        invitedBy: invite.created_by, 
-        usedCode: code 
+      console.log('Successfully updated user with invite relationship:', {
+        userId: userRecord.id,
+        invitedBy: invite.created_by,
+        usedCode: code,
       });
     }
 
@@ -178,7 +178,10 @@ export function generateInviteCode(): string {
 /**
  * Create invite codes for a user
  */
-export async function createInviteCodesForUser(userId: string, count: number = 3): Promise<Invite[]> {
+export async function createInviteCodesForUser(
+  userId: string,
+  count: number = 3
+): Promise<Invite[]> {
   try {
     // Get user's row ID first
     const { data: user, error: userError } = await supabase
@@ -199,29 +202,29 @@ export async function createInviteCodesForUser(userId: string, count: number = 3
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
       let code = generateInviteCode();
-      
+
       // Ensure uniqueness
       while (codes.includes(code)) {
         code = generateInviteCode();
       }
-      
+
       // Check against database for uniqueness
       const { data: existing } = await supabase
         .from('invites')
         .select('id')
         .eq('code', code)
         .single();
-      
+
       if (existing) {
         i--; // Retry this iteration
         continue;
       }
-      
+
       codes.push(code);
     }
 
     // Create invites
-    const inviteData = codes.map(code => ({
+    const inviteData = codes.map((code) => ({
       code,
       created_by: user.id,
       status: 'pending' as const,
@@ -263,7 +266,7 @@ export async function createInviteCodesForUser(userId: string, count: number = 3
 export async function getUserInviteStats(userId: string): Promise<UserInviteStats> {
   try {
     console.log('Getting invite stats for userId:', userId);
-    
+
     // Get user's row ID first
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -305,7 +308,7 @@ export async function getUserInviteStats(userId: string): Promise<UserInviteStat
     return {
       invites: invites as Invite[],
       remaining_codes: user.invite_codes_remaining,
-      invited_users: (invitedUsers || []).map(u => ({
+      invited_users: (invitedUsers || []).map((u) => ({
         username: u.username,
         email: u.email,
         joined_at: u.created_at,
@@ -323,7 +326,7 @@ export async function getUserInviteStats(userId: string): Promise<UserInviteStat
 export async function generateInitialInviteCodes(userId: string): Promise<void> {
   try {
     console.log('generateInitialInviteCodes called with userId:', userId);
-    
+
     // Get user's Supabase row ID and existing invite count
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -363,19 +366,19 @@ export async function generateInitialInviteCodes(userId: string): Promise<void> 
     const codes: string[] = [];
     for (let i = 0; i < codesToGenerate; i++) {
       let code = generateInviteCode();
-      
+
       // Ensure uniqueness
       while (codes.includes(code)) {
         code = generateInviteCode();
       }
-      
+
       codes.push(code);
     }
 
     console.log('Generated codes:', codes);
 
     // Create invites
-    const inviteData = codes.map(code => ({
+    const inviteData = codes.map((code) => ({
       code,
       created_by: user.id,
       status: 'pending' as const,
@@ -412,7 +415,7 @@ export async function generateInitialInviteCodes(userId: string): Promise<void> 
 export async function sendInviteEmail({
   code,
   email,
-  senderName = 'Someone'
+  senderName = 'Someone',
 }: {
   code: string;
   email: string;
@@ -420,7 +423,7 @@ export async function sendInviteEmail({
 }): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('🔍 [InviteService] Sending invite email:', { code, email, senderName });
-    
+
     // First validate the invite code
     const validation = await validateInviteCode(code);
     if (!validation.valid || !validation.invite) {
@@ -438,7 +441,7 @@ export async function sendInviteEmail({
       .update({
         email_sent_to: email,
         email_sent_at: new Date().toISOString(),
-        status: 'email_sent'
+        status: 'email_sent',
       })
       .eq('id', validation.invite.id);
 
@@ -474,4 +477,4 @@ export async function sendInviteEmail({
     console.error('Error sending invite email:', error);
     return { success: false, error: 'Failed to send invite email' };
   }
-} 
+}
