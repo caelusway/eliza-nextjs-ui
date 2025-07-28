@@ -13,6 +13,7 @@ import { NavigationMenu } from './navigation-menu';
 import { ChatSessionsList } from './chat-sessions-list';
 import { UserProfile } from './user-profile';
 import { PostHogTracking } from '@/lib/posthog';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface AppSidebarProps {
   isCollapsed: boolean;
@@ -33,6 +34,9 @@ export function AppSidebar({
   const { getUserId, getUserName, isUserAuthenticated } = useUserManager();
   const { logout } = usePrivy();
   const [currentChannel, setCurrentChannel] = useState<string | null>(null);
+  
+  const sidebarConfig = useUIConfigSection('sidebar');
+  const brandingConfig = useUIConfigSection('branding');
 
   const userId = getUserId();
 
@@ -101,7 +105,13 @@ export function AppSidebar({
             <button
               onClick={() => router.push('/account')}
               className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
-              title="Account"
+              title={sidebarConfig.accountButtonTitle}
+              style={{
+                '--tw-ring-color': `${brandingConfig.primaryColor}33`,
+              } as React.CSSProperties & { '--tw-ring-color': string }}
+              onFocus={(e) => {
+                e.currentTarget.style.outlineColor = brandingConfig.primaryColor;
+              }}
             >
               <svg className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -112,7 +122,13 @@ export function AppSidebar({
             <button
               onClick={handleInvitesNavigation}
               className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
-              title="Invite Friends"
+              title={sidebarConfig.inviteButtonTitle}
+              style={{
+                '--tw-ring-color': `${brandingConfig.primaryColor}33`,
+              } as React.CSSProperties & { '--tw-ring-color': string }}
+              onFocus={(e) => {
+                e.currentTarget.style.outlineColor = brandingConfig.primaryColor;
+              }}
             >
               <svg className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -152,7 +168,7 @@ export function AppSidebar({
             <div className="mb-4">
               <div className="px-4 pb-2 pt-4">
                 <h3 className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-                  Recent Chats
+                  {sidebarConfig.recentChatsText}
                 </h3>
               </div>
               <ChatSessionsList

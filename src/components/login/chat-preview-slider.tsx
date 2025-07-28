@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface ChatMessage {
   type: 'user' | 'aubrai';
@@ -13,65 +14,37 @@ interface ChatSlide {
   messages: ChatMessage[];
 }
 
-const chatSlides: ChatSlide[] = [
-  {
-    id: 1,
-    messages: [
-      {
-        type: 'user',
-        content: 'How do DNA methylation clocks relate to biological aging?'
-      },
-      {
-        type: 'aubrai',
-        content: 'DNA methylation clocks are powerful biomarkers that measure biological age by analyzing methylation patterns at specific CpG sites. The Horvath clock uses 353 CpG sites and correlates strongly with chronological age (r=0.96). More advanced clocks like GrimAge predict mortality risk and healthspan. These epigenetic changes are potentially reversible - partial reprogramming with Yamanaka factors has shown methylation age reversal in mice without dedifferentiation.'
-      }
-    ]
-  },
-  {
-    id: 2,
-    messages: [
-      {
-        type: 'user',
-        content: 'What are the main goals of the RMR2 project?'
-      },
-      {
-        type: 'aubrai',
-        content: 'The Robust Mouse Rejuvenation 2 (RMR2) project aims to double the remaining lifespan of middle-aged mice through combination interventions. Key strategies include: 1) Cellular reprogramming using modified Yamanaka factors, 2) Senolytic drugs to clear damaged cells, 3) Telomerase activation for telomere maintenance, 4) NAD+ restoration, and 5) Mitochondrial rejuvenation. The goal is to achieve synergistic effects by targeting multiple hallmarks of aging simultaneously.'
-      }
-    ]
-  },
-  {
-    id: 3,
-    messages: [
-      {
-        type: 'user',
-        content: 'Are dasatinib and quercetin effective senolytics?'
-      },
-      {
-        type: 'aubrai',
-        content: 'Yes, the dasatinib + quercetin (D+Q) combination is one of the most validated senolytic interventions. In mice, D+Q extends healthspan, improves physical function, and reduces senescent cell burden by 30-70% depending on tissue type. Human trials show promise: a pilot study in IPF patients improved 6-minute walk distance. The combination works synergistically - dasatinib targets senescent preadipocytes while quercetin eliminates senescent endothelial cells.'
-      }
-    ]
-  },
-  {
-    id: 4,
-    messages: [
-      {
-        type: 'user',
-        content: 'Rapamycin vs metformin for longevity - which is better?'
-      },
-      {
-        type: 'aubrai',
-        content: 'Rapamycin shows stronger evidence for lifespan extension. In the ITP studies, rapamycin consistently extends median lifespan by 10-15% in mice when started late in life. It works via mTOR inhibition, enhancing autophagy and stress resistance. Metformin\'s effects are more modest - the TAME trial is still ongoing. However, metformin has a superior safety profile for long-term human use. For optimal results, consider lower-dose rapamycin (5mg weekly) with breaks, as continuous high doses can cause immunosuppression.'
-      }
-    ]
-  }
-];
-
 export default function ChatPreviewSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  const chatConfig = useUIConfigSection('chat');
+  const brandingConfig = useUIConfigSection('branding');
+
+  // Convert config slides to component format
+  const chatSlides: ChatSlide[] = chatConfig.previewSlides.map((slide, index) => ({
+    id: index + 1,
+    messages: [
+      {
+        type: 'user' as const,
+        content: slide.userMessage
+      },
+      {
+        type: 'aubrai' as const,
+        content: slide.aiResponse
+      }
+    ]
+  }));
+
+  // Generate darker shade for gradient effects
+  const getDarkerShade = (color: string) => {
+    const hex = color.replace('#', '');
+    const r = Math.max(0, parseInt(hex.substring(0, 2), 16) - 20);
+    const g = Math.max(0, parseInt(hex.substring(2, 4), 16) - 20);
+    const b = Math.max(0, parseInt(hex.substring(4, 6), 16) - 20);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     if (!isPaused) {
@@ -118,15 +91,20 @@ export default function ChatPreviewSlider() {
       <div className="relative z-30 flex-shrink-0 px-6 mt-6 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-4 md:pt-6 lg:pt-8 pb-2 sm:pb-2 md:pb-3 lg:pb-4">
         <div className="max-w-full lg:max-w-2xl mx-auto">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 md:mb-4 lg:mb-6">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-[#FF6E71] to-[#E55A5D] rounded-full flex items-center justify-center shadow-md">
+            <div 
+              className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center shadow-md"
+              style={{
+                background: `linear-gradient(135deg, ${brandingConfig.primaryColor}, ${getDarkerShade(brandingConfig.primaryColor)})`
+              }}
+            >
               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-4 lg:h-4 bg-white rounded-full opacity-90"></div>
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold text-zinc-900 dark:text-white truncate drop-shadow-sm">
-                Chat with AUBRAI
+                {chatConfig.previewTitle}
               </h3>
               <p className="text-xs sm:text-xs md:text-sm lg:text-base text-zinc-600 dark:text-zinc-300 truncate drop-shadow-sm opacity-90">
-                See how AUBRAI helps with longevity research
+                {chatConfig.previewSubtitle}
               </p>
             </div>
           </div>
@@ -159,7 +137,12 @@ export default function ChatPreviewSlider() {
                       }}
                     >
                       {message.type === 'aubrai' && (
-                        <div className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-6 lg:h-6 bg-gradient-to-br from-[#FF6E71] to-[#E55A5D] rounded-full flex items-center justify-center shadow-sm mt-0.5 sm:mt-1">
+                        <div 
+                          className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-6 lg:h-6 rounded-full flex items-center justify-center shadow-sm mt-0.5 sm:mt-1"
+                          style={{
+                            background: `linear-gradient(135deg, ${brandingConfig.primaryColor}, ${getDarkerShade(brandingConfig.primaryColor)})`
+                          }}
+                        >
                           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 lg:w-2.5 lg:h-2.5 bg-white rounded-full opacity-90"></div>
                         </div>
                       )}
@@ -168,9 +151,14 @@ export default function ChatPreviewSlider() {
                         className={cn(
                           "max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] rounded-lg sm:rounded-lg md:rounded-xl px-2 sm:px-2.5 md:px-3 lg:px-4 py-2 sm:py-2 md:py-2.5 lg:py-3 shadow-sm backdrop-blur-sm border border-opacity-50",
                           message.type === 'user'
-                            ? "bg-gradient-to-br from-[#FF6E71]/90 to-[#E55A5D]/90 text-white shadow-[#FF6E71]/20 border-[#FF6E71]/30"
+                            ? "text-white"
                             : "bg-white/75 dark:bg-zinc-800/75 text-zinc-900 dark:text-zinc-100 shadow-zinc-900/5 dark:shadow-zinc-100/5 border-zinc-200/40 dark:border-zinc-700/40"
                         )}
+                        style={message.type === 'user' ? {
+                          background: `linear-gradient(135deg, ${brandingConfig.primaryColor}E6, ${getDarkerShade(brandingConfig.primaryColor)}E6)`,
+                          boxShadow: `0 1px 3px ${brandingConfig.primaryColor}33`,
+                          borderColor: `${brandingConfig.primaryColor}4D`
+                        } : {}}
                       >
                         <p className="text-xs sm:text-xs md:text-xs lg:text-sm leading-relaxed font-medium opacity-95">
                           {message.content}
@@ -201,9 +189,12 @@ export default function ChatPreviewSlider() {
               className={cn(
                 "transition-all duration-300 rounded-full",
                 index === currentSlide
-                  ? "w-3 sm:w-4 md:w-6 h-1.5 sm:h-2 md:h-2.5 bg-gradient-to-r from-[#FF6E71] to-[#E55A5D] shadow-sm"
+                  ? "w-3 sm:w-4 md:w-6 h-1.5 sm:h-2 md:h-2.5 shadow-sm"
                   : "w-1.5 sm:w-2 md:w-2.5 h-1.5 sm:h-2 md:h-2.5 bg-zinc-300/80 dark:bg-zinc-600/80 hover:bg-zinc-400/80 dark:hover:bg-zinc-500/80 hover:scale-110"
               )}
+              style={index === currentSlide ? {
+                background: `linear-gradient(90deg, ${brandingConfig.primaryColor}, ${getDarkerShade(brandingConfig.primaryColor)})`
+              } : {}}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -211,8 +202,18 @@ export default function ChatPreviewSlider() {
       </div>
 
       {/* Subtle corner decorations - softened */}
-      <div className="absolute top-0 left-0 w-12 sm:w-16 md:w-24 h-12 sm:h-16 md:h-24 bg-gradient-to-br from-[#FF6E71]/5 to-transparent rounded-full blur-2xl z-20"></div>
-      <div className="absolute bottom-0 right-0 w-16 sm:w-20 md:w-32 h-16 sm:h-20 md:h-32 bg-gradient-to-tl from-[#FF6E71]/5 to-transparent rounded-full blur-2xl z-20"></div>
+      <div 
+        className="absolute top-0 left-0 w-12 sm:w-16 md:w-24 h-12 sm:h-16 md:h-24 rounded-full blur-2xl z-20"
+        style={{
+          background: `linear-gradient(135deg, ${brandingConfig.primaryColor}0D, transparent)`
+        }}
+      ></div>
+      <div 
+        className="absolute bottom-0 right-0 w-16 sm:w-20 md:w-32 h-16 sm:h-20 md:h-32 rounded-full blur-2xl z-20"
+        style={{
+          background: `linear-gradient(315deg, ${brandingConfig.primaryColor}0D, transparent)`
+        }}
+      ></div>
     </div>
   );
 } 

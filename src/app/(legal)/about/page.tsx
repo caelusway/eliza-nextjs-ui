@@ -10,8 +10,11 @@ import { HeroSection } from '@/components/landing';
 import { ActionButtons } from '@/components/landing';
 import { ContentSection } from '@/components/landing';
 import { DecorativeElements } from '@/components/landing';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 export default function AboutPage() {
+  const contentConfig = useUIConfigSection('content');
+  
   return (
     <main className="flex-1 size-full overflow-auto">
       <div className="min-h-screen">
@@ -77,7 +80,7 @@ export default function AboutPage() {
         {/* RMR2 Project Section */}
         <div className="py-16 lg:py-24 px-4 md:px-8">
           <ContentSection
-            buttonText="Explore the research"
+            buttonText={contentConfig.researchButtonText}
             onButtonClick={() => {
               // TODO: Implement research page navigation
               console.log('Navigate to research page');
@@ -109,8 +112,8 @@ export default function AboutPage() {
         {/* What is AUBRAI Section */}
         <div className="py-16 lg:py-24 px-4 md:px-8 bg-zinc-50/50 dark:bg-zinc-950/50">
           <ContentSection
-            title="What is AUBRAI?"
-            buttonText="Launch AUBRAI"
+            title={contentConfig.aboutTitle}
+            buttonText={contentConfig.launchButtonText}
             onButtonClick={() => {
               // Navigate to chat interface
               window.location.href = '/chat';

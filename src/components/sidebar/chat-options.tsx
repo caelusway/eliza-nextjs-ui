@@ -3,6 +3,7 @@
 import React from 'react';
 import { Globe, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface ChatOptionsProps {
   currentChannel: string | null;
@@ -19,6 +20,8 @@ export function ChatOptions({
   onPublicChat, 
   onPrivateChat 
 }: ChatOptionsProps) {
+  const sidebarConfig = useUIConfigSection('sidebar');
+  
   return (
     <div className="px-4 py-1 space-y-1">
       {/* Public Chat */}
@@ -36,9 +39,9 @@ export function ChatOptions({
             <Globe className="w-4 h-4" />
           </div>
           <div className="flex-1 text-left">
-            <div className="text-sm font-medium">Public Chat</div>
+            <div className="text-sm font-medium">{sidebarConfig.publicChatTitle}</div>
             <div className="text-xs text-zinc-600 dark:text-zinc-400">
-              Chat with everyone
+              {sidebarConfig.publicChatDescription}
             </div>
           </div>
           <div className="flex-shrink-0">
@@ -64,9 +67,9 @@ export function ChatOptions({
           <Lock className="w-4 h-4" />
         </div>
         <div className="flex-1 text-left">
-          <div className="text-sm font-medium">Private Chat</div>
+          <div className="text-sm font-medium">{sidebarConfig.privateChatTitle}</div>
           <div className="text-xs text-zinc-600 dark:text-zinc-400">
-            Chat with AUBRAI privately
+            {sidebarConfig.privateChatDescription}
           </div>
         </div>
         <div className="flex-shrink-0">

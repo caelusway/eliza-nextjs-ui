@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { User, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface UserProfileProps {
   isCollapsed: boolean;
@@ -12,6 +13,8 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ isCollapsed, userName, userId, onLogout }: UserProfileProps) {
+  const sidebarConfig = useUIConfigSection('sidebar');
+  
   return (
     <div className="border-t border-zinc-200 dark:border-zinc-700 p-2">
       {!isCollapsed && (
@@ -38,7 +41,7 @@ export function UserProfile({ isCollapsed, userName, userId, onLogout }: UserPro
         <div className="w-6 h-6 rounded-full bg-transparent flex items-center justify-center flex-shrink-0">
           <LogOut className="w-3.5 h-3.5" />
         </div>
-        {!isCollapsed && <span className="text-sm">Log Out</span>}
+        {!isCollapsed && <span className="text-sm">{sidebarConfig.logOutText}</span>}
       </button>
     </div>
   );

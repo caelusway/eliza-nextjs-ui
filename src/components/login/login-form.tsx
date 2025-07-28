@@ -5,6 +5,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePrivy } from '@privy-io/react-auth';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface LoginFormProps {
   onInviteSubmit: (code: string) => void;
@@ -26,6 +27,18 @@ export default function LoginForm({
   const [inviteCode, setInviteCode] = useState('');
   const [showExistingUserMode, setShowExistingUserMode] = useState(false);
   const { login, ready, authenticated } = usePrivy();
+  const authConfig = useUIConfigSection('auth');
+  const brandingConfig = useUIConfigSection('branding');
+
+  // Generate darker shade for hover effect
+  const getDarkerShade = (color: string) => {
+    // Simple method to darken a hex color by reducing each RGB component
+    const hex = color.replace('#', '');
+    const r = Math.max(0, parseInt(hex.substring(0, 2), 16) - 20);
+    const g = Math.max(0, parseInt(hex.substring(2, 4), 16) - 20);
+    const b = Math.max(0, parseInt(hex.substring(4, 6), 16) - 20);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
 
   const formatInviteCode = (value: string) => {
     // Remove non-alphanumeric characters and convert to uppercase
@@ -70,8 +83,8 @@ export default function LoginForm({
       {/* Checking User State */}
       {isCheckingUser && (
         <div className="flex items-center justify-center gap-2 py-6 sm:py-8">
-          <Loader2 className="w-4 h-4 animate-spin text-[#FF6E71]" />
-          <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">Verifying your account...</span>
+          <Loader2 className="w-4 h-4 animate-spin" style={{ color: brandingConfig.primaryColor }} />
+          <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">{authConfig.verifyingText}</span>
         </div>
       )}
 
@@ -86,18 +99,21 @@ export default function LoginForm({
             "text-white font-medium",
             "hover:bg-zinc-800 transition-all duration-200",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            "focus:outline-none focus:ring-2 focus:ring-[#FF6E71] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black",
+            "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black",
             "min-h-[48px] sm:min-h-[52px] text-sm sm:text-base",
             "active:scale-[0.98] transform"
           )}
+          style={{
+            '--tw-ring-color': brandingConfig.primaryColor,
+          } as React.CSSProperties & { '--tw-ring-color': string }}
         >
           {isAuthenticating ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Signing in...</span>
+              <span>{authConfig.signingInText}</span>
             </>
           ) : (
-            <span>Already a user? Sign in</span>
+            <span>{authConfig.existingUserText}</span>
           )}
         </button>
       )}
@@ -114,24 +130,27 @@ export default function LoginForm({
         <form onSubmit={handleInviteSubmit} className="space-y-4 sm:space-y-5">
           <div>
             <label htmlFor="invite-code" className="block text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Invite Code
+              {authConfig.inviteCodeLabel}
             </label>
             <input
               id="invite-code"
               type="text"
               value={inviteCode}
               onChange={handleInviteChange}
-              placeholder="Enter your invite code"
+              placeholder={authConfig.inviteCodePlaceholder}
               className={cn(
                 "w-full px-3 py-3 sm:py-4 rounded-lg text-sm sm:text-base",
                 "bg-white dark:bg-zinc-950 border text-zinc-900 dark:text-white",
                 "placeholder:text-zinc-500 dark:placeholder:text-zinc-400",
-                "focus:outline-none focus:ring-2 focus:ring-[#FF6E71] focus:border-transparent",
+                "focus:outline-none focus:ring-2 focus:border-transparent",
                 "transition-all duration-200 shadow-sm",
                 "hover:border-zinc-300 dark:hover:border-zinc-600",
                 "min-h-[48px] sm:min-h-[52px]",
                 error ? "border-red-500 bg-red-50/50 dark:bg-red-900/10" : "border-zinc-200 dark:border-zinc-700"
               )}
+              style={{
+                '--tw-ring-color': brandingConfig.primaryColor,
+              } as React.CSSProperties & { '--tw-ring-color': string }}
               autoFocus
               autoComplete="off"
               autoCapitalize="off"
@@ -144,19 +163,33 @@ export default function LoginForm({
             disabled={!inviteCode || isValidating || isAuthenticating || !ready}
             className={cn(
               "w-full min-h-[48px] sm:min-h-[52px] text-sm sm:text-base font-semibold rounded-lg",
-              "bg-[#FF6E71] hover:bg-[#E55A5D] text-white",
+              "text-white",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-colors duration-200",
               "flex items-center justify-center gap-2"
             )}
+            style={{
+              backgroundColor: brandingConfig.primaryColor,
+              '--hover-bg': getDarkerShade(brandingConfig.primaryColor),
+            } as React.CSSProperties & { '--hover-bg': string }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.backgroundColor = getDarkerShade(brandingConfig.primaryColor);
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
+              }
+            }}
           >
             {isValidating || isAuthenticating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{isValidating ? 'Validating...' : 'Authenticating...'}</span>
+                <span>{isValidating ? authConfig.validatingText : authConfig.authenticatingText}</span>
               </>
             ) : (
-              <span>Continue with invite</span>
+              <span>{authConfig.continueButtonText}</span>
             )}
           </button>
         </form>
@@ -165,12 +198,21 @@ export default function LoginForm({
       {/* Terms */}
       <div className="pt-4 sm:pt-5">
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 text-center leading-relaxed">
-          By continuing, you acknowledge AUBRAI&apos;s{' '}
+          {authConfig.privacyText.replace('{appName}', brandingConfig.appName)}{' '}
           <a 
             href="/privacy" 
-            className="text-[#FF6E71] hover:text-[#E55A5D] dark:hover:text-[#FF8A8D] underline underline-offset-2 font-medium transition-colors"
+            className="underline underline-offset-2 font-medium transition-colors"
+            style={{ 
+              color: brandingConfig.primaryColor,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = getDarkerShade(brandingConfig.primaryColor);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = brandingConfig.primaryColor;
+            }}
           >
-            Privacy Policy
+            {authConfig.privacyLinkText}
           </a>
           .
         </p>

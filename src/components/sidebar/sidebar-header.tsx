@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, PanelLeftClose, PanelLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface SidebarHeaderProps {
   isCollapsed: boolean;
@@ -21,6 +22,9 @@ export function SidebarHeader({
   onMobileMenuToggle 
 }: SidebarHeaderProps) {
   const router = useRouter();
+  
+  const sidebarConfig = useUIConfigSection('sidebar');
+  const brandingConfig = useUIConfigSection('branding');
 
   const handleLogoClick = () => {
     router.push('/chat');
@@ -37,13 +41,19 @@ export function SidebarHeader({
           onClick={handleLogoClick}
           className="flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
-            <MessageSquare className="w-4 h-4 text-brand" />
+          <div 
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: `${brandingConfig.primaryColor}1A` }}
+          >
+            <MessageSquare 
+              className="w-4 h-4" 
+              style={{ color: brandingConfig.primaryColor }}
+            />
           </div>
           <div>
-            <h1 className="font-semibold text-zinc-900 dark:text-white">AUBRAI</h1>
+            <h1 className="font-semibold text-zinc-900 dark:text-white">{brandingConfig.appName}</h1>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
-              {isConnected ? 'Connected' : 'Connecting...'}
+              {isConnected ? sidebarConfig.connectedText : sidebarConfig.connectingText}
             </p>
           </div>
         </button>
@@ -54,7 +64,7 @@ export function SidebarHeader({
           <button
             onClick={onMobileMenuToggle}
             className="lg:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            aria-label="Close mobile menu"
+            aria-label={sidebarConfig.closeMobileMenuTitle}
           >
             <X className="w-4 h-4" />
           </button>
@@ -64,7 +74,7 @@ export function SidebarHeader({
         <button
           onClick={onToggleCollapse}
           className="hidden lg:block p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={isCollapsed ? sidebarConfig.expandSidebarTitle : sidebarConfig.collapseSidebarTitle}
         >
           {isCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
         </button>

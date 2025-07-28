@@ -8,6 +8,7 @@ import ChatPreviewSlider from '@/components/login/chat-preview-slider';
 import LoginForm from '@/components/login/login-form';
 import { PostHogTracking } from '@/lib/posthog';
 import { useUserManager } from '@/lib/user-manager';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface InviteValidationResult {
   valid: boolean;
@@ -25,6 +26,9 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const { login, logout, authenticated, ready, user } = usePrivy();
   const { getUserId } = useUserManager();
+  
+  const loginConfig = useUIConfigSection('login');
+  const brandingConfig = useUIConfigSection('branding');
   
   const [inviteCode, setInviteCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
@@ -46,7 +50,7 @@ function LoginPageContent() {
     // Check for error params
     const errorParam = searchParams.get('error');
     if (errorParam === 'not-invited') {
-      setError('You need an invite code to access AUBRAI. Please enter your invite code below.');
+      setError(loginConfig.inviteRequiredError);
     } else if (errorParam === 'auth-error') {
       setError('Authentication error. Please try again.');
     }
@@ -90,7 +94,7 @@ function LoginPageContent() {
         } else {
           // User doesn't exist - they need an invite
           console.log('[LoginPage] User not in database, logging out');
-          setError('You need an invite code to access AUBRAI. Please enter your invite code below.');
+          setError(loginConfig.inviteRequiredError);
           setIsAuthenticating(false);
           // Clear any cached auth data
           try {
@@ -104,7 +108,7 @@ function LoginPageContent() {
         console.error('[LoginPage] Error checking user:', error);
         // More specific error handling
         if (error?.message?.includes('not found') || error?.code === 'PGRST116') {
-          setError('You need an invite code to access AUBRAI. Please enter your invite code below.');
+          setError(loginConfig.inviteRequiredError);
         } else {
           setError('Error connecting to the server. Please try again.');
           PostHogTracking.getInstance().authError('user_check_failed', error?.message || 'Unknown error');
@@ -274,8 +278,8 @@ function LoginPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] mb-4"></div>
-          <p className="text-zinc-600 dark:text-zinc-400 text-sm">Initializing...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 mb-4" style={{ borderColor: brandingConfig.primaryColor }}></div>
+          <p className="text-zinc-600 dark:text-zinc-400 text-sm">{loginConfig.initializingText}</p>
         </div>
       </div>
     );
@@ -302,22 +306,42 @@ function LoginPageContent() {
             {/* Hero Section */}
             <div className="text-center lg:text-left">
               <h1 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-3xl font-bold text-zinc-900 dark:text-white mb-2 sm:mb-3 leading-tight">
-                Your longevity co-pilot
+                {loginConfig.heroTitle}
               </h1>
               <p className="text-sm sm:text-base md:text-base lg:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Expert AI guidance from Dr. Aubrey de Grey&apos;s research.
+                {loginConfig.heroSubtitle}
               </p>
             </div>
 
             {/* Welcome Message for New Users */}
-            <div className="relative bg-gradient-to-r from-[#FF6E71]/10 to-[#FF6E71]/5 dark:from-[#FF6E71]/20 dark:to-[#FF6E71]/10 border border-[#FF6E71]/30 dark:border-[#FF6E71]/40 rounded-lg p-3 sm:p-4 md:p-4 lg:p-4 overflow-hidden">
-              <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#FF6E71]/5 rounded-full blur-xl"></div>
+            <div 
+              className="relative rounded-lg p-3 sm:p-4 md:p-4 lg:p-4 overflow-hidden border"
+              style={{
+                background: `linear-gradient(to right, ${brandingConfig.primaryColor}1A, ${brandingConfig.primaryColor}0D)`,
+                borderColor: `${brandingConfig.primaryColor}4D`,
+              }}
+            >
+              <div 
+                className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 rounded-full blur-xl"
+                style={{ backgroundColor: `${brandingConfig.primaryColor}0D` }}
+              ></div>
               <div className="relative flex items-start gap-2 sm:gap-3">
-                <div className="flex-shrink-0 w-1.5 h-1.5 bg-[#FF6E71] rounded-full mt-2 animate-pulse" />
+                <div 
+                  className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 animate-pulse"
+                  style={{ backgroundColor: brandingConfig.primaryColor }}
+                />
                 <div className="text-xs sm:text-sm">
-                  <p className="text-[#FF6E71] dark:text-[#FF6E71] font-semibold mb-1">Welcome to AUBRAI</p>
-                  <p className="text-[#FF6E71]/80 dark:text-[#FF6E71]/70 leading-relaxed">
-                    Join thousands exploring longevity science with AI-powered insights from cutting-edge research.
+                  <p 
+                    className="font-semibold mb-1"
+                    style={{ color: brandingConfig.primaryColor }}
+                  >
+                    {loginConfig.welcomeTitle}
+                  </p>
+                  <p 
+                    className="leading-relaxed"
+                    style={{ color: `${brandingConfig.primaryColor}B3` }}
+                  >
+                    {loginConfig.welcomeDescription}
                   </p>
                 </div>
               </div>
@@ -338,12 +362,15 @@ function LoginPageContent() {
               {(isAuthenticating || isCheckingExistingUser || isRedirecting) && (
                 <div className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
                   <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] mb-3"></div>
+                    <div 
+                      className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 mb-3"
+                      style={{ borderColor: brandingConfig.primaryColor }}
+                    ></div>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {isRedirecting ? 'Redirecting you...' :
-                       isCheckingExistingUser ? 'Verifying account...' : 
-                       isValidating ? 'Validating invite...' : 
-                       'Signing you in...'}
+                      {isRedirecting ? loginConfig.redirectingText :
+                       isCheckingExistingUser ? loginConfig.verifyingAccountText : 
+                       isValidating ? loginConfig.validatingInviteText : 
+                       loginConfig.signingInText}
                     </p>
                   </div>
                 </div>
@@ -361,16 +388,26 @@ function LoginPageContent() {
   );
 }
 
+function LoginPageSuspenseFallback() {
+  const loginConfig = useUIConfigSection('login');
+  const brandingConfig = useUIConfigSection('branding');
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <div className="text-center">
+        <div 
+          className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 mb-4"
+          style={{ borderColor: brandingConfig.primaryColor }}
+        ></div>
+        <p className="text-zinc-600 dark:text-zinc-400 text-sm">{loginConfig.loadingText}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] mb-4"></div>
-          <p className="text-zinc-600 dark:text-zinc-400 text-sm">Loading...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoginPageSuspenseFallback />}>
       <LoginPageContent />
     </Suspense>
   );
