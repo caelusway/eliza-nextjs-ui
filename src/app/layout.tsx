@@ -81,7 +81,16 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
       <head>
-      <script type="text/javascript" src="https://www.bugherd.com/sidebarv2.js?apikey=eueujerg3pkawdagajobfq" async={true}></script>
+<script>
+  window.feedbugConfig = {
+    apiKey: 'fb_wWIU1WLYNWnTGMoAXfsT6euEQsAl3J85',
+    domain: 'https://staging.aubr.ai'
+  };
+  var script = document.createElement('script');
+  script.src = 'https://feedbug.xyz/widget.js';
+  script.async = true;
+  document.head.appendChild(script);
+</script>
       </head>
       <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
