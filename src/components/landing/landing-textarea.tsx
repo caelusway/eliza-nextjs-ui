@@ -12,11 +12,13 @@ import SpeechToTextButton from '@/components/ui/speech-to-text-button';
 import DeepResearchButton from '@/components/ui/deep-research-button';
 import FileUploadButton from '@/components/ui/file-upload-button';
 import { useUserManager } from '@/lib/user-manager';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 export const LandingTextarea = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
+  const authenticatedFetch = useAuthenticatedFetch();
 
   const { push } = useRouter();
   const { getUserId, isUserAuthenticated } = useUserManager();
@@ -44,11 +46,8 @@ export const LandingTextarea = () => {
       console.log(`[Landing] Creating new session with message: "${finalMessage}"`);
       console.log(`[Landing] Using user ID: ${currentUserId}`);
 
-      const response = await fetch('/api/chat-session/create', {
+      const response = await authenticatedFetch('/api/chat-session/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId: currentUserId,
           initialMessage: finalMessage,

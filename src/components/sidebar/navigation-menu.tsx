@@ -27,7 +27,6 @@ export function NavigationMenu({ onMobileMenuClose }: NavigationMenuProps) {
         <Users className="w-4 h-4 flex-shrink-0" />
         <span className="text-sm">{sidebarConfig.inviteFriendsText}</span>
       </Link>
-
     </div>
   );
 }

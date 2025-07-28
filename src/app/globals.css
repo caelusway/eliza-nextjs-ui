@@ -326,6 +326,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent page scroll - only allow container scroll */
+html,
+body {
+  overflow: hidden;
+  height: 100%;
+}
+
 /* Custom Colors for AUBRAI */
 :root {
   --color-brand: #ff6e71;
@@ -610,6 +617,30 @@
   80% {
     transform: translateY(-4px) translateX(-1px) rotate(-1deg);
   }
+}
+
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Animation delay utilities */
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+.animation-delay-2000 {
+  animation-delay: 2000ms;
+}
+.animation-delay-4000 {
+  animation-delay: 4000ms;
 }
 
 /* Font utility classes */

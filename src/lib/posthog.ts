@@ -185,10 +185,7 @@ export class PostHogTracking {
     });
   }
 
-  public messageReceived(messageData: {
-    sessionId: string;
-    generationTime: number;
-  }) {
+  public messageReceived(messageData: { sessionId: string; generationTime: number }) {
     if (!this._enabled) {
       return;
     }
@@ -236,8 +233,6 @@ export class PostHogTracking {
     });
   }
 
-
-
   public authError(errorType: string, errorMessage: string) {
     if (!this._enabled) {
       return;
@@ -259,7 +254,6 @@ export class PostHogTracking {
       messageCount,
     });
   }
-
 
   public featureDiscovered(featureName: string) {
     if (!this._enabled) {

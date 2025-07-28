@@ -636,7 +636,11 @@ export default function AccountPage() {
       )}
 
       {/* Toast */}
-      <Toast message={toastMessage} isVisible={showToast} />
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        primaryColor={brandingConfig.primaryColor}
+      />
     </div>
   );
 }

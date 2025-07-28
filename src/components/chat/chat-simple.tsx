@@ -15,7 +15,8 @@ import SocketIOManager, {
 } from '@/lib/socketio-manager';
 import { SocketDebugUtils } from '@/lib/socket-debug-utils';
 import type { ChatMessage } from '@/types/chat-message';
-import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
+import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 import { useUserManager } from '@/lib/user-manager';
 import { PostHogTracking } from '@/lib/posthog';
 
@@ -74,13 +75,17 @@ export const Chat = ({
   // --- User Management ---
   const { getUserId, getUserName, getUserEmail, isUserAuthenticated, isReady } = useUserManager();
 
+  // --- Authenticated API ---
+  const authenticatedAPI = useAuthenticatedAPI();
+  const authenticatedFetch = useAuthenticatedFetch();
+
   // --- State ---
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [inputDisabled, setInputDisabled] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(propSessionId || null);
   const [sessionData, setSessionData] = useState<ChatSession | null>(propSessionData || null);
-  const [followUpQues, setFollowUpQues] = useState<string[] | undefined>([])
+  const [followUpQues, setFollowUpQues] = useState<string[] | undefined>([]);
   const [channelId, setChannelId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
   const [isAgentThinking, setIsAgentThinking] = useState<boolean>(false);
@@ -224,7 +229,7 @@ export const Chat = ({
     const checkServer = async () => {
       try {
         console.log('[Chat] Checking server status...');
-        const isOnline = await pingServer();
+        const isOnline = await authenticatedAPI.pingServer();
         console.log('[Chat] Server ping result:', isOnline);
         setServerStatus(isOnline ? 'online' : 'offline');
         if (!isOnline) {
@@ -251,11 +256,8 @@ export const Chat = ({
       console.log(`[Chat] Creating new session with initial message: "${initialMessage}"`);
       console.log(`[Chat] Using user ID: ${currentUserId}`);
 
-      const response = await fetch('/api/chat-session/create', {
+      const response = await authenticatedFetch('/api/chat-session/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId: currentUserId,
           initialMessage: initialMessage,
@@ -477,15 +479,15 @@ export const Chat = ({
       };
 
       setMessages((prev) => [...prev, userMessage]);
-      
+
       // Track message sent event
       const posthog = PostHogTracking.getInstance();
       posthog.messageSent({
         sessionId: sessionId || 'unknown',
         messageType: 'text',
-        messageLength: finalMessageText.length
+        messageLength: finalMessageText.length,
       });
-      
+
       // Start thinking animation with safeguards
       const currentTime = Date.now();
       setIsAgentThinking(true);
@@ -510,7 +512,8 @@ export const Chat = ({
       });
       console.log('[Chat] Current Channel ID for this message:', channelId);
 
-      socketIOManager.sendChannelMessage( // sending message logic
+      socketIOManager.sendChannelMessage(
+        // sending message logic
         finalMessageText,
         channelId,
         CHAT_SOURCE,
@@ -551,16 +554,15 @@ export const Chat = ({
   // scroll to view once follow up questions have been loaded
   useEffect(() => {
     if (followUpQues?.length) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [followUpQues]);
 
   useEffect(() => {
-    const questions = localStorage.getItem("questions")
-    if (questions)
-      console.log(questions)
-      setFollowUpQues(JSON.parse(questions))
-  }, [])
+    const questions = localStorage.getItem('questions');
+    if (questions) console.log(questions);
+    setFollowUpQues(JSON.parse(questions));
+  }, []);
 
   // --- Set up Socket Event Listeners ---
   useEffect(() => {
@@ -776,7 +778,7 @@ export const Chat = ({
       if (isAgentMessage && message.text) {
         // Track when we start receiving the response
         const streamStartTime = Date.now();
-        
+
         // Add the message with empty text first
         const streamingMessage = { ...message, text: '' };
         setMessages((prev) => [...prev, streamingMessage]);
@@ -808,31 +810,33 @@ export const Chat = ({
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
           } else {
             clearInterval(streamInterval);
-            
+
             // Track message received event with generation time (in seconds)
             const streamEndTime = Date.now();
             const generationTime = streamEndTime - streamStartTime;
-            
+
             const posthog = PostHogTracking.getInstance();
             posthog.messageReceived({
               sessionId: sessionId || 'unknown',
-              generationTime: generationTime / 1000 // Convert to seconds
+              generationTime: generationTime / 1000, // Convert to seconds
             });
-            
+
             // Stop animation immediately when streaming is complete - this is the actual response
             console.log('[Chat] Agent response streaming complete, stopping animation');
             safeStopAnimation();
             // Fetch follow up questions after streaming stops
             const body = {
-              prompt: fullText
-            }
+              prompt: fullText,
+            };
             fetch('/api/followup-questions', {
               body: JSON.stringify(body),
-              method: "POST"
-            }).then(res => res.json()).then(res => {
-              setFollowUpQues(res.questions)
-              localStorage.setItem("questions", JSON.stringify(res.questions))
+              method: 'POST',
             })
+              .then((res) => res.json())
+              .then((res) => {
+                setFollowUpQues(res.questions);
+                localStorage.setItem('questions', JSON.stringify(res.questions));
+              });
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
       } else {
@@ -947,7 +951,7 @@ export const Chat = ({
     const loadMessageHistory = async () => {
       try {
         // First try the channel messages API (matches new message format)
-        const channelMessages = await getChannelMessages(channelId, 50);
+        const channelMessages = await authenticatedAPI.getChannelMessages(channelId, 50);
         if (channelMessages.length > 0) {
           console.log(`[Chat] Loaded ${channelMessages.length} channel messages`);
           return channelMessages;
@@ -955,7 +959,7 @@ export const Chat = ({
 
         // Fallback to room memories if channel messages are empty
         console.log('[Chat] No channel messages found, trying room memories...');
-        const roomMessages = await getRoomMemories(agentId, channelId, 50);
+        const roomMessages = await authenticatedAPI.getRoomMemories(agentId, channelId, 50);
         console.log(`[Chat] Loaded ${roomMessages.length} room memory messages`);
         return roomMessages;
       } catch (error) {
@@ -1085,11 +1089,11 @@ export const Chat = ({
           connectionStatus,
           sendMessageRef: !!sendMessageRef.current,
         });
-        
+
         // Track media upload event
         const posthog = PostHogTracking.getInstance();
         posthog.mediaUploaded(file.type || 'unknown', file.size);
-        
+
         // Create a message indicating the file was uploaded and enable internal knowledge
         const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
         console.log('[Chat] Message to send:', fileMessage);
@@ -1119,8 +1123,8 @@ export const Chat = ({
   // Check if environment is properly configured
   if (!agentId) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
-        <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
+      <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-[#292929]/20">
+        <div className="text-center p-8 bg-white dark:bg-[#1f1f1f] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             Configuration Error
           </h2>
@@ -1138,8 +1142,8 @@ export const Chat = ({
   // Check if user is authenticated
   if (!isReady) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
-        <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
+      <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-[#292929]/20">
+        <div className="text-center p-8 bg-white dark:bg-[#1f1f1f] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Loading...</h2>
           <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
             Initializing authentication...
@@ -1150,9 +1154,9 @@ export const Chat = ({
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717] mt-6 sm:mt-4 md:mt-6 lg:mt-8">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#292929]">
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
+      <div className="flex-shrink-0 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#292929]">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-4">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
@@ -1238,7 +1242,7 @@ export const Chat = ({
             <>
               <ChatMessages
                 messages={messages}
-                followUpPromptsMap={{[messages.length / 2 - 1]: followUpQues}}
+                followUpPromptsMap={{ [messages.length / 2 - 1]: followUpQues }}
                 onFollowUpClick={(prompt) => {
                   // Handle follow-up prompts by setting as new input
                   setInput(prompt);
@@ -1265,9 +1269,9 @@ export const Chat = ({
       </div>
 
       {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 py-3 bg-white dark:bg-[#171717]">
+      <div className="flex-shrink-0 py-3 bg-white dark:bg-[#292929]">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="bg-white dark:bg-[#171717]">
+          <div className="bg-white dark:bg-[#292929]">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}

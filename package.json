@@ -36,6 +36,7 @@
     "@heroicons/react": "^2.2.0",
     "@libsql/client": "^0.14.0",
     "@privy-io/react-auth": "^2.18.0",
+    "@privy-io/server-auth": "^1.28.8",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",

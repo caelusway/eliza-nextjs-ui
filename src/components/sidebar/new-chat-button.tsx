@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { Plus } from 'lucide-react';
@@ -15,8 +15,6 @@ interface NewChatButtonProps {
 export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonProps) {
   const router = useRouter();
   const { getUserId } = useUserManager();
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const sidebarConfig = useUIConfigSection('sidebar');
   const brandingConfig = useUIConfigSection('branding');
@@ -36,48 +34,22 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
     return color;
   };
 
-  const handleCreateNewSession = useCallback(async () => {
+  const handleNewChat = useCallback(() => {
     if (!userId) return;
 
-    try {
-      setIsCreatingSession(true);
-      setError(null);
-
-      const response = await fetch('/api/chat-session/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          initialMessage: `I'm ${brandingConfig.appName}, here to help with longevity research and biological aging interventions. What research question can I explore for you today?`,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create chat session');
-      }
-
-      // Call the onNewChat callback if provided
-      onNewChat?.();
-
-      // Redirect to the new session - tracking happens there
-      router.push(`/chat/${data.data.sessionId}`);
-    } catch (err) {
-      console.error('[NewChatButton] Error creating session:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create chat session');
-    } finally {
-      setIsCreatingSession(false);
+    // Call the onNewChat callback if provided, otherwise redirect to /chat
+    if (onNewChat) {
+      onNewChat();
+    } else {
+      router.push('/chat');
     }
   }, [userId, router, onNewChat]);
 
   return (
     <div>
       <button
-        onClick={handleCreateNewSession}
-        disabled={isCreatingSession}
+        onClick={handleNewChat}
+        disabled={false}
         className={cn(
           'flex items-center rounded-lg transition-colors',
           'text-white border border-dashed border-white/20 hover:border-white/40',
@@ -90,22 +62,12 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
           backgroundColor: brandingConfig.primaryColor,
         }}
         onMouseEnter={(e) => {
-          if (!isCreatingSession) {
-            e.currentTarget.style.backgroundColor = getDarkerShade(brandingConfig.primaryColor);
-          }
+          e.currentTarget.style.backgroundColor = getDarkerShade(brandingConfig.primaryColor);
         }}
         onMouseLeave={(e) => {
-          if (!isCreatingSession) {
-            e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
-          }
+          e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
         }}
-        title={
-          isCollapsed
-            ? isCreatingSession
-              ? sidebarConfig.creatingText
-              : sidebarConfig.newChatText
-            : undefined
-        }
+        title={isCollapsed ? sidebarConfig.newChatText : undefined}
       >
         <Plus
           className={cn(
@@ -113,13 +75,8 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
             isCollapsed ? 'w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6' : 'w-4 h-4'
           )}
         />
-        {!isCollapsed && (
-          <span className="text-sm font-medium">
-            {isCreatingSession ? sidebarConfig.creatingText : sidebarConfig.newChatText}
-          </span>
-        )}
+        {!isCollapsed && <span className="text-sm font-medium">{sidebarConfig.newChatText}</span>}
       </button>
-      {error && <div className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</div>}
     </div>
   );
 }

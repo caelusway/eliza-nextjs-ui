@@ -32,7 +32,6 @@ export function AppSidebar({
   const router = useRouter();
   const { getUserId, getUserName, isUserAuthenticated } = useUserManager();
   const { logout } = usePrivy();
-  const [currentChannel, setCurrentChannel] = useState<string | null>(null);
 
   const sidebarConfig = useUIConfigSection('sidebar');
   const brandingConfig = useUIConfigSection('branding');
@@ -47,21 +46,12 @@ export function AppSidebar({
   }, [logout, router]);
 
   const handleNewPrivateChat = useCallback(() => {
-    setCurrentChannel(`private-${userId}`);
-    router.push('/chat');
     // Close mobile menu when navigating
     if (onMobileMenuToggle) {
       onMobileMenuToggle();
     }
-  }, [userId, router, onMobileMenuToggle]);
 
-  const handlePublicChat = useCallback(() => {
-    setCurrentChannel('public-chat');
     router.push('/chat');
-    // Close mobile menu when navigating
-    if (onMobileMenuToggle) {
-      onMobileMenuToggle();
-    }
   }, [router, onMobileMenuToggle]);
 
   const handleInvitesNavigation = useCallback(() => {
@@ -79,7 +69,7 @@ export function AppSidebar({
   return (
     <div
       className={cn(
-        'flex flex-col h-screen bg-zinc-50 dark:bg-zinc-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300',
+        'flex flex-col h-screen bg-zinc-50 dark:bg-[#1f1f1f] border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
         // Mobile: always full width, Desktop: respect collapsed state
         'w-72 sm:w-72 md:w-72',
         isCollapsed ? 'lg:w-16 xl:w-20' : 'lg:w-72 xl:w-80'
@@ -105,7 +95,7 @@ export function AppSidebar({
             {/* Account Icon */}
             <button
               onClick={() => router.push('/account')}
-              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
+              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-[#333333] hover:bg-zinc-300 dark:hover:bg-[#404040] flex items-center justify-center transition-colors group"
               title={sidebarConfig.accountButtonTitle}
               style={
                 {
@@ -134,7 +124,7 @@ export function AppSidebar({
             {/* Invite Icon */}
             <button
               onClick={handleInvitesNavigation}
-              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
+              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-[#333333] hover:bg-zinc-300 dark:hover:bg-[#404040] flex items-center justify-center transition-colors group"
               title={sidebarConfig.inviteButtonTitle}
               style={
                 {
@@ -175,7 +165,7 @@ export function AppSidebar({
               <NavigationMenu onMobileMenuClose={onMobileMenuToggle} />
             </div>
             {/* Divider */}
-            <div className="mx-4 border-t border-gray-200 dark:border-gray-800" />
+            <div className="mx-4 border-t border-gray-200 dark:border-gray-600" />
 
             {/* Chat Sessions Section */}
             <div className="mb-4">
