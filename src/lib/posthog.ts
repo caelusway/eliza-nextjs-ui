@@ -127,6 +127,9 @@ export class PostHogTracking {
       return;
     }
     this.identify(userData.userId);
+    if (userData.email) {
+      this.alias(userData.email, userData.userId);
+    }
     const now = new Date().toISOString();
     this.track('user_signin', {
       email: userData.email,
@@ -184,16 +187,14 @@ export class PostHogTracking {
 
   public messageReceived(messageData: {
     sessionId: string;
-    responseTime: number;
-    thinkingTime?: number;
+    generationTime: number;
   }) {
     if (!this._enabled) {
       return;
     }
     this.track('message_received', {
       sessionId: messageData.sessionId,
-      responseTime: messageData.responseTime,
-      thinkingTime: messageData.thinkingTime,
+      generationTime: messageData.generationTime,
     });
   }
 
@@ -235,50 +236,7 @@ export class PostHogTracking {
     });
   }
 
-  // Agent & Connection Events
-  public agentConnected(agentId: string) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('agent_connected', {
-      agentId,
-      timestamp: new Date().toISOString(),
-    });
-  }
 
-  public agentDisconnected(agentId: string, reason?: string) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('agent_disconnected', {
-      agentId,
-      reason,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  public socketConnectionError(error: string) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('socket_connection_error', {
-      error,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  // Error Events
-  public apiError(endpoint: string, statusCode: number, error: string) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('api_error', {
-      endpoint,
-      statusCode,
-      error,
-      timestamp: new Date().toISOString(),
-    });
-  }
 
   public authError(errorType: string, errorMessage: string) {
     if (!this._enabled) {
@@ -302,14 +260,6 @@ export class PostHogTracking {
     });
   }
 
-  public sidebarToggled(isCollapsed: boolean) {
-    if (!this._enabled) {
-      return;
-    }
-    this.track('sidebar_toggled', {
-      isCollapsed,
-    });
-  }
 
   public featureDiscovered(featureName: string) {
     if (!this._enabled) {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { PostHogTracking } from '@/lib/posthog';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -84,14 +83,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('[API] Error creating chat session:', error);
-
-    // Track API error
-    PostHogTracking.getInstance().apiError(
-      '/api/chat-session/create',
-      500,
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-
+    
     return NextResponse.json(
       {
         error: 'Failed to create chat session',
