@@ -36,6 +36,7 @@ const isUserMessage = (message: ChatMessageType) => {
   return message.senderId !== AGENT_ID;
 };
 
+
 interface ChatMessageProps {
   message: ChatMessageType;
   i: number;
@@ -50,6 +51,7 @@ export const ChatMessage = memo(function ChatMessage({
   onFollowUpClick,
 }: ChatMessageProps) {
   const [showAllPapers, setShowAllPapers] = useState(false);
+  const [showAllFollowUps, setShowAllFollowUps] = useState(false);
 
   // Voting state
   const [vote, setVote] = useState<'up' | 'down' | null>(message.userVote || null);
@@ -369,81 +371,100 @@ export const ChatMessage = memo(function ChatMessage({
               )}
             </div>
 
-            {/* Follow-up prompts */}
-            {followUpPrompts?.length > 0 && (
-              <div className="mt-6">
-                <div className="text-sm text-zinc-700 dark:text-zinc-300 mb-3 font-medium flex items-center gap-2">
-                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Continue exploring:
-                </div>
-                <div className="grid gap-2">
-                  {followUpPrompts.map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => onFollowUpClick?.(prompt)}
-                      className="group relative overflow-hidden text-left p-3 bg-gradient-to-r from-zinc-50 to-zinc-100 hover:from-blue-50 hover:to-blue-100 dark:from-zinc-800 dark:to-zinc-750 dark:hover:from-blue-900/30 dark:hover:to-blue-800/30 text-zinc-800 dark:text-zinc-200 rounded-lg transition-all duration-300 border border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium pr-2 line-clamp-1">{prompt}</span>
-                        <ArrowRightIcon className="w-4 h-4 flex-shrink-0 text-zinc-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1" />
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 transition-all duration-700 group-hover:translate-x-full"></div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Papers Section */}
-            {message.papers && message.papers.length > 0 && (
+            {/* Combined Follow-ups and Papers Section */}
+            {(followUpPrompts?.length > 0 || (message.papers && message.papers.length > 0)) && (
               <div className="mt-4 border-t border-zinc-200 dark:border-zinc-700 pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg
-                    className="w-4 h-4 text-zinc-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    Research Papers ({message.papers.length})
-                  </span>
-                  {message.papers.length > 3 && (
-                    <button
-                      onClick={() => setShowAllPapers(!showAllPapers)}
-                      className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                    >
-                      {showAllPapers ? (
-                        <>
-                          <span>Show less</span>
-                          <ChevronUpIcon className="w-3 h-3" />
-                        </>
-                      ) : (
-                        <>
-                          <span>View all</span>
-                          <ChevronDownIcon className="w-3 h-3" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  {(showAllPapers ? message.papers : message.papers.slice(0, 3)).map(
-                    (paper, index) => (
-                      <div key={`${paper.doi}-${index}`} className="w-full min-w-0">
-                        <PaperCard paper={paper} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Papers Section */}
+                  {message.papers && message.papers.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                          Research Papers ({message.papers.length})
+                        </span>
+                        {message.papers.length > 3 && (
+                          <button
+                            onClick={() => setShowAllPapers(!showAllPapers)}
+                            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                          >
+                            {showAllPapers ? (
+                              <>
+                                <span>Show less</span>
+                                <ChevronUpIcon className="w-3 h-3" />
+                              </>
+                            ) : (
+                              <>
+                                <span>View all</span>
+                                <ChevronDownIcon className="w-3 h-3" />
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
-                    )
+
+                      <div className="space-y-2">
+                        {(showAllPapers ? message.papers : message.papers.slice(0, 3)).map(
+                          (paper, index) => (
+                            <div key={`${paper.doi}-${index}`} className="w-full min-w-0">
+                              <PaperCard paper={paper} />
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
                   )}
+
+                  {/* Follow-up prompts */}
+                  {followUpPrompts?.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                          Continue exploring ({followUpPrompts.length})
+                        </span>
+                        {followUpPrompts.length > 3 && (
+                          <button
+                            onClick={() => setShowAllFollowUps(!showAllFollowUps)}
+                            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                          >
+                            {showAllFollowUps ? (
+                              <>
+                                <span>Show less</span>
+                                <ChevronUpIcon className="w-3 h-3" />
+                              </>
+                            ) : (
+                              <>
+                                <span>View all</span>
+                                <ChevronDownIcon className="w-3 h-3" />
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {(showAllFollowUps ? followUpPrompts : followUpPrompts.slice(0, 3)).map((prompt, index) => (
+                          <button
+                            key={index}
+                            onClick={() => onFollowUpClick?.(prompt)}
+                            className="group w-full text-left p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all duration-200 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 focus:shadow-sm"
+                          >
+                            <div className="flex items-start gap-3">
+                              <ArrowRightIcon className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors duration-200 group-hover:translate-x-0.5 flex-shrink-0 mt-0.5" />
+                              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-tight">{prompt}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                 </div>
               </div>
             )}
