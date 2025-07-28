@@ -90,18 +90,28 @@ interface MessageSubmission {
 }
 
 /**
- * Enhanced fetch wrapper with API key authentication
+ * Enhanced fetch wrapper with authentication support
  */
-const fetcher = async (url: string, options: RequestInit = {}): Promise<any> => {
+const fetcher = async (
+  url: string,
+  options: RequestInit = {},
+  authToken?: string
+): Promise<any> => {
   const fullUrl = API_PREFIX + (url.startsWith('/') ? url : `/${url}`);
 
-  // Prepare headers with optional API key
+  // Prepare headers with authentication
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
 
+  // Add Privy JWT token if provided
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
+  // Legacy API key support
   if (API_KEY) {
     headers['X-API-KEY'] = API_KEY;
   }
@@ -150,9 +160,9 @@ const fetcher = async (url: string, options: RequestInit = {}): Promise<any> => 
 /**
  * Get all available agents
  */
-export const getAgents = async (): Promise<Agent[]> => {
+export const getAgents = async (authToken?: string): Promise<Agent[]> => {
   try {
-    const response: ElizaAPIResponse<Agent[]> = await fetcher('/agents');
+    const response: ElizaAPIResponse<Agent[]> = await fetcher('/agents', {}, authToken);
     return response.data || [];
   } catch (error) {
     console.error('[API Client] Error fetching agents:', error);
@@ -163,9 +173,9 @@ export const getAgents = async (): Promise<Agent[]> => {
 /**
  * Get specific agent details
  */
-export const getAgent = async (agentId: string): Promise<Agent | null> => {
+export const getAgent = async (agentId: string, authToken?: string): Promise<Agent | null> => {
   try {
-    const response: ElizaAPIResponse<Agent> = await fetcher(`/agents/${agentId}`);
+    const response: ElizaAPIResponse<Agent> = await fetcher(`/agents/${agentId}`, {}, authToken);
     return response.data || null;
   } catch (error) {
     console.error('[API Client] Error fetching agent:', error);
@@ -180,13 +190,18 @@ export const getAgent = async (agentId: string): Promise<Agent | null> => {
  */
 export const getAgentMemories = async (
   agentId: string,
-  limit: number = 50
+  limit: number = 50,
+  authToken?: string
 ): Promise<ChatMessage[]> => {
   assert(agentId && typeof agentId === 'string', '[getAgentMemories] Invalid agentId');
 
   try {
     const url = `/memory/${agentId}/memories?limit=${limit}`;
-    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> = await fetcher(url);
+    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> = await fetcher(
+      url,
+      {},
+      authToken
+    );
 
     if (!response.success || !Array.isArray(response.data?.memories)) {
       console.error('[getAgentMemories] Failed to get valid memories from API.', response);
@@ -209,14 +224,19 @@ export const getAgentMemories = async (
 export const getRoomMemories = async (
   agentId: string,
   roomId: string,
-  limit: number = 50
+  limit: number = 50,
+  authToken?: string
 ): Promise<ChatMessage[]> => {
   assert(agentId && typeof agentId === 'string', '[getRoomMemories] Invalid agentId');
   assert(roomId && typeof roomId === 'string', '[getRoomMemories] Invalid roomId');
 
   try {
     const url = `/memory/${agentId}/rooms/${roomId}/memories?limit=${limit}`;
-    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> = await fetcher(url);
+    const response: ElizaAPIResponse<{ memories: BackendMemory[] }> = await fetcher(
+      url,
+      {},
+      authToken
+    );
 
     if (!response.success || !Array.isArray(response.data?.memories)) {
       console.error('[getRoomMemories] Failed to get valid memories from API.', response);
@@ -269,12 +289,19 @@ function transformMemoriesToChatMessages(memories: BackendMemory[]): ChatMessage
 /**
  * Submit a message via the messaging system
  */
-export const submitMessage = async (payload: MessageSubmission): Promise<boolean> => {
+export const submitMessage = async (
+  payload: MessageSubmission,
+  authToken?: string
+): Promise<boolean> => {
   try {
-    const response: ElizaAPIResponse = await fetcher('/messaging/submit', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    const response: ElizaAPIResponse = await fetcher(
+      '/messaging/submit',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      authToken
+    );
 
     return response.success || false;
   } catch (error) {
@@ -288,11 +315,14 @@ export const submitMessage = async (payload: MessageSubmission): Promise<boolean
  */
 export const getChannelMessages = async (
   channelId: string,
-  limit: number = 50
+  limit: number = 50,
+  authToken?: string
 ): Promise<ChatMessage[]> => {
   try {
     const response: ElizaAPIResponse<{ messages: any[] }> = await fetcher(
-      `/messaging/central-channels/${channelId}/messages?limit=${limit}`
+      `/messaging/central-channels/${channelId}/messages?limit=${limit}`,
+      {},
+      authToken
     );
 
     if (!response.success || !Array.isArray(response.data?.messages)) {
@@ -336,7 +366,8 @@ export const sendChannelMessage = async (
   channelId: string,
   content: string,
   userId: string,
-  agentId?: string
+  agentId?: string,
+  authToken?: string
 ): Promise<boolean> => {
   try {
     const response: ElizaAPIResponse = await fetcher(
@@ -348,7 +379,8 @@ export const sendChannelMessage = async (
           userId,
           agentId,
         }),
-      }
+      },
+      authToken
     );
 
     return response.success || false;
@@ -363,9 +395,13 @@ export const sendChannelMessage = async (
 /**
  * Get agent rooms
  */
-export const getAgentRooms = async (agentId: string): Promise<Room[]> => {
+export const getAgentRooms = async (agentId: string, authToken?: string): Promise<Room[]> => {
   try {
-    const response: ElizaAPIResponse<Room[]> = await fetcher(`/memory/${agentId}/rooms`);
+    const response: ElizaAPIResponse<Room[]> = await fetcher(
+      `/memory/${agentId}/rooms`,
+      {},
+      authToken
+    );
     return response.data || [];
   } catch (error) {
     console.error('[API Client] Error fetching agent rooms:', error);
@@ -378,13 +414,18 @@ export const getAgentRooms = async (agentId: string): Promise<Room[]> => {
  */
 export const createRoom = async (
   agentId: string,
-  roomData: Partial<Room>
+  roomData: Partial<Room>,
+  authToken?: string
 ): Promise<Room | null> => {
   try {
-    const response: ElizaAPIResponse<Room> = await fetcher(`/memory/${agentId}/rooms`, {
-      method: 'POST',
-      body: JSON.stringify(roomData),
-    });
+    const response: ElizaAPIResponse<Room> = await fetcher(
+      `/memory/${agentId}/rooms`,
+      {
+        method: 'POST',
+        body: JSON.stringify(roomData),
+      },
+      authToken
+    );
 
     return response.data || null;
   } catch (error) {
@@ -398,9 +439,9 @@ export const createRoom = async (
 /**
  * Ping server for health check
  */
-export const pingServer = async (): Promise<boolean> => {
+export const pingServer = async (authToken?: string): Promise<boolean> => {
   try {
-    const response = await fetcher('/server/ping');
+    const response = await fetcher('/server/ping', {}, authToken);
     console.log('[API Client] Ping response:', response);
     // ElizaOS returns {pong: true, timestamp: number} for successful ping
     return response.pong === true || response.success === true;
@@ -448,12 +489,18 @@ export const createDMChannel = async (
   userId: string,
   agentId: string,
   channelId?: string,
-  title?: string
+  title?: string,
+  authToken?: string
 ): Promise<DMChannel | null> => {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
     const response = await fetch('/api/dm-channel/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         userId,
         agentId,
@@ -482,12 +529,18 @@ export const createDMChannel = async (
 export const getOrCreateDMChannel = async (
   userId: string,
   agentId: string,
-  sessionId?: string
+  sessionId?: string,
+  authToken?: string
 ): Promise<{ channel: DMChannel; isNew: boolean } | null> => {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
     const response = await fetch('/api/dm-channel/get-or-create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         userId,
         agentId,
@@ -512,13 +565,22 @@ export const getOrCreateDMChannel = async (
 /**
  * List DM channels for a user and agent
  */
-export const listDMChannels = async (userId: string, agentId: string): Promise<DMChannel[]> => {
+export const listDMChannels = async (
+  userId: string,
+  agentId: string,
+  authToken?: string
+): Promise<DMChannel[]> => {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
     const response = await fetch(
       `/api/dm-channel/list?userId=${encodeURIComponent(userId)}&agentId=${encodeURIComponent(agentId)}`,
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
       }
     );
 

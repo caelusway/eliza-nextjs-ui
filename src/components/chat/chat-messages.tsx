@@ -44,10 +44,9 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
     }
 
     scrollTimeoutRef.current = setTimeout(() => {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight + 400,
-        behavior,
-      });
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior });
+      }
     }, 100);
   };
 
@@ -95,12 +94,8 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
     );
 
     if (isAgentMessage(lastMessage)) {
-      const isAtBottom =
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100;
-
-      if (isAtBottom) {
-        scrollToBottom();
-      }
+      // For container scroll, just auto-scroll to bottom for agent messages
+      setTimeout(() => scrollToBottom('smooth'), 100);
     }
   }, [messages[messages.length - 1]?.text]);
 

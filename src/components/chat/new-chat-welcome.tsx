@@ -91,30 +91,44 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-full p-3 sm:p-4 lg:p-8">
-      <div className="w-full max-w-2xl lg:max-w-3xl">
-        <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-zinc-900 dark:text-white mb-3 sm:mb-4 leading-tight">
-            Welcome to{' '}
-            <span style={{ color: brandingConfig.primaryColor }}>{brandingConfig.appName}</span>
-          </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-zinc-600 dark:text-zinc-400 max-w-sm sm:max-w-md lg:max-w-xl mx-auto px-2 sm:px-0">
-            {chatConfig.welcomeSubtitle}
-          </p>
+    <div className="flex items-center justify-center min-h-full px-4 py-12">
+      <div className="w-full max-w-4xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <div className="mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
+              <span className="text-zinc-900 dark:text-white">Welcome to </span>
+              <span 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                style={{ 
+                  background: `linear-gradient(135deg, ${brandingConfig.primaryColor}, ${brandingConfig.primaryColor}CC)`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                {brandingConfig.appName}
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              {chatConfig.welcomeSubtitle}
+            </p>
+          </div>
         </div>
 
-        <div className="mb-6 sm:mb-8 lg:mb-10">
-          <div className="text-center mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-zinc-900 dark:text-white mb-2 sm:mb-3">
+        {/* Suggested Prompts Section */}
+        <div className="w-full mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white mb-3">
               {chatConfig.tryAskingText}
             </h2>
-            <div
-              className="w-8 sm:w-12 h-0.5 mx-auto rounded-full"
+            <div 
+              className="w-16 h-1 mx-auto rounded-full opacity-80"
               style={{ backgroundColor: brandingConfig.primaryColor }}
-            ></div>
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {chatConfig.suggestedPrompts.map((prompt, index) => {
               const isPromptLoading = clickedPrompt === prompt;
               return (
@@ -122,59 +136,50 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
                   key={index}
                   onClick={() => handlePromptClick(prompt)}
                   disabled={isLoading}
-                  className={`group relative p-4 sm:p-5 lg:p-6 text-left bg-white dark:bg-zinc-800 rounded-lg sm:rounded-xl dark:border-zinc-600 transition-all duration-200 cursor-pointer ${
+                  className={`group relative p-4 md:p-5 text-left rounded-xl border transition-all duration-500 ease-out transform ${
                     isLoading
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:shadow-md'
-                  }`}
-                  style={
+                      ? 'opacity-50 cursor-not-allowed scale-100'
+                      : 'hover:scale-[1.01] hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/25 hover:-translate-y-1'
+                  } ${
                     isPromptLoading
-                      ? {
-                          backgroundColor: `${brandingConfig.primaryColor}1A`,
-                          borderColor: `${brandingConfig.primaryColor}80`,
-                        }
-                      : {}
-                  }
-                  onMouseEnter={(e) => {
-                    if (!isLoading && !isPromptLoading) {
-                      e.currentTarget.style.borderColor = `${brandingConfig.primaryColor}4D`;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isLoading && !isPromptLoading) {
-                      e.currentTarget.style.borderColor = '';
-                    }
-                  }}
+                      ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 shadow-lg'
+                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/80 hover:border-zinc-300/80 dark:hover:border-zinc-600/80 shadow-sm hover:shadow-md'
+                  }`}
                 >
-                  <div className="flex items-start gap-2 sm:gap-3">
-                    <div className="flex-shrink-0 flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 mt-1">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700 transition-all duration-500 group-hover:from-zinc-200 group-hover:to-zinc-300 dark:group-hover:from-zinc-700 dark:group-hover:to-zinc-600">
                       {isPromptLoading ? (
-                        <div
-                          className="w-3 sm:w-4 h-3 sm:h-4 border-2 border-t-transparent rounded-full animate-spin"
-                          style={{
-                            borderColor: brandingConfig.primaryColor,
-                            borderTopColor: 'transparent',
-                          }}
-                        ></div>
+                        <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" 
+                             style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }} />
                       ) : (
-                        <div
-                          className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"
+                        <div 
+                          className="w-2 h-2 rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-sm"
                           style={{ backgroundColor: brandingConfig.primaryColor }}
-                        ></div>
+                        />
                       )}
                     </div>
-                    <div className="text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white leading-relaxed">
-                      {prompt}
+                    <div className="flex-1">
+                      <p className="text-sm md:text-base font-medium text-zinc-800 dark:text-zinc-200 leading-relaxed group-hover:text-zinc-900 dark:group-hover:text-white transition-colors duration-300">
+                        {prompt}
+                      </p>
                     </div>
                   </div>
+                  
+                  {/* Subtle glow effect on hover */}
+                  <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none"
+                       style={{ 
+                         background: `linear-gradient(135deg, ${brandingConfig.primaryColor}06, ${brandingConfig.primaryColor}02)`,
+                         boxShadow: `0 0 30px ${brandingConfig.primaryColor}08`
+                       }} />
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="text-center">
-          <div className="mb-4 sm:mb-6">
+        {/* Input Section */}
+        <div className="w-full">
+          <div className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}
@@ -187,15 +192,16 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
 
           {/* Loading feedback */}
           {isLoading && (
-            <div
-              className="flex items-center justify-center gap-2 text-sm"
-              style={{ color: brandingConfig.primaryColor }}
-            >
-              <div
-                className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
-                style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }}
-              ></div>
-              <span>{chatConfig.creatingSessionText}</span>
+            <div className="flex items-center justify-center gap-3 mt-4 text-base">
+              <div className="relative">
+                <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                     style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }} />
+                <div className="absolute inset-0 w-5 h-5 border-2 border-transparent rounded-full animate-ping"
+                     style={{ borderTopColor: `${brandingConfig.primaryColor}40` }} />
+              </div>
+              <span className="font-medium" style={{ color: brandingConfig.primaryColor }}>
+                {chatConfig.creatingSessionText}
+              </span>
             </div>
           )}
         </div>
