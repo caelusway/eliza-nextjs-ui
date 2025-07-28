@@ -10,6 +10,8 @@ import { ConditionalHeader } from '@/components/layout/conditional-header';
 import { PrivyClientProvider } from './core/privy-client-provider';
 import { AuthWrapper } from '@/components/auth/auth-wrapper';
 import { BugHerdScript } from '@/components/bugherd-script';
+import Script from 'next/script'
+
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -81,16 +83,22 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
       <head>
-<script>
-  window.feedbugConfig = {
-    apiKey: 'fb_wWIU1WLYNWnTGMoAXfsT6euEQsAl3J85',
-    domain: 'https://staging.aubr.ai'
-  };
-  var script = document.createElement('script');
-  script.src = 'https://feedbug.xyz/widget.js';
-  script.async = true;
-  document.head.appendChild(script);
-</script>
+
+        {/* Feedbug Config Script */}
+        <Script id="feedbug-config" strategy="beforeInteractive">
+          {`
+            window.feedbugConfig = {
+              apiKey: 'fb_wWIU1WLYNWnTGMoAXfsT6euEQsAl3J85',
+              domain: 'https://staging.aubr.ai'
+            };
+          `}
+        </Script>
+
+        {/* Feedbug Widget Loader */}
+        <Script
+          src="https://feedbug.xyz/widget.js"
+          strategy="lazyOnload"
+        />
       </head>
       <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
         <div className="flex min-h-dvh w-full flex-col grow">
