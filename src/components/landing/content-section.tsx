@@ -26,11 +26,11 @@ export const ContentSection = ({
             {title}
           </h2>
         )}
-        
+
         <div className="text-sm sm:text-base lg:text-lg leading-relaxed text-zinc-700 dark:text-zinc-300">
           {children}
         </div>
-        
+
         {buttonText && onButtonClick && (
           <div className="flex justify-center lg:justify-start">
             <Button
@@ -45,4 +45,4 @@ export const ContentSection = ({
       </div>
     </div>
   );
-}; 
+};

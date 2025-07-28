@@ -44,13 +44,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
     // Initialize socket connection
     try {
       socketIOManager.initialize(userId);
-      
+
       // Set up connection monitoring
       const checkConnection = () => {
         const connected = socketIOManager.isSocketConnected();
         console.log('[AppLayout] Connection check:', connected);
         setIsConnected(connected);
-        
+
         if (!connected) {
           // Check again in 1 second if not connected
           setTimeout(checkConnection, 1000);
@@ -71,19 +71,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex h-screen bg-white dark:bg-[#171717]">
           {/* Mobile backdrop overlay */}
           {isMobileMenuOpen && (
-            <div 
+            <div
               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
           )}
 
           {/* Sidebar */}
-          <div className={`
+          <div
+            className={`
             fixed inset-y-0 left-0 z-50 lg:static lg:inset-0
             ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             transition-transform duration-300 ease-in-out
-          `}>
-            <AppSidebar 
+          `}
+          >
+            <AppSidebar
               isCollapsed={isCollapsed}
               onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
               isConnected={isConnected}
@@ -106,10 +108,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </button>
               </div>
             )}
-            
-            <div className="h-full">
-              {children}
-            </div>
+
+            <div className="h-full">{children}</div>
           </div>
         </div>
       </>

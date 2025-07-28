@@ -9,16 +9,18 @@ This directory contains the SQL migration scripts for the thumbs up/down voting 
 ## 🚀 Quick Setup
 
 1. **Run the migration in your Supabase SQL Editor:**
+
    ```sql
    -- Copy and paste the contents of 20250117000001_create_voting_system.sql
    -- into your Supabase SQL Editor and execute
    ```
 
 2. **Verify the setup:**
+
    ```sql
    -- Check if table was created
    SELECT * FROM response_votes LIMIT 5;
-   
+
    -- Test the voting function
    SELECT cast_vote(
      'your-user-id'::uuid,
@@ -33,34 +35,39 @@ This directory contains the SQL migration scripts for the thumbs up/down voting 
 ### Tables
 
 #### `response_votes`
+
 Stores all user votes for responses.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | UUID | Primary key |
-| `voter_id` | UUID | References `users.id` |
-| `response_id` | TEXT | ID of the response being voted on |
-| `value` | INTEGER | Vote value: `1` (thumbs up), `-1` (thumbs down) |
-| `comment` | TEXT | Optional feedback text (nullable) |
-| `created_at` | TIMESTAMPTZ | When vote was created |
-| `updated_at` | TIMESTAMPTZ | When vote was last updated |
+| Column        | Type        | Description                                     |
+| ------------- | ----------- | ----------------------------------------------- |
+| `id`          | UUID        | Primary key                                     |
+| `voter_id`    | UUID        | References `users.id`                           |
+| `response_id` | TEXT        | ID of the response being voted on               |
+| `value`       | INTEGER     | Vote value: `1` (thumbs up), `-1` (thumbs down) |
+| `comment`     | TEXT        | Optional feedback text (nullable)               |
+| `created_at`  | TIMESTAMPTZ | When vote was created                           |
+| `updated_at`  | TIMESTAMPTZ | When vote was last updated                      |
 
 **Constraints:**
+
 - `UNIQUE(voter_id, response_id)` - One vote per user per response
 - `CHECK (value IN (-1, 1))` - Only allow valid vote values
 
 ### RPC Functions
 
 #### `cast_vote(voter_id, response_id, value, comment?)`
+
 **Purpose:** Creates or updates a user's vote for a response.
 
 **Parameters:**
+
 - `_voter_id` (UUID) - User ID from the `users` table
 - `_response_id` (TEXT) - Response identifier
 - `_value` (INTEGER) - Vote value: `1` or `-1`
 - `_comment` (TEXT, optional) - Feedback text
 
 **Returns:** JSON with vote data and updated statistics
+
 ```json
 {
   "success": true,
@@ -74,9 +81,11 @@ Stores all user votes for responses.
 ```
 
 #### `get_vote_stats(response_id)`
+
 **Purpose:** Get aggregated vote statistics for a response.
 
 **Returns:**
+
 ```json
 {
   "response_id": "abc123",
@@ -88,9 +97,11 @@ Stores all user votes for responses.
 ```
 
 #### `get_user_vote(voter_id, response_id)`
+
 **Purpose:** Check if a user has voted on a specific response.
 
 **Returns:**
+
 ```json
 {
   "exists": true,
@@ -107,9 +118,11 @@ Stores all user votes for responses.
 ```
 
 #### `remove_vote(voter_id, response_id)`
+
 **Purpose:** Remove a user's vote for a response.
 
 **Returns:**
+
 ```json
 {
   "success": true,
@@ -128,7 +141,7 @@ Row Level Security is enabled with these policies:
 
 - **SELECT**: Anyone can view votes (for statistics)
 - **INSERT**: Users can only insert their own votes
-- **UPDATE**: Users can only update their own votes  
+- **UPDATE**: Users can only update their own votes
 - **DELETE**: Users can only delete their own votes
 
 ## 🎛️ Usage in Code
@@ -139,7 +152,7 @@ Row Level Security is enabled with these policies:
 import { castVote, getVoteStats, getUserVote } from '@/services/vote-service';
 
 // Cast a vote
-const result = await castVote(userId, responseId, 1, "Great answer!");
+const result = await castVote(userId, responseId, 1, 'Great answer!');
 
 // Get vote statistics
 const stats = await getVoteStats(responseId);
@@ -161,7 +174,7 @@ The voting system includes these utility functions:
 The system includes optimized indexes:
 
 - `idx_response_votes_response_id` - Fast response lookups
-- `idx_response_votes_voter_id` - Fast user lookups  
+- `idx_response_votes_voter_id` - Fast user lookups
 - `idx_response_votes_created_at` - Chronological ordering
 
 ## 🧪 Testing
@@ -198,10 +211,12 @@ SELECT remove_vote(
 ### Common Issues
 
 1. **"User not found" error**
+
    - Ensure the `voter_id` exists in the `users` table
    - Check that your user authentication is working properly
 
 2. **"Permission denied" error**
+
    - Verify RLS policies are set up correctly
    - Ensure the user is authenticated with Supabase
 
@@ -209,8 +224,8 @@ SELECT remove_vote(
    - Re-run the migration script
    - Check that the functions were created successfully:
      ```sql
-     SELECT routine_name 
-     FROM information_schema.routines 
+     SELECT routine_name
+     FROM information_schema.routines
      WHERE routine_name LIKE '%vote%';
      ```
 
@@ -232,4 +247,4 @@ Enable debug logging in the vote service:
 
 ---
 
-🎉 **You're all set!** The voting system should now be fully functional in your application. 
+🎉 **You're all set!** The voting system should now be fully functional in your application.

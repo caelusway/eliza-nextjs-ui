@@ -31,14 +31,14 @@ export class PostHogTracking {
     }
     if (PostHogTracking._instance) {
       throw new Error(
-        'Instance creation of PostHogTracking is not allowed. Use PostHogTracking.getInstance()',
+        'Instance creation of PostHogTracking is not allowed. Use PostHogTracking.getInstance()'
       );
     }
 
     const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     if (posthogKey) {
       posthog.init(posthogKey, {
-        api_host: "/relay-cAnL",
+        api_host: '/relay-cAnL',
         ui_host: 'https://eu.posthog.com',
       });
       this._enabled = true;
@@ -48,12 +48,12 @@ export class PostHogTracking {
 
   public track(event: string, properties: object = {}) {
     console.log('[PostHog] track() called:', { event, properties, enabled: this._enabled });
-    
+
     if (!this._enabled) {
       console.warn('[PostHog] PostHog is not enabled, skipping event:', event);
       return;
     }
-    
+
     try {
       posthog.capture(event, properties);
       console.log('[PostHog] Event captured successfully:', event);
@@ -85,20 +85,16 @@ export class PostHogTracking {
   }
 
   public pageView(currentUrl: string, previousUrl: string | null | undefined) {
-    if (trackedRoutes.some(route => currentUrl.includes(route))) {
+    if (trackedRoutes.some((route) => currentUrl.includes(route))) {
       if (previousUrl) {
-        this.track('$pageleave', {'$current_url': previousUrl});
+        this.track('$pageleave', { $current_url: previousUrl });
       }
-      this.track('$pageview', { '$current_url': currentUrl });
+      this.track('$pageview', { $current_url: currentUrl });
     }
   }
 
   // Authentication Events
-  public userSignUp(userData: { 
-    email?: string; 
-    userId: string;
-    inviteCode?: string;
-  }) {
+  public userSignUp(userData: { email?: string; userId: string; inviteCode?: string }) {
     if (!this._enabled) {
       return;
     }
@@ -107,7 +103,7 @@ export class PostHogTracking {
       this.alias(userData.email, userData.userId);
     }
     const now = new Date().toISOString();
-    this.track('user_signup', { 
+    this.track('user_signup', {
       email: userData.email,
       userId: userData.userId,
       inviteCode: userData.inviteCode,
@@ -116,7 +112,7 @@ export class PostHogTracking {
     });
     // Set email always, but first_login and signup_date only once
     this.setUserProperties(
-      { 
+      {
         email: userData.email,
       },
       {
@@ -126,10 +122,7 @@ export class PostHogTracking {
     );
   }
 
-  public userSignIn(userData: { 
-    email?: string; 
-    userId: string;
-  }) {
+  public userSignIn(userData: { email?: string; userId: string }) {
     if (!this._enabled) {
       return;
     }
@@ -138,13 +131,13 @@ export class PostHogTracking {
       this.alias(userData.email, userData.userId);
     }
     const now = new Date().toISOString();
-    this.track('user_signin', { 
+    this.track('user_signin', {
       email: userData.email,
       userId: userData.userId,
       last_login: now,
     });
     // Always update email and last_login
-    this.setUserProperties({ 
+    this.setUserProperties({
       email: userData.email,
       last_login: now,
     });
@@ -157,7 +150,6 @@ export class PostHogTracking {
     this.track('user_signout');
     posthog.reset();
   }
-
 
   public inviteRedeemed(inviteCode: string, userId: string) {
     if (!this._enabled) {
@@ -172,7 +164,6 @@ export class PostHogTracking {
       invite_redeemed_at: new Date().toISOString(),
     });
   }
-
 
   public messageSent(messageData: {
     sessionId: string;
@@ -189,8 +180,8 @@ export class PostHogTracking {
     });
     const messageCount = posthog.get_property('total_messages_sent') || 0;
     this.setUserProperties({
-      'total_messages_sent': messageCount + 1,
-      'last_message_type': messageData.messageType,
+      total_messages_sent: messageCount + 1,
+      last_message_type: messageData.messageType,
     });
   }
 
@@ -216,7 +207,7 @@ export class PostHogTracking {
       duration,
     });
     this.setUserProperties({
-      'has_used_voice': true,
+      has_used_voice: true,
     });
   }
 
@@ -228,7 +219,7 @@ export class PostHogTracking {
       textLength,
     });
     this.setUserProperties({
-      'has_used_tts': true,
+      has_used_tts: true,
     });
   }
 
@@ -241,7 +232,7 @@ export class PostHogTracking {
       fileSize,
     });
     this.setUserProperties({
-      'has_uploaded_media': true,
+      has_uploaded_media: true,
     });
   }
 
@@ -298,6 +289,19 @@ export class PostHogTracking {
       duration: sessionData.duration,
       messageCount: sessionData.messageCount,
       avgResponseTime: sessionData.avgResponseTime,
+    });
+  }
+
+  // API Error Tracking
+  public apiError(endpoint: string, statusCode: number, errorMessage: string) {
+    if (!this._enabled) {
+      return;
+    }
+    this.track('api_error', {
+      endpoint,
+      statusCode,
+      errorMessage,
+      timestamp: new Date().toISOString(),
     });
   }
 

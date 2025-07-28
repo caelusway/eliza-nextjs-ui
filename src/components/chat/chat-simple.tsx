@@ -8,7 +8,11 @@ import { ChatMessages } from '@/components/chat/chat-messages';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
 import { toast } from '@/components/ui';
 import { CHAT_SOURCE, MESSAGE_STATE_MESSAGES } from '@/constants';
-import SocketIOManager, { ControlMessageData, MessageBroadcastData, MessageStateData } from '@/lib/socketio-manager';
+import SocketIOManager, {
+  ControlMessageData,
+  MessageBroadcastData,
+  MessageStateData,
+} from '@/lib/socketio-manager';
 import { SocketDebugUtils } from '@/lib/socket-debug-utils';
 import type { ChatMessage } from '@/types/chat-message';
 import { getChannelMessages, getRoomMemories, pingServer } from '@/lib/api-client';
@@ -57,7 +61,10 @@ interface ChatProps {
   sessionData?: ChatSession;
 }
 
-export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }: ChatProps = {}) => {
+export const Chat = ({
+  sessionId: propSessionId,
+  sessionData: propSessionData,
+}: ChatProps = {}) => {
   const router = useRouter();
 
   // --- Environment Configuration ---
@@ -74,7 +81,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [sessionId, setSessionId] = useState<string | null>(propSessionId || null);
   const [sessionData, setSessionData] = useState<ChatSession | null>(propSessionData || null);
   const [followUpQues, setFollowUpQues] = useState<string[] | undefined>([])
-  
   const [channelId, setChannelId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
   const [isAgentThinking, setIsAgentThinking] = useState<boolean>(false);
@@ -85,19 +91,19 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [agentStatus, setAgentStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
-  
+
   // File upload state
   const [isFileUploading, setIsFileUploading] = useState<boolean>(false);
-  
+
   // Real-time session tracking
   const [currentMessageCount, setCurrentMessageCount] = useState<number>(0);
   const [lastActivity, setLastActivity] = useState<string | null>(null);
   const [timeUpdateTrigger, setTimeUpdateTrigger] = useState<number>(0);
-  
+
   // Agent readiness tracking
   const [isWaitingForAgent, setIsWaitingForAgent] = useState<boolean>(false);
   const [agentReadinessMessage, setAgentReadinessMessage] = useState<string>('');
-  
+
   // Animation safeguards
   const [isWaitingForResponse, setIsWaitingForResponse] = useState<boolean>(false);
   const [animationLocked, setAnimationLocked] = useState<boolean>(false);
@@ -107,7 +113,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   const initStartedRef = useRef(false);
   const sessionSetupDone = useRef<string | null>(null); // Track which session has been set up
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const sendMessageRef = useRef<((messageText: string, options?: { useInternalKnowledge?: boolean }) => void) | null>(null);
+  const sendMessageRef = useRef<
+    ((messageText: string, options?: { useInternalKnowledge?: boolean }) => void) | null
+  >(null);
   const socketIOManager = SocketIOManager.getInstance();
   const isCurrentlyThinking = useRef<boolean>(false);
 
@@ -122,17 +130,21 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       isAuthenticated: isUserAuthenticated(),
       isReady,
       userIdLength: currentUserId?.length,
-      userIdFormat: currentUserId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i) ? 'Valid UUID v5' : 'Invalid format'
+      userIdFormat: currentUserId?.match(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      )
+        ? 'Valid UUID v5'
+        : 'Invalid format',
     });
   }, [currentUserId, getUserEmail, isUserAuthenticated, isReady]);
-  
+
   // Combined loading state with safeguards
   const isShowingAnimation = isAgentThinking || isWaitingForResponse || animationLocked;
 
   // --- Helper Functions ---
   const safeStopAnimation = (callback?: () => void) => {
     console.log('[Chat] Stopping animation immediately');
-    
+
     setIsAgentThinking(false);
     setIsWaitingForResponse(false);
     setAnimationLocked(false);
@@ -140,7 +152,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     setAnimationStartTime(null);
     isCurrentlyThinking.current = false;
     setAgentMessageState(null); // Reset message state
-    
+
     callback?.();
     console.log('[Chat] Animation stopped at:', Date.now());
   };
@@ -159,7 +171,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
   };
-
 
   // --- Render Connection Status ---
   const renderConnectionStatus = () => {
@@ -284,7 +295,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     sessionSetupDone.current = null; // Clear session setup tracking
     setMessages([]);
     setIsLoadingHistory(true);
-    
+
     // Safe reset of thinking states
     if (!isCurrentlyThinking.current) {
       setIsAgentThinking(false);
@@ -323,7 +334,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           setSessionData(session);
           setChannelId(session.channelId);
 
-          console.log(`[Chat] Loaded session from API: ${session.title} (${session.messageCount} messages)`);
+          console.log(
+            `[Chat] Loaded session from API: ${session.title} (${session.messageCount} messages)`
+          );
         } catch (error) {
           console.error('[Chat] Failed to load session:', error);
           setIsLoadingHistory(false);
@@ -341,22 +354,24 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     }
 
     const initializeConnection = async () => {
-              console.log('[Chat] Initializing connection...');
-        setConnectionStatus('connecting');
+      console.log('[Chat] Initializing connection...');
+      setConnectionStatus('connecting');
 
-        // Check for potential URL mismatch issues
-        const socketUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
-        const currentOrigin = window.location.origin;
-        console.log('[Chat] Connection URLs:', {
-          socketUrl,
-          currentOrigin,
-          agentId,
-          userId: currentUserId,
-        });
-        
-        if (socketUrl !== currentOrigin && !socketUrl.includes('localhost')) {
-          console.warn('[Chat] ⚠️ Socket URL differs from current origin - this may cause CORS issues');
-        }
+      // Check for potential URL mismatch issues
+      const socketUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+      const currentOrigin = window.location.origin;
+      console.log('[Chat] Connection URLs:', {
+        socketUrl,
+        currentOrigin,
+        agentId,
+        userId: currentUserId,
+      });
+
+      if (socketUrl !== currentOrigin && !socketUrl.includes('localhost')) {
+        console.warn(
+          '[Chat] ⚠️ Socket URL differs from current origin - this may cause CORS issues'
+        );
+      }
 
       try {
         // Step 1: Try to add agent to centralized channel (optional)
@@ -480,7 +495,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       setInputDisabled(true);
       isCurrentlyThinking.current = true;
       setAgentMessageState(null); // Reset message state for new request
-      
+
       console.log('[Chat] Started thinking animation at:', currentTime);
 
       console.log('[Chat] Sending message to session channel:', {
@@ -512,11 +527,22 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       // No automatic timeout - let the animation run until actual response or user action
     };
-  }, [channelId, currentUserId, inputDisabled, connectionStatus, deepResearchEnabled, getUserName, socketIOManager]);
+  }, [
+    channelId,
+    currentUserId,
+    inputDisabled,
+    connectionStatus,
+    deepResearchEnabled,
+    getUserName,
+    socketIOManager,
+  ]);
 
   // This is a stable function that we can pass as a prop
   const sendMessage = useCallback(
-    (messageText: string, options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }) => {
+    (
+      messageText: string,
+      options?: { useInternalKnowledge?: boolean; bypassFileUploadCheck?: boolean }
+    ) => {
       sendMessageRef.current?.(messageText, options);
     },
     [sessionId]
@@ -548,7 +574,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     const ensureAgentInChannel = async (): Promise<boolean> => {
       try {
         console.log('[Chat] Ensuring agent is in channel for new session...');
-        
+
         // Add agent to the specific session channel
         const addAgentResponse = await fetch(
           `/api/eliza/messaging/central-channels/${channelId}/agents`,
@@ -573,7 +599,11 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           return addAgentResponse.status === 409 || errorText.includes('already');
         }
       } catch (error) {
-        console.log('[Chat] ℹ️ Could not add agent to channel:', error, '(might already be in channel)');
+        console.log(
+          '[Chat] ℹ️ Could not add agent to channel:',
+          error,
+          '(might already be in channel)'
+        );
         return false;
       }
     };
@@ -582,26 +612,24 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     const verifyAgentReadiness = async (): Promise<boolean> => {
       try {
         // Check if agent is in the channel participants
-        const channelResponse = await fetch(
-          `/api/eliza/messaging/central-channels/${channelId}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        const channelResponse = await fetch(`/api/eliza/messaging/central-channels/${channelId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (channelResponse.ok) {
           const channelData = await channelResponse.json();
-          const isAgentInChannel = channelData.participantCentralUserIds?.includes(agentId) || 
-                                   channelData.participants?.some((p: any) => p.id === agentId);
-          
+          const isAgentInChannel =
+            channelData.participantCentralUserIds?.includes(agentId) ||
+            channelData.participants?.some((p: any) => p.id === agentId);
+
           console.log('[Chat] Agent readiness check:', {
             isInChannel: isAgentInChannel,
             participants: channelData.participantCentralUserIds || channelData.participants,
           });
-          
+
           return isAgentInChannel;
         }
       } catch (error) {
@@ -609,8 +637,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       }
       return false;
     };
-
-
 
     // Enhanced setup for new sessions
     const setupNewSession = async () => {
@@ -643,7 +669,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         // Step 1: Ensure agent is in channel
         setIsWaitingForAgent(true);
         setAgentReadinessMessage('Adding agent to channel...');
-        
+
         const agentAdded = await ensureAgentInChannel();
         if (!agentAdded) {
           console.warn('[Chat] ⚠️ Could not confirm agent was added to channel');
@@ -653,7 +679,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         let agentReady = false;
         for (let i = 0; i < 5; i++) {
           setAgentReadinessMessage(`Initializing agent...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           agentReady = await verifyAgentReadiness();
           if (agentReady) break;
           console.log(`[Chat] Initializing agent... (${i + 1}/5)`);
@@ -664,14 +690,14 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         }
 
         setAgentReadinessMessage('Agent ready! Sending initial message...');
-        
+
         // Step 3: Send initial message once
         console.log('[Chat] Sending initial message:', sessionData.metadata.initialMessage);
         sendMessage(sessionData.metadata.initialMessage);
       } catch (error) {
         console.error('[Chat] Error during agent setup:', error);
         setAgentReadinessMessage('Error setting up agent, trying anyway...');
-        
+
         // Still try to send the message
         setTimeout(() => {
           sendMessage(sessionData.metadata.initialMessage);
@@ -694,7 +720,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         currentChannelId: channelId,
         activeSession: socketIOManager.getActiveSessionChannelId(),
         senderId: data.senderId,
-        isAgent: data.senderId === agentId
+        isAgent: data.senderId === agentId,
       });
 
       // Skip our own messages to avoid duplicates
@@ -704,9 +730,12 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       }
 
       // Check for duplicate messages based on ID and timestamp
-      const isDuplicate = messages.some(msg => 
-        msg.id === data.id || 
-        (msg.text === data.text && msg.senderId === data.senderId && Math.abs(msg.createdAt - data.createdAt) < 1000)
+      const isDuplicate = messages.some(
+        (msg) =>
+          msg.id === data.id ||
+          (msg.text === data.text &&
+            msg.senderId === data.senderId &&
+            Math.abs(msg.createdAt - data.createdAt) < 1000)
       );
 
       if (isDuplicate) {
@@ -716,7 +745,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       // Check if this is an agent message by sender ID
       const isAgentMessage = data.senderId === agentId;
-      
+
       console.log('[Chat] Message analysis:', {
         isAgentMessage,
         senderId: data.senderId,
@@ -809,7 +838,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       } else {
         // For non-agent messages, add normally
         setMessages((prev) => [...prev, message]);
-        
+
         // Update last activity timestamp for real-time display
         const timestamp = new Date(message.createdAt).toISOString();
         setLastActivity(timestamp);
@@ -842,12 +871,17 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         stateRoomId: data.roomId,
         currentChannelId: channelId,
         state: data.state,
-        willProcess: data.roomId === channelId || data.channelId === channelId
+        willProcess: data.roomId === channelId || data.channelId === channelId,
       });
-      
+
       // Only update state if this is for our active channel
       if (data.roomId === channelId || data.channelId === channelId) {
-        setAgentMessageState(data.state);
+        // Hide animation when state is DONE since response is already streaming
+        if (data.state === 'DONE') {
+          safeStopAnimation();
+        } else {
+          setAgentMessageState(data.state);
+        }
       }
     };
 
@@ -867,7 +901,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       channelId,
       sessionId,
       activeChannels: Array.from(socketIOManager.getActiveChannels()),
-      activeSession: socketIOManager.getActiveSessionChannelId()
+      activeSession: socketIOManager.getActiveSessionChannelId(),
     });
 
     // Setup new session if needed
@@ -882,7 +916,15 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       socketIOManager.leaveChannel(channelId);
       socketIOManager.clearActiveSessionChannelId();
     };
-  }, [connectionStatus, channelId, agentId, socketIOManager, currentUserId, sessionData, sendMessage]);
+  }, [
+    connectionStatus,
+    channelId,
+    agentId,
+    socketIOManager,
+    currentUserId,
+    sessionData,
+    sendMessage,
+  ]);
 
   // --- Load Message History (Simplified) ---
   useEffect(() => {
@@ -926,7 +968,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       .then((loadedMessages) => {
         console.log(`[Chat] Loaded ${loadedMessages.length} messages from history`);
         setMessages(loadedMessages);
-        
+
         // Note: Initial message sending is now handled in the socket event listeners setup
         // This prevents race conditions between history loading and message sending
       })
@@ -949,7 +991,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   useEffect(() => {
     if (messages.length > 0) {
       setCurrentMessageCount(messages.length);
-      
+
       // Find the most recent message timestamp
       const mostRecentMessage = messages[messages.length - 1];
       if (mostRecentMessage) {
@@ -971,7 +1013,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   useEffect(() => {
     const interval = setInterval(() => {
       // Trigger re-render to update "time ago" display
-      setTimeUpdateTrigger(prev => prev + 1);
+      setTimeUpdateTrigger((prev) => prev + 1);
     }, 60000); // Update every minute
 
     return () => clearInterval(interval);
@@ -986,7 +1028,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
 
       const messageToSend = input.trim();
       setInput('');
-      
+
       // Immediately start animation for better UX - ensure it shows before any async operations
       const currentTime = Date.now();
       setIsAgentThinking(true);
@@ -995,9 +1037,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       setAnimationStartTime(currentTime);
       setInputDisabled(true);
       isCurrentlyThinking.current = true;
-      
+
       console.log('[Chat] Animation started immediately on submit at:', currentTime);
-      
+
       sendMessage(messageToSend);
     },
     [input, currentUserId, inputDisabled, isFileUploading, sendMessage]
@@ -1022,13 +1064,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   }, []);
 
   // --- Handle File Upload State Change ---
-  const handleFileUploadStateChange = useCallback(
-    (isUploading: boolean) => {
-      console.log('[Chat] File upload state changed:', isUploading);
-      setIsFileUploading(isUploading);
-    },
-    []
-  );
+  const handleFileUploadStateChange = useCallback((isUploading: boolean) => {
+    console.log('[Chat] File upload state changed:', isUploading);
+    setIsFileUploading(isUploading);
+  }, []);
 
   // --- Handle File Upload ---
   const handleFileUpload = useCallback(
@@ -1044,7 +1083,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           inputDisabled,
           isFileUploading,
           connectionStatus,
-          sendMessageRef: !!sendMessageRef.current
+          sendMessageRef: !!sendMessageRef.current,
         });
         
         // Track media upload event
@@ -1054,7 +1093,7 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
         // Create a message indicating the file was uploaded and enable internal knowledge
         const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
         console.log('[Chat] Message to send:', fileMessage);
-        
+
         // Small delay to ensure upload state is cleared before sending message
         setTimeout(() => {
           console.log('[Chat] Sending message after short delay...');
@@ -1063,11 +1102,13 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       } else {
         // Handle upload failure
         console.error('[Chat] File upload failed:', uploadResult);
-        
+
         // Show error message to user via toast
         const errorMessage = uploadResult?.error?.message || 'Failed to upload file';
-        toast.error(`Failed to upload "${file.name}": ${errorMessage}. Please try uploading the file again.`);
-        
+        toast.error(
+          `Failed to upload "${file.name}": ${errorMessage}. Please try uploading the file again.`
+        );
+
         // Make sure animation is stopped since no agent response is expected
         safeStopAnimation();
       }
@@ -1080,7 +1121,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
     return (
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
         <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Configuration Error</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+            Configuration Error
+          </h2>
           <p className="text-gray-600 dark:text-gray-400 text-base mb-4 leading-relaxed">
             NEXT_PUBLIC_AGENT_ID is not configured in environment variables.
           </p>
@@ -1098,7 +1141,9 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900/20">
         <div className="text-center p-8 bg-white dark:bg-[#171717] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Loading...</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Initializing authentication...</p>
+          <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
+            Initializing authentication...
+          </p>
         </div>
       </div>
     );
@@ -1107,11 +1152,15 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
   return (
     <div className="h-full w-full flex flex-col bg-white dark:bg-[#171717] mt-6 sm:mt-4 md:mt-6 lg:mt-8">
       {/* Fixed Header Section */}
-              <div className="flex-shrink-0 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
+      <div className="flex-shrink-0 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-4">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-              {sessionData ? sessionData.title : <span className="animate-pulse">Loading session...</span>}
+              {sessionData ? (
+                sessionData.title
+              ) : (
+                <span className="animate-pulse">Loading session...</span>
+              )}
             </h1>
             {sessionData ? (
               <div className="flex items-center gap-3 mt-2">
@@ -1122,14 +1171,10 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                   {timeUpdateTrigger > 0 && ''}
                   {/* Real-time indicator */}
                 </div>
-                <div className="text-sm">
-                  {renderConnectionStatus()}
-                </div>
+                <div className="text-sm">{renderConnectionStatus()}</div>
               </div>
             ) : (
-              <div className="mt-2">
-                {renderConnectionStatus()}
-              </div>
+              <div className="mt-2">{renderConnectionStatus()}</div>
             )}
           </div>
         </div>
@@ -1143,21 +1188,25 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center gap-3">
                 <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 text-base">Connecting to agent...</span>
+                <span className="text-gray-600 dark:text-gray-400 text-base">
+                  Connecting to agent...
+                </span>
               </div>
             </div>
           )}
-          
+
           {/* Agent readiness loading */}
           {isWaitingForAgent && (
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center gap-3">
                 <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 text-base">{agentReadinessMessage}</span>
+                <span className="text-gray-600 dark:text-gray-400 text-base">
+                  {agentReadinessMessage}
+                </span>
               </div>
             </div>
           )}
-          
+
           {/* Connection error state */}
           {connectionStatus === 'error' && !isWaitingForAgent && (
             <div className="flex items-center justify-center h-32">
@@ -1171,17 +1220,19 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
               </div>
             </div>
           )}
-          
+
           {/* Only show history loading if we're connected and actually loading history */}
           {connectionStatus === 'connected' && isLoadingHistory && !isWaitingForAgent && (
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center gap-3">
                 <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 text-base">Loading conversation history...</span>
+                <span className="text-gray-600 dark:text-gray-400 text-base">
+                  Loading conversation history...
+                </span>
               </div>
             </div>
           )}
-          
+
           {/* Show chat messages when not loading */}
           {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && (
             <>
@@ -1198,8 +1249,11 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
                   <LoadingSpinner />
                   <span className="text-base">
                     {process.env.NEXT_PUBLIC_AGENT_NAME || 'Agent'}{' '}
-                    {agentMessageState && MESSAGE_STATE_MESSAGES[agentMessageState as keyof typeof MESSAGE_STATE_MESSAGES]
-                      ? MESSAGE_STATE_MESSAGES[agentMessageState as keyof typeof MESSAGE_STATE_MESSAGES]
+                    {agentMessageState &&
+                    MESSAGE_STATE_MESSAGES[agentMessageState as keyof typeof MESSAGE_STATE_MESSAGES]
+                      ? MESSAGE_STATE_MESSAGES[
+                          agentMessageState as keyof typeof MESSAGE_STATE_MESSAGES
+                        ]
                       : MESSAGE_STATE_MESSAGES.DEFAULT}
                   </span>
                 </div>
@@ -1213,12 +1267,17 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
       {/* Input Area - Fixed at Bottom */}
       <div className="flex-shrink-0 py-3 bg-white dark:bg-[#171717]">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
-                      <div className="bg-white dark:bg-[#171717]">
+          <div className="bg-white dark:bg-[#171717]">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}
               onSubmit={handleSubmit}
-              isLoading={isShowingAnimation || inputDisabled || connectionStatus !== 'connected' || isWaitingForAgent}
+              isLoading={
+                isShowingAnimation ||
+                inputDisabled ||
+                connectionStatus !== 'connected' ||
+                isWaitingForAgent
+              }
               placeholder={
                 !isUserAuthenticated()
                   ? 'Please login to start a chat..'
@@ -1241,8 +1300,6 @@ export const Chat = ({ sessionId: propSessionId, sessionData: propSessionData }:
           </div>
         </div>
       </div>
-
-   
 
       {/* Debug Info (Only when NEXT_PUBLIC_DEBUG is enabled) */}
       {process.env.NEXT_PUBLIC_DEBUG === 'true' && (

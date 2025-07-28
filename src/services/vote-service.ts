@@ -1,19 +1,19 @@
 import { supabase } from '@/lib/supabase/client';
-import { 
-  VoteValue, 
-  CastVoteResponse, 
-  VoteStats, 
-  GetUserVoteResponse, 
-  RemoveVoteResponse 
+import {
+  VoteValue,
+  CastVoteResponse,
+  VoteStats,
+  GetUserVoteResponse,
+  RemoveVoteResponse,
 } from '@/lib/supabase/types';
 
 /**
  * Cast or update a vote for a response
  */
 export async function castVote(
-  voterId: string, 
-  responseId: string, 
-  value: VoteValue, 
+  voterId: string,
+  responseId: string,
+  value: VoteValue,
   comment?: string
 ): Promise<CastVoteResponse> {
   try {
@@ -21,7 +21,7 @@ export async function castVote(
       _voter_id: voterId,
       _response_id: responseId,
       _value: value,
-      _comment: comment ?? null
+      _comment: comment ?? null,
     });
 
     if (error) {
@@ -34,7 +34,7 @@ export async function castVote(
     console.error('[VoteService] Cast vote failed:', err);
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error occurred'
+      error: err instanceof Error ? err.message : 'Unknown error occurred',
     };
   }
 }
@@ -45,7 +45,7 @@ export async function castVote(
 export async function getVoteStats(responseId: string): Promise<VoteStats | null> {
   try {
     const { data, error } = await supabase.rpc('get_vote_stats', {
-      _response_id: responseId
+      _response_id: responseId,
     });
 
     if (error) {
@@ -64,13 +64,13 @@ export async function getVoteStats(responseId: string): Promise<VoteStats | null
  * Get a specific user's vote for a response
  */
 export async function getUserVote(
-  voterId: string, 
+  voterId: string,
   responseId: string
 ): Promise<GetUserVoteResponse | null> {
   try {
     const { data, error } = await supabase.rpc('get_user_vote', {
       _voter_id: voterId,
-      _response_id: responseId
+      _response_id: responseId,
     });
 
     if (error) {
@@ -88,14 +88,11 @@ export async function getUserVote(
 /**
  * Remove a user's vote for a response
  */
-export async function removeVote(
-  voterId: string, 
-  responseId: string
-): Promise<RemoveVoteResponse> {
+export async function removeVote(voterId: string, responseId: string): Promise<RemoveVoteResponse> {
   try {
     const { data, error } = await supabase.rpc('remove_vote', {
       _voter_id: voterId,
-      _response_id: responseId
+      _response_id: responseId,
     });
 
     if (error) {
@@ -109,7 +106,7 @@ export async function removeVote(
     return {
       success: false,
       deleted: false,
-      stats: { upvotes: 0, downvotes: 0, total: 0 }
+      stats: { upvotes: 0, downvotes: 0, total: 0 },
     };
   }
 }
@@ -126,13 +123,13 @@ export async function toggleVote(
   try {
     // First check if user has existing vote
     const existingVote = await getUserVote(voterId, responseId);
-    
+
     if (existingVote?.exists && existingVote.vote?.value === value) {
       // Same vote exists, remove it
       const removeResult = await removeVote(voterId, responseId);
       return {
         success: removeResult.success,
-        stats: removeResult.stats
+        stats: removeResult.stats,
       };
     } else {
       // Cast new vote (will update if different vote exists)
@@ -142,7 +139,7 @@ export async function toggleVote(
     console.error('[VoteService] Toggle vote failed:', err);
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'Unknown error occurred'
+      error: err instanceof Error ? err.message : 'Unknown error occurred',
     };
   }
 }
@@ -152,7 +149,7 @@ export async function toggleVote(
  */
 export async function getBatchVoteStats(responseIds: string[]): Promise<Map<string, VoteStats>> {
   const results = new Map<string, VoteStats>();
-  
+
   // Execute requests in parallel
   const promises = responseIds.map(async (responseId) => {
     const stats = await getVoteStats(responseId);
@@ -160,7 +157,7 @@ export async function getBatchVoteStats(responseIds: string[]): Promise<Map<stri
       results.set(responseId, stats);
     }
   });
-  
+
   await Promise.all(promises);
   return results;
 }
@@ -169,11 +166,11 @@ export async function getBatchVoteStats(responseIds: string[]): Promise<Map<stri
  * Batch get user votes for multiple responses
  */
 export async function getBatchUserVotes(
-  voterId: string, 
+  voterId: string,
   responseIds: string[]
 ): Promise<Map<string, GetUserVoteResponse>> {
   const results = new Map<string, GetUserVoteResponse>();
-  
+
   // Execute requests in parallel
   const promises = responseIds.map(async (responseId) => {
     const userVote = await getUserVote(voterId, responseId);
@@ -181,7 +178,7 @@ export async function getBatchUserVotes(
       results.set(responseId, userVote);
     }
   });
-  
+
   await Promise.all(promises);
   return results;
 }

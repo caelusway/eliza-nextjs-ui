@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ELIZA_SERVER_URL = process.env.ELIZA_SERVER_URL || process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+const ELIZA_SERVER_URL =
+  process.env.ELIZA_SERVER_URL || process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 
 interface GetOrCreateDMChannelRequest {
   userId: string;
@@ -22,7 +23,7 @@ interface DMChannelMetadata {
 // Simple title generation from the old UI
 function generateTitle(content: string): string {
   if (!content) return `Chat - ${new Date().toLocaleString()}`;
-  
+
   const cleaned = content.replace(/\s+/g, ' ').trim();
   return cleaned.length > 50 ? cleaned.substring(0, 47) + '...' : cleaned;
 }
@@ -115,7 +116,10 @@ export async function POST(request: NextRequest) {
 
       if (!createChannelResponse.ok) {
         const errorText = await createChannelResponse.text();
-        console.warn('[DM Channel API] ElizaOS channel creation failed, using fallback:', errorText);
+        console.warn(
+          '[DM Channel API] ElizaOS channel creation failed, using fallback:',
+          errorText
+        );
         throw new Error(`ElizaOS API failed: ${errorText}`);
       }
 
@@ -169,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     // Give the agent a brief moment to register the new channel (reduced for serverless)
     if (!channelData.fallback) {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     return NextResponse.json({

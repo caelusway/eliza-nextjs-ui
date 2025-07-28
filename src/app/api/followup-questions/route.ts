@@ -51,8 +51,8 @@ async function makeRequestToOpenAi(prompt: string) {
         {
             role: 'developer',
             content:
-            'You are an expert at structured data extraction. Given a prompt, your job is to given upto 5 follow up questions related to it as a JSON object.'+
-            'If there are no scientific terms then just generate questions regarding RMR studies, SENS framework or longevity. Just remember that it should be scientific.',
+            'You are an expert at structured data extraction. Given a prompt, your job is to generate exactly 6 follow up questions related to it as a JSON object.'+
+            'If there are no scientific terms then just generate questions regarding RMR studies, SENS framework or longevity. Just remember that it should be scientific and relevant to the topic.',
         },
         {
             role: 'user',

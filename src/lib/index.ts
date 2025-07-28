@@ -12,4 +12,4 @@ export * from './local-storage';
 
 // Supabase
 export { supabase } from './supabase/client';
-export type * from './supabase/types'; 
+export type * from './supabase/types';
