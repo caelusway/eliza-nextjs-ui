@@ -10,7 +10,6 @@ import { ConditionalHeader } from '@/components/layout/conditional-header';
 import { PrivyClientProvider } from './core/privy-client-provider';
 import { AuthWrapper } from '@/components/auth/auth-wrapper';
 import { BugHerdScript } from '@/components/bugherd-script';
-import Script from 'next/script'
 
 
 export const viewport: Viewport = {
