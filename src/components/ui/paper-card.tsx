@@ -5,8 +5,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 import { Paper } from '@/types/chat-message';
-import { Dialog, DialogTitle, DialogBody, DialogActions } from '@/components/dialogs';
-import { Button } from '@/components/ui';
+import { Dialog } from '@/components/dialogs';
 
 interface PaperCardProps {
   paper: Paper;
