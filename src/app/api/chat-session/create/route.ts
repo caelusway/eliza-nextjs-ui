@@ -18,7 +18,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Log environment configuration for debugging
-    console.log(`[API] Environment check - API_BASE_URL: ${API_BASE_URL}, AGENT_ID: ${AGENT_ID?.substring(0, 8)}...`);
+    console.log(
+      `[API] Environment check - API_BASE_URL: ${API_BASE_URL}, AGENT_ID: ${AGENT_ID?.substring(0, 8)}...`
+    );
 
     // Generate a new session ID
     const sessionId = uuidv4();
@@ -30,12 +32,12 @@ export async function POST(request: NextRequest) {
       // Use relative URL for internal API calls in Vercel
       const dmChannelUrl = `/api/dm-channel/get-or-create`;
       console.log(`[API] Calling DM channel API internally: ${dmChannelUrl}`);
-      
+
       // For Vercel, use the request host for internal calls
       const host = request.headers.get('host');
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const fullUrl = `${protocol}://${host}${dmChannelUrl}`;
-      
+
       console.log(`[API] Full DM channel URL: ${fullUrl}`);
       const dmChannelResponse = await fetch(fullUrl, {
         method: 'POST',
@@ -82,14 +84,14 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('[API] Error creating chat session:', error);
-    
+
     // Track API error
     PostHogTracking.getInstance().apiError(
       '/api/chat-session/create',
       500,
       error instanceof Error ? error.message : 'Unknown error'
     );
-    
+
     return NextResponse.json(
       {
         error: 'Failed to create chat session',

@@ -139,7 +139,9 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
             <ChatMessage
               message={message}
               i={i}
-              followUpPrompts={isAgentMessage(message) ? followUpPromptsMap[assistantIndex] : undefined}
+              followUpPrompts={
+                isAgentMessage(message) ? followUpPromptsMap[assistantIndex] : undefined
+              }
               onFollowUpClick={onFollowUpClick}
             />
           </div>

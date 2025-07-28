@@ -14,15 +14,15 @@ interface SidebarHeaderProps {
   onMobileMenuToggle?: () => void;
 }
 
-export function SidebarHeader({ 
-  isCollapsed, 
-  onToggleCollapse, 
+export function SidebarHeader({
+  isCollapsed,
+  onToggleCollapse,
   isConnected,
   isMobileMenuOpen = false,
-  onMobileMenuToggle 
+  onMobileMenuToggle,
 }: SidebarHeaderProps) {
   const router = useRouter();
-  
+
   const sidebarConfig = useUIConfigSection('sidebar');
   const brandingConfig = useUIConfigSection('branding');
 
@@ -41,17 +41,16 @@ export function SidebarHeader({
           onClick={handleLogoClick}
           className="flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer"
         >
-          <div 
+          <div
             className="w-8 h-8 rounded-full flex items-center justify-center"
             style={{ backgroundColor: `${brandingConfig.primaryColor}1A` }}
           >
-            <MessageSquare 
-              className="w-4 h-4" 
-              style={{ color: brandingConfig.primaryColor }}
-            />
+            <MessageSquare className="w-4 h-4" style={{ color: brandingConfig.primaryColor }} />
           </div>
           <div>
-            <h1 className="font-semibold text-zinc-900 dark:text-white">{brandingConfig.appName}</h1>
+            <h1 className="font-semibold text-zinc-900 dark:text-white">
+              {brandingConfig.appName}
+            </h1>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
               {isConnected ? sidebarConfig.connectedText : sidebarConfig.connectingText}
             </p>
@@ -69,16 +68,18 @@ export function SidebarHeader({
             <X className="w-4 h-4" />
           </button>
         )}
-        
+
         {/* Desktop collapse/expand button */}
         <button
           onClick={onToggleCollapse}
           className="hidden lg:block p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-          aria-label={isCollapsed ? sidebarConfig.expandSidebarTitle : sidebarConfig.collapseSidebarTitle}
+          aria-label={
+            isCollapsed ? sidebarConfig.expandSidebarTitle : sidebarConfig.collapseSidebarTitle
+          }
         >
           {isCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
         </button>
       </div>
     </div>
   );
-} 
+}

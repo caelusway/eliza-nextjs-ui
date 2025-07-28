@@ -29,16 +29,15 @@ import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 function MyComponent() {
   const authConfig = useUIConfigSection('auth');
-  
-  return (
-    <button>{authConfig.signInButtonText}</button>
-  );
+
+  return <button>{authConfig.signInButtonText}</button>;
 }
 ```
 
 ## Available Hooks
 
 ### `useUIConfig()`
+
 Returns the complete UI configuration object.
 
 ```tsx
@@ -47,6 +46,7 @@ console.log(config.branding.appName);
 ```
 
 ### `useUIConfigSection(section)`
+
 Returns a specific section of the configuration.
 
 ```tsx
@@ -55,6 +55,7 @@ const navigationConfig = useUIConfigSection('navigation');
 ```
 
 ### `useFeatureFlags()`
+
 Returns all feature flags.
 
 ```tsx
@@ -65,6 +66,7 @@ if (features.deepResearchEnabled) {
 ```
 
 ### `useFeatureFlag(feature)`
+
 Returns a specific feature flag value.
 
 ```tsx
@@ -72,6 +74,7 @@ const isEnabled = useFeatureFlag('speechToTextEnabled');
 ```
 
 ### `useBranding()`
+
 Returns branding configuration.
 
 ```tsx
@@ -82,16 +85,19 @@ return <img alt={branding.logoAlt} />;
 ## Configuration Sections
 
 ### Branding
+
 - `NEXT_PUBLIC_APP_NAME` - Application name
 - `NEXT_PUBLIC_APP_DESCRIPTION` - Application description
 - `NEXT_PUBLIC_LOGO_ALT` - Logo alt text
 - `NEXT_PUBLIC_PRIMARY_COLOR` - Primary brand color (hex format, e.g., #FF6E71)
 
 ### Hero Section
+
 - `NEXT_PUBLIC_HERO_TITLE` - Main hero title (supports `\n` for line breaks)
 - `NEXT_PUBLIC_HERO_SUBTITLE` - Optional subtitle
 
 ### Login Page
+
 - `NEXT_PUBLIC_LOGIN_HERO_TITLE` - Main hero title on login page
 - `NEXT_PUBLIC_LOGIN_HERO_SUBTITLE` - Hero subtitle on login page
 - `NEXT_PUBLIC_LOGIN_WELCOME_TITLE` - Welcome message title (supports `{appName}` template)
@@ -105,6 +111,7 @@ return <img alt={branding.logoAlt} />;
 - `NEXT_PUBLIC_LOGIN_INVITE_REQUIRED_ERROR` - Error message for missing invite (supports `{appName}` template)
 
 ### Authentication
+
 - `NEXT_PUBLIC_LOGIN_TITLE` - Login page title
 - `NEXT_PUBLIC_SIGN_IN_TEXT` - Sign in button text
 - `NEXT_PUBLIC_INVITE_CODE_LABEL` - Invite code input label
@@ -112,12 +119,14 @@ return <img alt={branding.logoAlt} />;
 - And many more auth-related texts...
 
 ### Navigation
+
 - `NEXT_PUBLIC_NAV_HOME` - Home navigation text
 - `NEXT_PUBLIC_NAV_CHAT` - Chat navigation text
 - `NEXT_PUBLIC_NAV_ABOUT` - About navigation text
 - etc.
 
 ### Chat
+
 - `NEXT_PUBLIC_NEW_CHAT_TEXT` - New chat button text
 - `NEXT_PUBLIC_WELCOME_TITLE` - Chat welcome title (supports `{appName}` template)
 - `NEXT_PUBLIC_WELCOME_SUBTITLE` - Chat welcome subtitle/description
@@ -132,12 +141,14 @@ return <img alt={branding.logoAlt} />;
 - `NEXT_PUBLIC_CHAT_PREVIEW_SLIDES` - Chat preview slide content (see format below)
 
 ### Feature Flags
+
 - `NEXT_PUBLIC_DEEP_RESEARCH_ENABLED` - Enable/disable deep research (default: false)
 - `NEXT_PUBLIC_SPEECH_TO_TEXT_ENABLED` - Enable/disable speech-to-text (default: true)
 - `NEXT_PUBLIC_FILE_UPLOAD_ENABLED` - Enable/disable file uploads (default: true)
 - `NEXT_PUBLIC_INVITE_SYSTEM_ENABLED` - Enable/disable invite system (default: true)
 
 ### Social Features
+
 - `NEXT_PUBLIC_DISCORD_ENABLED` - Enable Discord integration
 - `NEXT_PUBLIC_TELEGRAM_ENABLED` - Enable Telegram integration
 - `NEXT_PUBLIC_TWITTER_ENABLED` - Enable Twitter integration
@@ -149,6 +160,7 @@ Some configuration values support template variables that get replaced dynamical
 - `{appName}` - Replaced with `NEXT_PUBLIC_APP_NAME` value
 
 Example:
+
 ```bash
 NEXT_PUBLIC_WELCOME_TITLE="Welcome to {appName}"
 # Results in: "Welcome to AUBRAI"
@@ -164,14 +176,14 @@ NEXT_PUBLIC_APP_NAME="BioDAO"
 NEXT_PUBLIC_PRIMARY_COLOR="#4F46E5"
 NEXT_PUBLIC_HERO_TITLE="Decentralized\nBio Research"
 NEXT_PUBLIC_APP_DESCRIPTION="Decentralized platform for biological research"
-NEXT_PUBLIC_LOGIN_HERO_TITLE="Your decentralized research companion" 
+NEXT_PUBLIC_LOGIN_HERO_TITLE="Your decentralized research companion"
 NEXT_PUBLIC_LOGIN_HERO_SUBTITLE="Powered by collective intelligence and blockchain technology"
 NEXT_PUBLIC_LOGIN_WELCOME_TITLE="Welcome to {appName}"
 NEXT_PUBLIC_LOGIN_WELCOME_DESCRIPTION="Join the decentralized autonomous organization revolutionizing biological research through community collaboration."
 NEXT_PUBLIC_WELCOME_SUBTITLE="Your decentralized research network"
 NEXT_PUBLIC_SUGGESTED_PROMPTS="What are the latest DAO governance proposals?,How can I contribute to bio research?,Find open research funding opportunities,Connect me with bio researchers"
 
-# For Generic Research Platform  
+# For Generic Research Platform
 NEXT_PUBLIC_APP_NAME="ResearchHub"
 NEXT_PUBLIC_PRIMARY_COLOR="#059669"
 NEXT_PUBLIC_HERO_TITLE="Collaborative\nResearch Platform"
@@ -198,11 +210,13 @@ The `NEXT_PUBLIC_CHAT_PREVIEW_SLIDES` variable uses a special format to define t
 - Each slide creates a conversation pair in the preview
 
 **Example:**
+
 ```bash
 NEXT_PUBLIC_CHAT_PREVIEW_SLIDES="What is longevity research?|Longevity research focuses on understanding aging mechanisms to extend healthy human lifespan through interventions like cellular reprogramming.;How do senolytic drugs work?|Senolytic drugs selectively eliminate senescent cells that accumulate with age and contribute to inflammation and tissue dysfunction."
 ```
 
 This creates 2 slides:
+
 1. User asks about longevity research → AI responds about aging mechanisms
 2. User asks about senolytic drugs → AI responds about eliminating senescent cells
 
@@ -214,7 +228,7 @@ import { useFeatureFlag } from '@/hooks/use-ui-config';
 function ChatInterface() {
   const speechEnabled = useFeatureFlag('speechToTextEnabled');
   const fileUploadEnabled = useFeatureFlag('fileUploadEnabled');
-  
+
   return (
     <div>
       {speechEnabled && <SpeechToTextButton />}
@@ -231,16 +245,20 @@ import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 function ErrorHandler({ error }) {
   const errors = useUIConfigSection('errors');
-  
+
   const getErrorMessage = (errorType: string) => {
     switch (errorType) {
-      case 'connection': return errors.connectionError;
-      case 'auth': return errors.authError;
-      case 'validation': return errors.validationError;
-      default: return errors.genericError;
+      case 'connection':
+        return errors.connectionError;
+      case 'auth':
+        return errors.authError;
+      case 'validation':
+        return errors.validationError;
+      default:
+        return errors.genericError;
     }
   };
-  
+
   return <div>{getErrorMessage(error.type)}</div>;
 }
 ```
@@ -259,6 +277,7 @@ function ErrorHandler({ error }) {
 To add new configuration options:
 
 1. **Update the interface** in `src/config/ui-config.ts`:
+
 ```tsx
 export interface UIConfig {
   // ... existing sections
@@ -270,6 +289,7 @@ export interface UIConfig {
 ```
 
 2. **Add environment variable support**:
+
 ```tsx
 const DEFAULT_CONFIG: UIConfig = {
   // ... existing config
@@ -281,6 +301,7 @@ const DEFAULT_CONFIG: UIConfig = {
 ```
 
 3. **Export for convenience**:
+
 ```tsx
 export const { myNewSection } = uiConfig;
 ```
@@ -288,6 +309,7 @@ export const { myNewSection } = uiConfig;
 4. **Document in the env example file** (`src/config/ui-config.env.example`)
 
 5. **Use in components**:
+
 ```tsx
 const myConfig = useUIConfigSection('myNewSection');
 ```
@@ -295,16 +317,19 @@ const myConfig = useUIConfigSection('myNewSection');
 ## Troubleshooting
 
 ### Environment Variables Not Loading
+
 - Ensure variables start with `NEXT_PUBLIC_`
 - Restart the development server after adding new variables
 - Check that `.env.local` is in the project root
 
 ### TypeScript Errors
+
 - Make sure the interface is updated when adding new configuration
 - Verify the section name matches exactly in `useUIConfigSection()`
 
 ### Template Variables Not Working
+
 - Ensure template processing is added in `processConfigTemplates()` function
 - Use exact variable names like `{appName}` (case-sensitive)
 
-This system provides maximum flexibility while maintaining type safety and ease of use across the entire application. 
+This system provides maximum flexibility while maintaining type safety and ease of use across the entire application.

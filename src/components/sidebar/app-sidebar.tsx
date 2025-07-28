@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import { PanelLeftClose, PanelLeft } from 'lucide-react';
 import { SidebarHeader } from './sidebar-header';
 import { NewChatButton } from './new-chat-button';
-import { ChatOptions } from './chat-options';
 import { NavigationMenu } from './navigation-menu';
 import { ChatSessionsList } from './chat-sessions-list';
 import { UserProfile } from './user-profile';
@@ -28,13 +27,13 @@ export function AppSidebar({
   onToggleCollapse,
   isConnected,
   isMobileMenuOpen = false,
-  onMobileMenuToggle
+  onMobileMenuToggle,
 }: AppSidebarProps) {
   const router = useRouter();
   const { getUserId, getUserName, isUserAuthenticated } = useUserManager();
   const { logout } = usePrivy();
   const [currentChannel, setCurrentChannel] = useState<string | null>(null);
-  
+
   const sidebarConfig = useUIConfigSection('sidebar');
   const brandingConfig = useUIConfigSection('branding');
 
@@ -78,12 +77,14 @@ export function AppSidebar({
   }
 
   return (
-    <div className={cn(
-      "flex flex-col h-full bg-zinc-50 dark:bg-zinc-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300",
-      // Mobile: always full width, Desktop: respect collapsed state
-      "w-72 sm:w-72 md:w-72",
-      isCollapsed ? "lg:w-16 xl:w-20" : "lg:w-72 xl:w-80"
-    )}>
+    <div
+      className={cn(
+        'flex flex-col h-screen bg-zinc-50 dark:bg-zinc-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300',
+        // Mobile: always full width, Desktop: respect collapsed state
+        'w-72 sm:w-72 md:w-72',
+        isCollapsed ? 'lg:w-16 xl:w-20' : 'lg:w-72 xl:w-80'
+      )}
+    >
       {/* Header */}
       <SidebarHeader
         isCollapsed={isCollapsed}
@@ -106,15 +107,27 @@ export function AppSidebar({
               onClick={() => router.push('/account')}
               className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
               title={sidebarConfig.accountButtonTitle}
-              style={{
-                '--tw-ring-color': `${brandingConfig.primaryColor}33`,
-              } as React.CSSProperties & { '--tw-ring-color': string }}
+              style={
+                {
+                  '--tw-ring-color': `${brandingConfig.primaryColor}33`,
+                } as React.CSSProperties & { '--tw-ring-color': string }
+              }
               onFocus={(e) => {
                 e.currentTarget.style.outlineColor = brandingConfig.primaryColor;
               }}
             >
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
             </button>
 
@@ -123,15 +136,27 @@ export function AppSidebar({
               onClick={handleInvitesNavigation}
               className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
               title={sidebarConfig.inviteButtonTitle}
-              style={{
-                '--tw-ring-color': `${brandingConfig.primaryColor}33`,
-              } as React.CSSProperties & { '--tw-ring-color': string }}
+              style={
+                {
+                  '--tw-ring-color': `${brandingConfig.primaryColor}33`,
+                } as React.CSSProperties & { '--tw-ring-color': string }
+              }
               onFocus={(e) => {
                 e.currentTarget.style.outlineColor = brandingConfig.primaryColor;
               }}
             >
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
               </svg>
             </button>
           </div>
@@ -145,21 +170,9 @@ export function AppSidebar({
               <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={false} />
             </div>
 
-            {/* Chat Options and Menu Section */}
+            {/* Menu Section */}
             <div className="mb-1">
-
-              <ChatOptions
-                currentChannel={currentChannel}
-                userId={userId}
-                isConnected={isConnected}
-                onPublicChat={handlePublicChat}
-                onPrivateChat={handleNewPrivateChat}
-              />
-              {/* Divider */}
-              <div className="mx-4 border-t border-gray-200 dark:border-gray-800" />
-              <NavigationMenu
-                onMobileMenuClose={onMobileMenuToggle}
-              />
+              <NavigationMenu onMobileMenuClose={onMobileMenuToggle} />
             </div>
             {/* Divider */}
             <div className="mx-4 border-t border-gray-200 dark:border-gray-800" />
@@ -171,10 +184,7 @@ export function AppSidebar({
                   {sidebarConfig.recentChatsText}
                 </h3>
               </div>
-              <ChatSessionsList
-                userId={userId}
-                onMobileMenuClose={onMobileMenuToggle}
-              />
+              <ChatSessionsList userId={userId} onMobileMenuClose={onMobileMenuToggle} />
             </div>
           </div>
         )}

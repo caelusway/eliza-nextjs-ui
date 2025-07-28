@@ -36,9 +36,17 @@ export function useFeatureFlag(feature: keyof UIConfig['features']): boolean {
 }
 
 /**
+ * Hook to access SEO configuration
+ * @returns SEO configuration
+ */
+export function useSEOConfig() {
+  return useMemo(() => uiConfig.seo, []);
+}
+
+/**
  * Hook to access branding configuration
  * @returns Branding configuration
  */
 export function useBranding() {
   return useMemo(() => uiConfig.branding, []);
-} 
+}

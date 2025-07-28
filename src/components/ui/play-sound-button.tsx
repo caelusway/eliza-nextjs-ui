@@ -69,10 +69,10 @@ export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
       audio.onloadstart = () => {
         setIsLoading(false);
         setIsPlaying(true);
-        
+
         // Track TTS usage
         PostHogTracking.getInstance().textToSpeechUsed(cleanText.length);
-        
+
         // Check if this is first time using TTS
         const hasUsedTTS = localStorage.getItem('discovered_text_to_speech');
         if (!hasUsedTTS) {

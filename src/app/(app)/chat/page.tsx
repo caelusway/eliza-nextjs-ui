@@ -9,7 +9,7 @@ import { useUIConfigSection } from '@/hooks/use-ui-config';
 export default function ChatPage() {
   const router = useRouter();
   const { getUserId, isUserAuthenticated, isReady } = useUserManager();
-  
+
   const statusConfig = useUIConfigSection('status');
   const brandingConfig = useUIConfigSection('branding');
 
@@ -26,7 +26,7 @@ export default function ChatPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div 
+          <div
             className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 mb-4"
             style={{ borderColor: brandingConfig.primaryColor }}
           ></div>
@@ -41,4 +41,4 @@ export default function ChatPage() {
   }
 
   return <NewChatWelcome userId={userId} />;
-} 
+}

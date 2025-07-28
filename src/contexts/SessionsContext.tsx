@@ -74,7 +74,7 @@ export const SessionsProvider = ({ children, userId }: SessionsProviderProps) =>
         if (response.status === 429) {
           console.log('[SessionsProvider] Rate limited, will retry in 5 seconds');
           setError('Too many requests. Retrying in a moment...');
-          
+
           // Retry after delay
           setTimeout(() => {
             fetchSessions(true);
@@ -97,7 +97,7 @@ export const SessionsProvider = ({ children, userId }: SessionsProviderProps) =>
   };
 
   const getSessionById = (id: string): ChatSession | undefined => {
-    return sessions.find(session => session.id === id);
+    return sessions.find((session) => session.id === id);
   };
 
   const refreshSessions = () => {
@@ -110,7 +110,7 @@ export const SessionsProvider = ({ children, userId }: SessionsProviderProps) =>
   };
 
   const addNewSession = (session: ChatSession) => {
-    setSessions(prev => [session, ...prev]);
+    setSessions((prev) => [session, ...prev]);
   };
 
   useEffect(() => {
@@ -137,4 +137,4 @@ export const useSessions = () => {
     throw new Error('useSessions must be used within a SessionsProvider');
   }
   return context;
-}; 
+};

@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
-import { 
-  User, 
-  Mail, 
-  Copy, 
-  Send, 
-  UserPlus, 
-  LogOut, 
-  Check, 
+import {
+  User,
+  Mail,
+  Copy,
+  Send,
+  UserPlus,
+  LogOut,
+  Check,
   ExternalLink,
   RefreshCw,
   Calendar,
@@ -19,7 +19,7 @@ import {
   Settings,
   Badge,
   Clock,
-  X
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -51,27 +51,29 @@ interface UserInviteStats {
 }
 
 // Toast notification component (will be rendered inside the component to access config)
-const Toast = ({ 
-  message, 
-  isVisible, 
-  primaryColor 
-}: { 
-  message: string; 
-  isVisible: boolean; 
+const Toast = ({
+  message,
+  isVisible,
+  primaryColor,
+}: {
+  message: string;
+  isVisible: boolean;
   primaryColor: string;
 }) => (
   <div
     className={cn(
-      "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50",
-      "px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md",
-      "transition-all duration-300 ease-in-out text-sm font-medium",
-      "border",
-      isVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-8 opacity-0 scale-95 pointer-events-none"
+      'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50',
+      'px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md',
+      'transition-all duration-300 ease-in-out text-sm font-medium',
+      'border',
+      isVisible
+        ? 'translate-y-0 opacity-100 scale-100'
+        : 'translate-y-8 opacity-0 scale-95 pointer-events-none'
     )}
     style={{
       backgroundColor: 'rgba(43, 43, 43, 0.9)',
       borderColor: primaryColor,
-      color: primaryColor
+      color: primaryColor,
     }}
   >
     <div className="flex items-center gap-2">
@@ -93,18 +95,18 @@ export default function AccountPage() {
   const [emailInput, setEmailInput] = useState('');
   const [senderName, setSenderName] = useState('');
   const [isSending, setIsSending] = useState<string | null>(null);
-  
+
   const accountConfig = useUIConfigSection('account');
   const brandingConfig = useUIConfigSection('branding');
-  
+
   // Helper function to get darker shade for hover states
   const getDarkerShade = (color: string) => {
     if (color.startsWith('#')) {
       const hex = color.slice(1);
       const num = parseInt(hex, 16);
       const r = Math.max(0, (num >> 16) - 20);
-      const g = Math.max(0, ((num >> 8) & 0x00FF) - 20);
-      const b = Math.max(0, (num & 0x0000FF) - 20);
+      const g = Math.max(0, ((num >> 8) & 0x00ff) - 20);
+      const b = Math.max(0, (num & 0x0000ff) - 20);
       return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
     }
     return color;
@@ -126,7 +128,7 @@ export default function AccountPage() {
 
   const fetchInviteStats = async () => {
     if (!user?.id) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/invites/my-codes', {
@@ -138,7 +140,7 @@ export default function AccountPage() {
           userId: user.id,
         }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setInviteStats(data);
@@ -167,9 +169,9 @@ export default function AccountPage() {
 
   const handleSendInvite = async (inviteCode: InviteCode) => {
     if (!emailInput.trim()) return;
-    
+
     setIsSending(inviteCode.id);
-    
+
     try {
       const response = await fetch('/api/invites/send', {
         method: 'POST',
@@ -215,16 +217,18 @@ export default function AccountPage() {
       pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-400/30',
       email_sent: 'bg-blue-500/20 text-blue-400 border-blue-400/30',
       accepted: 'bg-green-500/20 text-green-400 border-green-400/30',
-      expired: 'bg-red-500/20 text-red-400 border-red-400/30'
+      expired: 'bg-red-500/20 text-red-400 border-red-400/30',
     };
-    
+
     return (
-      <span className={cn(
-        "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium",
-        "border backdrop-blur-sm shadow-lg",
-        "transition-all duration-300 ease-in-out",
-        colors[status]
-      )}>
+      <span
+        className={cn(
+          'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium',
+          'border backdrop-blur-sm shadow-lg',
+          'transition-all duration-300 ease-in-out',
+          colors[status]
+        )}
+      >
         {status === 'accepted' && <Check className="w-3 h-3" />}
         {status === 'email_sent' && <Mail className="w-3 h-3" />}
         {status === 'pending' && <Clock className="w-3 h-3" />}
@@ -255,11 +259,11 @@ export default function AccountPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-8 sm:mt-0">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              style={{ 
+              style={{
                 backgroundColor: brandingConfig.primaryColor,
-                boxShadow: `0 8px 25px -5px ${brandingConfig.primaryColor}50`
+                boxShadow: `0 8px 25px -5px ${brandingConfig.primaryColor}50`,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.boxShadow = `0 8px 25px -5px ${brandingConfig.primaryColor}80`;
@@ -271,8 +275,12 @@ export default function AccountPage() {
               <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">{accountConfig.pageTitle}</h1>
-              <p className="text-sm sm:text-base text-muted-foreground">{accountConfig.pageDescription}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                {accountConfig.pageTitle}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {accountConfig.pageDescription}
+              </p>
             </div>
           </div>
           <button
@@ -280,7 +288,7 @@ export default function AccountPage() {
             disabled={isRefreshing}
             className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-xl transition-all duration-300 disabled:opacity-50 hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm"
           >
-            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+            <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
             <span className="sm:inline">{accountConfig.refreshText}</span>
           </button>
         </div>
@@ -300,32 +308,38 @@ export default function AccountPage() {
               <span className="hidden sm:inline">{accountConfig.logoutText}</span>
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="flex items-center gap-3 p-3 sm:p-4 bg-secondary/50 rounded-xl transition-all duration-300 hover:bg-secondary/70 backdrop-blur-sm shadow-inner">
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-muted-foreground font-medium">{accountConfig.emailLabel}</p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {accountConfig.emailLabel}
+                </p>
                 <p className="font-semibold text-foreground truncate">{getUserEmail()}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-3 sm:p-4 bg-secondary/50 rounded-xl transition-all duration-300 hover:bg-secondary/70 backdrop-blur-sm shadow-inner">
               <div className="p-2 bg-purple-500/20 rounded-lg">
                 <User className="w-5 h-5 text-purple-400 flex-shrink-0" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-muted-foreground font-medium">{accountConfig.userIdLabel}</p>
-                <p className="font-semibold text-foreground font-mono text-sm truncate">{user?.id?.substring(0, 20)}...</p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {accountConfig.userIdLabel}
+                </p>
+                <p className="font-semibold text-foreground font-mono text-sm truncate">
+                  {user?.id?.substring(0, 20)}...
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Invite Management */}
-        <div 
+        <div
           className="bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-xl border-l-4"
           style={{
             boxShadow: `0 25px 50px -12px ${brandingConfig.primaryColor}1A`,
@@ -356,7 +370,7 @@ export default function AccountPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div 
+              <div
                 className="animate-spin rounded-full h-8 w-8 border-b-2 shadow-lg"
                 style={{ borderBottomColor: brandingConfig.primaryColor }}
               ></div>
@@ -364,7 +378,10 @@ export default function AccountPage() {
           ) : inviteStats ? (
             <div className="space-y-4">
               {inviteStats.invites.map((invite) => (
-                <div key={invite.id} className="group bg-secondary/30 rounded-xl p-4 transition-all duration-300 hover:bg-secondary/50">
+                <div
+                  key={invite.id}
+                  className="group bg-secondary/30 rounded-xl p-4 transition-all duration-300 hover:bg-secondary/50"
+                >
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
@@ -378,20 +395,22 @@ export default function AccountPage() {
                           </span>
                         )}
                       </div>
-                      
+
                       <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5 bg-secondary/20 px-2 py-1 rounded-lg">
                           <Calendar className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{formatDistanceToNow(new Date(invite.created_at), { addSuffix: true })}</span>
+                          <span className="truncate">
+                            {formatDistanceToNow(new Date(invite.created_at), { addSuffix: true })}
+                          </span>
                         </span>
-                        
+
                         {invite.email_sent_to && (
                           <span className="flex items-center gap-1.5 bg-secondary/20 px-2 py-1 rounded-lg">
                             <Mail className="w-3 h-3 flex-shrink-0" />
                             <span className="truncate">{invite.email_sent_to}</span>
                           </span>
                         )}
-                        
+
                         {invite.current_uses !== undefined && invite.max_uses !== undefined && (
                           <span className="flex items-center gap-1.5 bg-secondary/20 px-2 py-1 rounded-lg">
                             <Users className="w-3 h-3 flex-shrink-0" />
@@ -403,31 +422,37 @@ export default function AccountPage() {
 
                     <div className="flex flex-wrap items-center gap-2">
                       <button
-                        onClick={() => copyToClipboard(invite.code, accountConfig.inviteCodeCopiedText)}
+                        onClick={() =>
+                          copyToClipboard(invite.code, accountConfig.inviteCodeCopiedText)
+                        }
                         className="flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm border border-white/10"
                       >
                         <Copy className="w-3 h-3" />
                         <span className="hidden sm:inline">{accountConfig.copyText}</span>
                       </button>
-                      
+
                       <button
-                        onClick={() => copyToClipboard(
-                          `${window.location.origin}/login?invite=${invite.code}`, 
-                          accountConfig.inviteLinkCopiedText
-                        )}
+                        onClick={() =>
+                          copyToClipboard(
+                            `${window.location.origin}/login?invite=${invite.code}`,
+                            accountConfig.inviteLinkCopiedText
+                          )
+                        }
                         className="flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm border border-white/10"
                       >
                         <Link className="w-3 h-3" />
                         <span className="hidden sm:inline">{accountConfig.linkText}</span>
                       </button>
-                      
+
                       {invite.status !== 'accepted' && (
                         <button
                           onClick={() => setEmailDialogInvite(invite)}
                           className="flex items-center gap-1 px-3 py-1.5 text-white rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95"
                           style={{ backgroundColor: brandingConfig.primaryColor }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = getDarkerShade(brandingConfig.primaryColor);
+                            e.currentTarget.style.backgroundColor = getDarkerShade(
+                              brandingConfig.primaryColor
+                            );
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
@@ -459,24 +484,31 @@ export default function AccountPage() {
               <Users className="w-5 h-5 text-muted-foreground" />
               {accountConfig.invitedUsersTitle} ({inviteStats.invited_users.length})
             </h2>
-            
+
             <div className="space-y-3">
               {inviteStats.invited_users.map((invitedUser, index) => (
-                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-gradient-to-r from-secondary/30 to-secondary/20 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-secondary/50 hover:to-secondary/30 hover:shadow-lg hover:shadow-green-500/5 border-l-2 border-green-500/20 hover:border-green-500/40">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-gradient-to-r from-secondary/30 to-secondary/20 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-secondary/50 hover:to-secondary/30 hover:shadow-lg hover:shadow-green-500/5 border-l-2 border-green-500/20 hover:border-green-500/40"
+                >
                   <div className="flex items-center gap-3">
-                    <div 
+                    <div
                       className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 flex-shrink-0 shadow-lg"
-                      style={{ 
+                      style={{
                         backgroundColor: brandingConfig.primaryColor,
-                        boxShadow: `0 10px 15px -3px ${brandingConfig.primaryColor}30`
+                        boxShadow: `0 10px 15px -3px ${brandingConfig.primaryColor}30`,
                       }}
                     >
                       <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground truncate">{invitedUser.username}</p>
+                      <p className="font-semibold text-foreground truncate">
+                        {invitedUser.username}
+                      </p>
                       {invitedUser.email && (
-                        <p className="text-sm text-muted-foreground truncate">{invitedUser.email}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {invitedUser.email}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -491,7 +523,7 @@ export default function AccountPage() {
             </div>
           </div>
         )}
-        
+
         {/* Add bottom padding to ensure content doesn't get cut off */}
         <div className="h-8 sm:h-4"></div>
       </div>
@@ -501,7 +533,9 @@ export default function AccountPage() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-card backdrop-blur-sm rounded-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100 shadow-2xl border border-white/10">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">{accountConfig.sendInviteDialogTitle}</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                {accountConfig.sendInviteDialogTitle}
+              </h3>
               <button
                 onClick={() => setEmailDialogInvite(null)}
                 className="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2 rounded-xl hover:bg-secondary/50"
@@ -509,7 +543,7 @@ export default function AccountPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
@@ -519,7 +553,7 @@ export default function AccountPage() {
                   {emailDialogInvite.code}
                 </code>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   {accountConfig.yourNameLabel}
@@ -530,12 +564,14 @@ export default function AccountPage() {
                   onChange={(e) => setSenderName(e.target.value)}
                   placeholder={accountConfig.yourNamePlaceholder}
                   className="w-full px-3 py-2 bg-gradient-to-r from-secondary to-secondary/80 rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm shadow-inner border border-white/10"
-                  style={{
-                    '--tw-ring-color': `${brandingConfig.primaryColor}66`,
-                  } as React.CSSProperties & { '--tw-ring-color': string }}
+                  style={
+                    {
+                      '--tw-ring-color': `${brandingConfig.primaryColor}66`,
+                    } as React.CSSProperties & { '--tw-ring-color': string }
+                  }
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   {accountConfig.emailAddressLabel}
@@ -546,12 +582,14 @@ export default function AccountPage() {
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder={accountConfig.emailPlaceholder}
                   className="w-full px-3 py-2 bg-gradient-to-r from-secondary to-secondary/80 rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm shadow-inner border border-white/10"
-                  style={{
-                    '--tw-ring-color': `${brandingConfig.primaryColor}66`,
-                  } as React.CSSProperties & { '--tw-ring-color': string }}
+                  style={
+                    {
+                      '--tw-ring-color': `${brandingConfig.primaryColor}66`,
+                    } as React.CSSProperties & { '--tw-ring-color': string }
+                  }
                 />
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setEmailDialogInvite(null)}
@@ -601,4 +639,4 @@ export default function AccountPage() {
       <Toast message={toastMessage} isVisible={showToast} />
     </div>
   );
-} 
+}

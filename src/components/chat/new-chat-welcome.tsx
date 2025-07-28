@@ -14,11 +14,9 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clickedPrompt, setClickedPrompt] = useState<string | null>(null);
-  
+
   const chatConfig = useUIConfigSection('chat');
   const brandingConfig = useUIConfigSection('branding');
-
-
 
   const handlePromptClick = async (prompt: string) => {
     if (!userId || isLoading) return;
@@ -48,7 +46,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
 
       // Clean the input box before redirecting
       setInput('');
-      
+
       // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
@@ -61,12 +59,12 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
 
   const handleDirectSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    
+
     if (!userId || !input.trim() || isLoading) return;
 
     try {
       setIsLoading(true);
-      
+
       const response = await fetch('/api/chat-session/create', {
         method: 'POST',
         headers: {
@@ -97,7 +95,8 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
       <div className="w-full max-w-2xl lg:max-w-3xl">
         <div className="text-center mb-6 sm:mb-8 lg:mb-10">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-zinc-900 dark:text-white mb-3 sm:mb-4 leading-tight">
-            Welcome to <span style={{ color: brandingConfig.primaryColor }}>{brandingConfig.appName}</span>
+            Welcome to{' '}
+            <span style={{ color: brandingConfig.primaryColor }}>{brandingConfig.appName}</span>
           </h1>
           <p className="text-sm sm:text-base lg:text-lg text-zinc-600 dark:text-zinc-400 max-w-sm sm:max-w-md lg:max-w-xl mx-auto px-2 sm:px-0">
             {chatConfig.welcomeSubtitle}
@@ -109,12 +108,12 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
             <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-zinc-900 dark:text-white mb-2 sm:mb-3">
               {chatConfig.tryAskingText}
             </h2>
-            <div 
+            <div
               className="w-8 sm:w-12 h-0.5 mx-auto rounded-full"
               style={{ backgroundColor: brandingConfig.primaryColor }}
             ></div>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
             {chatConfig.suggestedPrompts.map((prompt, index) => {
               const isPromptLoading = clickedPrompt === prompt;
@@ -150,12 +149,15 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
                   <div className="flex items-start gap-2 sm:gap-3">
                     <div className="flex-shrink-0 flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 mt-1">
                       {isPromptLoading ? (
-                        <div 
+                        <div
                           className="w-3 sm:w-4 h-3 sm:h-4 border-2 border-t-transparent rounded-full animate-spin"
-                          style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }}
+                          style={{
+                            borderColor: brandingConfig.primaryColor,
+                            borderTopColor: 'transparent',
+                          }}
                         ></div>
                       ) : (
-                        <div 
+                        <div
                           className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"
                           style={{ backgroundColor: brandingConfig.primaryColor }}
                         ></div>
@@ -182,11 +184,14 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
               disabled={isLoading}
             />
           </div>
-          
+
           {/* Loading feedback */}
           {isLoading && (
-            <div className="flex items-center justify-center gap-2 text-sm" style={{ color: brandingConfig.primaryColor }}>
-              <div 
+            <div
+              className="flex items-center justify-center gap-2 text-sm"
+              style={{ color: brandingConfig.primaryColor }}
+            >
+              <div
                 className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
                 style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }}
               ></div>
@@ -197,4 +202,4 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
       </div>
     </div>
   );
-} 
+}

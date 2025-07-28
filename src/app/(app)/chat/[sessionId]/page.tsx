@@ -13,7 +13,7 @@ interface ChatPageProps {
 
 export default function ChatPage({ params }: ChatPageProps) {
   const { currentSession, getSessionById, setCurrentSession } = useSessions();
-  
+
   useEffect(() => {
     // Get sessionId from params
     params.then(({ sessionId }) => {
@@ -36,24 +36,19 @@ export default function ChatPage({ params }: ChatPageProps) {
 
 function ChatPageContent({ params }: ChatPageProps) {
   const { currentSession } = useSessions();
-  
+
   // Wait for params to resolve
   const [sessionId, setSessionId] = useState<string | null>(null);
-  
+
   useEffect(() => {
     params.then(({ sessionId }) => {
       setSessionId(sessionId);
     });
   }, [params]);
-  
+
   if (!sessionId) {
     return <LoadingScreen message="Loading chat..." fullScreen={false} />;
   }
 
-  return (
-    <Chat 
-      sessionId={sessionId} 
-      sessionData={currentSession || undefined} 
-    />
-  );
+  return <Chat sessionId={sessionId} sessionData={currentSession || undefined} />;
 }

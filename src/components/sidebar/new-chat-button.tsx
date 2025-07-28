@@ -17,20 +17,20 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
   const { getUserId } = useUserManager();
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const sidebarConfig = useUIConfigSection('sidebar');
   const brandingConfig = useUIConfigSection('branding');
 
   const userId = getUserId();
-  
+
   // Helper function to get darker shade for hover states
   const getDarkerShade = (color: string) => {
     if (color.startsWith('#')) {
       const hex = color.slice(1);
       const num = parseInt(hex, 16);
       const r = Math.max(0, (num >> 16) - 20);
-      const g = Math.max(0, ((num >> 8) & 0x00FF) - 20);
-      const b = Math.max(0, (num & 0x0000FF) - 20);
+      const g = Math.max(0, ((num >> 8) & 0x00ff) - 20);
+      const b = Math.max(0, (num & 0x0000ff) - 20);
       return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
     }
     return color;
@@ -79,12 +79,12 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
         onClick={handleCreateNewSession}
         disabled={isCreatingSession}
         className={cn(
-          "flex items-center rounded-lg transition-colors",
-          "text-white border border-dashed border-white/20 hover:border-white/40",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          isCollapsed 
-            ? "w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 justify-center" 
-            : "w-full gap-3 p-3"
+          'flex items-center rounded-lg transition-colors',
+          'text-white border border-dashed border-white/20 hover:border-white/40',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          isCollapsed
+            ? 'w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 justify-center'
+            : 'w-full gap-3 p-3'
         )}
         style={{
           backgroundColor: brandingConfig.primaryColor,
@@ -99,23 +99,27 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
             e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
           }
         }}
-        title={isCollapsed ? (isCreatingSession ? sidebarConfig.creatingText : sidebarConfig.newChatText) : undefined}
+        title={
+          isCollapsed
+            ? isCreatingSession
+              ? sidebarConfig.creatingText
+              : sidebarConfig.newChatText
+            : undefined
+        }
       >
-        <Plus className={cn(
-          "flex-shrink-0",
-          isCollapsed ? "w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6" : "w-4 h-4"
-        )} />
+        <Plus
+          className={cn(
+            'flex-shrink-0',
+            isCollapsed ? 'w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6' : 'w-4 h-4'
+          )}
+        />
         {!isCollapsed && (
           <span className="text-sm font-medium">
             {isCreatingSession ? sidebarConfig.creatingText : sidebarConfig.newChatText}
           </span>
         )}
       </button>
-      {error && (
-        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</div>}
     </div>
   );
-} 
+}

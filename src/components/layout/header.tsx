@@ -52,19 +52,19 @@ export function Header() {
       {/* Mobile header */}
       <div className="flex items-center justify-between lg:hidden p-4">
         <Link href="/">
-          <Image 
-            src="/assets/aubrai_logo_white.png" 
-            alt="AUBRAI Logo" 
-            width={120} 
-            height={32} 
-            className="h-8 w-auto" 
+          <Image
+            src="/assets/aubrai_logo_white.png"
+            alt="AUBRAI Logo"
+            width={120}
+            height={32}
+            className="h-8 w-auto"
           />
         </Link>
         {!isLandingPage && (
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="min-w-[44px] min-h-[44px] flex flex-col justify-center items-center gap-1.5 border border-white/50 rounded p-2 touch-manipulation text-white"
-            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -72,12 +72,20 @@ export function Header() {
       </div>
 
       {/* Mobile menu */}
-      <div className={cn(
-        'overflow-hidden transition-all lg:hidden',
-        isOpen ? 'max-h-screen p-4 flex flex-col gap-6 bg-black' : 'max-h-0'
-      )}>
-        <NavLink to="/chat" label="AUBRAI" mobile pathname={pathname} onClick={() => setIsOpen(false)} />
-        
+      <div
+        className={cn(
+          'overflow-hidden transition-all lg:hidden',
+          isOpen ? 'max-h-screen p-4 flex flex-col gap-6 bg-black' : 'max-h-0'
+        )}
+      >
+        <NavLink
+          to="/chat"
+          label="AUBRAI"
+          mobile
+          pathname={pathname}
+          onClick={() => setIsOpen(false)}
+        />
+
         {ready && authenticated ? (
           <div className="flex flex-col gap-2">
             <Link
@@ -91,7 +99,7 @@ export function Header() {
                 <span className="text-slate-400 text-[10px] tracking-wide">Manage invites</span>
               </div>
             </Link>
-            <button 
+            <button
               onClick={() => {
                 handleAuthAction();
                 setIsOpen(false);
@@ -101,12 +109,14 @@ export function Header() {
               <LogOut size={16} className="mt-0.5" />
               <div className="flex flex-col leading-tight">
                 <span className="uppercase text-xs tracking-wider">Sign Out</span>
-                <span className="text-slate-400 text-[10px] tracking-wide">{username ?? getUserEmail()}</span>
+                <span className="text-slate-400 text-[10px] tracking-wide">
+                  {username ?? getUserEmail()}
+                </span>
               </div>
             </button>
           </div>
         ) : (
-          <button 
+          <button
             onClick={() => {
               handleAuthAction();
               setIsOpen(false);
@@ -122,15 +132,15 @@ export function Header() {
       {/* Desktop header */}
       <div className="hidden lg:flex items-center justify-between w-full py-3 px-8">
         <Link href="/">
-          <Image 
-            src="/assets/aubrai_logo_white.png" 
-            alt="AUBRAI Logo" 
-            width={160} 
-            height={32} 
-            className="h-8 w-auto" 
+          <Image
+            src="/assets/aubrai_logo_white.png"
+            alt="AUBRAI Logo"
+            width={160}
+            height={32}
+            className="h-8 w-auto"
           />
         </Link>
-        
+
         {!isLandingPage && (
           <div className="flex items-center gap-8">
             {/* Nav links container */}
@@ -145,13 +155,13 @@ export function Header() {
                 Give Feedback
               </a>
             </div>
-            
+
             {/* Buttons container */}
             <div className="flex gap-4">
               {ready && authenticated ? (
                 <DropdownMenu username={username ?? getUserEmail()} onLogout={handleAuthAction} />
               ) : (
-                <button 
+                <button
                   onClick={handleAuthAction}
                   disabled={!ready}
                   className="flex items-center gap-2 border border-white/50 rounded-md py-2 px-4 text-white text-xs bg-transparent cursor-pointer font-inherit uppercase tracking-wider hover:bg-white/10 transition-colors disabled:opacity-50"
@@ -178,7 +188,7 @@ interface NavLinkProps {
 
 const NavLink = ({ to, label, pathname, mobile, onClick }: NavLinkProps) => {
   const isActive = pathname === to;
-  
+
   const handleClick = () => {
     onClick?.();
   };
@@ -230,15 +240,12 @@ const DropdownMenu = ({ username, onLogout }: DropdownMenuProps) => {
         <span>{username}</span>
         <ChevronDown size={12} className="w-3 h-3" />
       </button>
-      
+
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-10" 
-            onClick={() => setIsOpen(false)}
-          />
-          
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+
           {/* Dropdown */}
           <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-20">
             <div className="py-1">

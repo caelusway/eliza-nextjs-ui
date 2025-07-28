@@ -4,4 +4,4 @@ export { LandingTextarea } from './landing-textarea';
 export { HeroSection } from './hero-section';
 export { ContentSection } from './content-section';
 export { ActionButtons } from './action-buttons';
-export { DecorativeElements } from './decorative-elements'; 
+export { DecorativeElements } from './decorative-elements';

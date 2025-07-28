@@ -64,7 +64,7 @@ export class SocketDebugUtils {
     eventType?: 'sent' | 'received' | 'connection' | 'error' | 'performance'
   ) {
     const events = this.socketManager.getDebugEvents();
-    const filtered = eventType ? events.filter(e => e.type === eventType) : events;
+    const filtered = eventType ? events.filter((e) => e.type === eventType) : events;
     return filtered.slice(-count).reverse(); // Most recent first
   }
 
@@ -74,7 +74,7 @@ export class SocketDebugUtils {
   static getSlowRequests(thresholdMs: number = 2000) {
     const events = this.socketManager.getDebugEvents();
     return events
-      .filter(e => e.type === 'received' && e.responseTime && e.responseTime > thresholdMs)
+      .filter((e) => e.type === 'received' && e.responseTime && e.responseTime > thresholdMs)
       .sort((a, b) => (b.responseTime || 0) - (a.responseTime || 0));
   }
 
@@ -84,9 +84,7 @@ export class SocketDebugUtils {
   static getStuckRequests(timeoutMs: number = 10000) {
     const metrics = this.socketManager.getPerformanceMetrics();
     const now = Date.now();
-    return metrics.pendingRequestsDetails.filter(
-      req => now - req.startTime > timeoutMs
-    );
+    return metrics.pendingRequestsDetails.filter((req) => now - req.startTime > timeoutMs);
   }
 
   /**
@@ -94,33 +92,33 @@ export class SocketDebugUtils {
    */
   static printReport(): void {
     const report = this.getPerformanceReport();
-    
+
     console.group('🔍 SocketIO Debug Report');
     console.log(report.summary);
-    
+
     console.group('📋 Recommendations');
-    report.recommendations.forEach(rec => console.log(rec));
+    report.recommendations.forEach((rec) => console.log(rec));
     console.groupEnd();
-    
+
     const slowRequests = this.getSlowRequests();
     if (slowRequests.length > 0) {
       console.group('🐌 Slow Requests (>2s)');
-      slowRequests.slice(0, 5).forEach(req => {
+      slowRequests.slice(0, 5).forEach((req) => {
         console.log(`${req.event}: ${req.responseTime}ms`, req.data);
       });
       console.groupEnd();
     }
-    
+
     const stuckRequests = this.getStuckRequests();
     if (stuckRequests.length > 0) {
       console.group('⏰ Stuck Requests (>10s)');
-      stuckRequests.forEach(req => {
+      stuckRequests.forEach((req) => {
         const age = Date.now() - req.startTime;
         console.log(`${req.type}: ${Math.round(age / 1000)}s ago`, req);
       });
       console.groupEnd();
     }
-    
+
     console.groupEnd();
   }
 
@@ -132,15 +130,15 @@ export class SocketDebugUtils {
       const report = this.getPerformanceReport();
       console.log(`[SocketIO Monitor] ${new Date().toLocaleTimeString()}`);
       console.log(report.summary);
-      
-      if (report.recommendations.some(r => r.includes('⚠️'))) {
+
+      if (report.recommendations.some((r) => r.includes('⚠️'))) {
         console.warn('Performance issues detected:', report.recommendations);
       }
     }, intervalSeconds * 1000);
 
     console.log(`🔄 Started SocketIO performance monitoring (every ${intervalSeconds}s)`);
     console.log('Call the returned function to stop monitoring');
-    
+
     return () => {
       clearInterval(interval);
       console.log('⏹️ Stopped SocketIO performance monitoring');
@@ -162,7 +160,7 @@ export class SocketDebugUtils {
         entityId: this.socketManager.getEntityId(),
         serverId: this.socketManager.getServerId(),
         activeSession: this.socketManager.getActiveSessionChannelId(),
-      }
+      },
     };
 
     // Create downloadable file
@@ -220,27 +218,31 @@ export class SocketDebugUtils {
     const typeBreakdown: Record<string, number> = {};
     const recommendations: string[] = [];
 
-    stuckRequests.forEach(req => {
+    stuckRequests.forEach((req) => {
       const channel = req.channelId || req.roomId || 'unknown';
       channelBreakdown[channel] = (channelBreakdown[channel] || 0) + 1;
-      
+
       typeBreakdown[req.type] = (typeBreakdown[req.type] || 0) + 1;
     });
 
     // Generate recommendations
     if (stuckRequests.length > 0) {
       recommendations.push(`🚨 Found ${stuckRequests.length} stuck requests`);
-      
-      const channelWithMostStuck = Object.entries(channelBreakdown)
-        .sort(([,a], [,b]) => b - a)[0];
+
+      const channelWithMostStuck = Object.entries(channelBreakdown).sort(
+        ([, a], [, b]) => b - a
+      )[0];
       if (channelWithMostStuck) {
-        recommendations.push(`🔍 Channel ${channelWithMostStuck[0]} has ${channelWithMostStuck[1]} stuck requests`);
+        recommendations.push(
+          `🔍 Channel ${channelWithMostStuck[0]} has ${channelWithMostStuck[1]} stuck requests`
+        );
       }
 
-      const mostStuckType = Object.entries(typeBreakdown)
-        .sort(([,a], [,b]) => b - a)[0];
+      const mostStuckType = Object.entries(typeBreakdown).sort(([, a], [, b]) => b - a)[0];
       if (mostStuckType) {
-        recommendations.push(`🔍 Most stuck request type: ${mostStuckType[0]} (${mostStuckType[1]} requests)`);
+        recommendations.push(
+          `🔍 Most stuck request type: ${mostStuckType[0]} (${mostStuckType[1]} requests)`
+        );
       }
 
       recommendations.push('💡 Consider calling SocketDebug.clearStuck() to clean up');
@@ -272,10 +274,11 @@ export class SocketDebugUtils {
   } {
     const performance = this.getPerformanceReport();
     const stuckAnalysis = this.analyzeStuckRequests();
-    
+
     const metrics = performance.metrics;
-    const responseRate = metrics.totalRequests > 0 ? (metrics.totalResponses / metrics.totalRequests) * 100 : 0;
-    
+    const responseRate =
+      metrics.totalRequests > 0 ? (metrics.totalResponses / metrics.totalRequests) * 100 : 0;
+
     const connectionHealth = {
       status: this.socketManager.isSocketConnected() ? 'connected' : 'disconnected',
       activeChannels: this.socketManager.getActiveChannels().size,
@@ -286,7 +289,9 @@ export class SocketDebugUtils {
 
     // Health recommendations
     if (responseRate < 50) {
-      connectionHealth.recommendations.push('🚨 Very low response rate - check server connectivity');
+      connectionHealth.recommendations.push(
+        '🚨 Very low response rate - check server connectivity'
+      );
     } else if (responseRate < 80) {
       connectionHealth.recommendations.push('⚠️ Low response rate - possible network issues');
     }
@@ -296,7 +301,9 @@ export class SocketDebugUtils {
     }
 
     if (metrics.pendingRequestsDetails.length > 5) {
-      connectionHealth.recommendations.push('⏳ Many pending requests - consider clearing stuck ones');
+      connectionHealth.recommendations.push(
+        '⏳ Many pending requests - consider clearing stuck ones'
+      );
     }
 
     if (connectionHealth.recommendations.length === 0) {
@@ -336,4 +343,4 @@ if (typeof window !== 'undefined') {
   (window as any).SocketDebug = SocketDebugUtils.debug;
 }
 
-export default SocketDebugUtils; 
+export default SocketDebugUtils;

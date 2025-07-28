@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
 
     // Get the form data from the request
     const formData = await request.formData();
-    
+
     // Get the user's ID (UUID) from query parameters (passed by the client)
     const userId = searchParams.get('userId');
-    
+
     // Add required fields for knowledge upload API
     formData.append('agentId', agentId);
     if (userId) {
