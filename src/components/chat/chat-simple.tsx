@@ -477,9 +477,6 @@ export const Chat = ({
       };
 
       setMessages((prev) => [...prev, userMessage]);
-<<<<<<< HEAD
-
-=======
       
       // Track message sent event
       const posthog = PostHogTracking.getInstance();
@@ -489,7 +486,6 @@ export const Chat = ({
         messageLength: finalMessageText.length
       });
       
->>>>>>> dev
       // Start thinking animation with safeguards
       const currentTime = Date.now();
       setIsAgentThinking(true);
@@ -812,9 +808,6 @@ export const Chat = ({
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
           } else {
             clearInterval(streamInterval);
-<<<<<<< HEAD
-
-=======
             
             // Track message received event with generation time (in seconds)
             const streamEndTime = Date.now();
@@ -826,7 +819,6 @@ export const Chat = ({
               generationTime: generationTime / 1000 // Convert to seconds
             });
             
->>>>>>> dev
             // Stop animation immediately when streaming is complete - this is the actual response
             console.log('[Chat] Agent response streaming complete, stopping animation');
             safeStopAnimation();
@@ -1093,15 +1085,11 @@ export const Chat = ({
           connectionStatus,
           sendMessageRef: !!sendMessageRef.current,
         });
-<<<<<<< HEAD
-
-=======
         
         // Track media upload event
         const posthog = PostHogTracking.getInstance();
         posthog.mediaUploaded(file.type || 'unknown', file.size);
         
->>>>>>> dev
         // Create a message indicating the file was uploaded and enable internal knowledge
         const fileMessage = `I've uploaded "${file.name}" to your knowledge base. Please analyze this document and tell me what it contains.`;
         console.log('[Chat] Message to send:', fileMessage);
