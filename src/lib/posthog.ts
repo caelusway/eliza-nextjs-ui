@@ -292,6 +292,19 @@ export class PostHogTracking {
     });
   }
 
+  // API Error Tracking
+  public apiError(endpoint: string, statusCode: number, errorMessage: string) {
+    if (!this._enabled) {
+      return;
+    }
+    this.track('api_error', {
+      endpoint,
+      statusCode,
+      errorMessage,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // User Identification Helper
   public identifyUser(userId: string, email?: string) {
     if (!this._enabled) {
