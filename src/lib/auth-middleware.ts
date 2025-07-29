@@ -260,10 +260,32 @@ export function validateOrigin(request: NextRequest): boolean {
     process.env.NEXT_PUBLIC_APP_URL,
     'http://localhost:4000',
     'https://localhost:4000',
+    'https://staging.aubr.ai', // Add staging environment
+    // Add any additional Vercel preview URLs dynamically
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ].filter(Boolean);
+
+  // Log for debugging
+  console.log('[CSRF] Origin validation:', {
+    origin,
+    referer,
+    allowedOrigins,
+    vercelUrl: process.env.VERCEL_URL
+  });
 
   // Check origin header
   if (origin && !allowedOrigins.includes(origin)) {
+    console.warn('[CSRF] Origin not allowed:', origin);
+    
+    // In development, be more permissive
+    const isDevelopment = process.env.NODE_ENV === 'development' || 
+                         process.env.NEXT_PUBLIC_NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      console.log('[CSRF] Allowing origin in development mode');
+      return true;
+    }
+    
     return false;
   }
 
@@ -271,7 +293,11 @@ export function validateOrigin(request: NextRequest): boolean {
   if (!origin && referer) {
     const refererUrl = new URL(referer);
     const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
-    return allowedOrigins.includes(refererOrigin);
+    
+    if (!allowedOrigins.includes(refererOrigin)) {
+      console.warn('[CSRF] Referer not allowed:', refererOrigin);
+      return false;
+    }
   }
 
   return true;
