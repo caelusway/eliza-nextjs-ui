@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface CachedPromptsData {
   prompts: string[];
@@ -21,6 +22,7 @@ export function useCachedPrompts(userId: string, userContext?: string): UseCache
   const [prompts, setPrompts] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authenticatedFetch = useAuthenticatedFetch();
 
   const getCacheKey = useCallback((userId: string) => {
     return `suggested_prompts_${userId}`;
@@ -59,11 +61,8 @@ export function useCachedPrompts(userId: string, userContext?: string): UseCache
 
   const fetchFreshPrompts = useCallback(
     async (userId: string, userContext?: string): Promise<string[]> => {
-      const response = await fetch('/api/suggested-prompts', {
+      const response = await authenticatedFetch('/api/suggested-prompts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId,
           userContext,
@@ -91,7 +90,7 @@ export function useCachedPrompts(userId: string, userContext?: string): UseCache
 
       return data.prompts;
     },
-    [saveToCache, getCacheKey]
+    [authenticatedFetch, saveToCache, getCacheKey]
   );
 
   const loadPrompts = useCallback(

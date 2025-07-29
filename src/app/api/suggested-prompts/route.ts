@@ -238,30 +238,14 @@ async function makeRequestToOpenAi(userContext?: string) {
   }
 }
 
-// Fallback prompts in case API fails
+// Fallback prompts in case API fails - use same prompts from config
 function getFallbackPrompts(): string[] {
-  const fallbackSets = [
-    [
-      'What drug combinations show synergistic effects for longevity?',
-      'Analyze the latest research on NAD+ precursors',
-      'Design a compound targeting cellular senescence',
-      'Find clinical trials for age-related diseases',
-    ],
-    [
-      'How do DNA methylation clocks relate to biological aging?',
-      'What are the main goals of the RMR2 project?',
-      'Are dasatinib and quercetin effective senolytics?',
-      'Rapamycin vs metformin for longevity - which is better?',
-    ],
-    [
-      'Explain the SENS framework for combating aging',
-      "What's the latest on cellular reprogramming for rejuvenation?",
-      'How does caloric restriction extend lifespan?',
-      'Which biomarkers best predict healthy aging?',
-    ],
-  ];
+  // Use the same default prompts as the UI config
+  const defaultPrompts = (
+    process.env.NEXT_PUBLIC_SUGGESTED_PROMPTS ||
+    'What drug combinations show synergistic effects for longevity?,Analyze the latest research on NAD+ precursors,Design a compound targeting cellular senescence,Find clinical trials for age-related diseases'
+  ).split(',');
 
-  // Rotate through fallback sets based on timestamp
-  const setIndex = Math.floor(Date.now() / (15 * 60 * 1000)) % fallbackSets.length;
-  return fallbackSets[setIndex];
+  // Return exactly 4 prompts, taking the first 4 if more are available
+  return defaultPrompts.slice(0, 4);
 }

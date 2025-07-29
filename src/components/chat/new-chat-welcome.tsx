@@ -24,10 +24,10 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const authenticatedFetch = useAuthenticatedFetch();
   const { addNewSession } = useSessions();
   
-  // Use dynamic prompts with caching
-  const { prompts: dynamicPrompts, isLoading: promptsLoading, error: promptsError } = useCachedPrompts(userId);
+  // Use dynamic prompts with caching, fallback to static prompts silently
+  const { prompts: dynamicPrompts, isLoading: promptsLoading } = useCachedPrompts(userId);
   
-  // Fall back to static prompts if dynamic ones fail or are loading
+  // Fall back to static prompts if dynamic ones fail or are loading (silent fallback)
   const suggestedPrompts = (dynamicPrompts.length > 0) ? dynamicPrompts : chatConfig.suggestedPrompts;
 
   // Handler for speech-to-text input
@@ -175,20 +175,11 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white mb-3">
               {chatConfig.tryAskingText}
-              {promptsLoading && (
-                <span className="ml-2 inline-block w-4 h-4 border-2 border-t-transparent rounded-full animate-spin opacity-60" 
-                      style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }} />
-              )}
             </h2>
             <div 
               className="w-16 h-1 mx-auto rounded-full opacity-80"
               style={{ backgroundColor: brandingConfig.primaryColor }}
             />
-            {promptsError && (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-                Using fallback prompts
-              </p>
-            )}
           </div>
 
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
