@@ -27,10 +27,7 @@ interface LogPromptRpcResponse {
 /**
  * Log a user prompt to the database
  */
-export async function logUserPrompt(
-  userId: string,
-  content: string
-): Promise<LogPromptResponse> {
+export async function logUserPrompt(userId: string, content: string): Promise<LogPromptResponse> {
   try {
     // Validate inputs
     if (!userId || !content || typeof content !== 'string' || content.trim() === '') {
