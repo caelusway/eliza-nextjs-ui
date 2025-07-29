@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { PostHogTracking } from '@/lib/posthog';
 import { cleanTextForAudio } from '@/utils/clean-text-for-audio';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface PlaySoundButtonProps {
   text: string;
@@ -16,6 +17,7 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const authenticatedFetch = useAuthenticatedFetch();
 
   const handlePlay = async () => {
     if (isLoading || isPlaying) return;
@@ -36,17 +38,35 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
 
       console.log(`[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..."`);
 
-      const response = await fetch('/api/text-to-speech', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: cleanText }),
-      });
+      // Try authenticated request first, then fallback to unauthenticated
+      let response: Response;
+      
+      try {
+        response = await authenticatedFetch('/api/text-to-speech', {
+          method: 'POST',
+          body: JSON.stringify({ text: cleanText }),
+        });
+      } catch (authError) {
+        console.warn('[PlaySound] Authenticated request failed, trying unauthenticated:', authError);
+        
+        // Fallback to unauthenticated request
+        response = await fetch('/api/text-to-speech', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: cleanText }),
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `TTS failed: ${response.status}`);
+        console.error('[PlaySound] TTS API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.error || `TTS failed: ${response.status} ${response.statusText}`);
       }
 
       const audioBlob = await response.blob();
