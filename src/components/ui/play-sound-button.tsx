@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { PostHogTracking } from '@/lib/posthog';
 import { cleanTextForAudio } from '@/utils/clean-text-for-audio';
-import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface PlaySoundButtonProps {
   text: string;
@@ -17,7 +16,6 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const authenticatedFetch = useAuthenticatedFetch();
 
   const handlePlay = async () => {
     if (isLoading || isPlaying) return;
@@ -50,8 +48,11 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
         console.log('[PlaySound] Long text detected - this may take a moment');
       }
 
-      const response = await authenticatedFetch('/api/text-to-speech', {
+      const response = await fetch('/api/text-to-speech', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ text: cleanText }),
       });
 
