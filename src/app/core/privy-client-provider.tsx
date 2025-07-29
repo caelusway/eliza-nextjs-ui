@@ -27,6 +27,13 @@ export function PrivyClientProvider({ children }: { children: React.ReactNode })
         // Prevent page scroll when modal is open
         preventPageScroll: true,
       },
+      // Session configuration for longer token duration
+      session: {
+        // Enable automatic token refresh before expiration
+        refreshOnWindowFocus: true,
+        // Keep session alive longer
+        inactivityTimeout: 30 * 60 * 1000, // 30 minutes of inactivity
+      },
     }),
     []
   );

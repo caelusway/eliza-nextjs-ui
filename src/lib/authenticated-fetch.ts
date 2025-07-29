@@ -53,6 +53,7 @@ export function useAuthenticatedFetch() {
           throw new Error('User not authenticated');
         }
         
+        // Always get a fresh token to ensure it's not expired
         token = await getAccessToken();
         
         if (!token) {
@@ -60,7 +61,7 @@ export function useAuthenticatedFetch() {
           throw new Error('No access token available');
         }
         
-        console.log('[AuthenticatedFetch] Successfully obtained token for:', url);
+        console.log('[AuthenticatedFetch] Successfully obtained fresh token for:', url);
       } catch (error) {
         console.error('[AuthenticatedFetch] Token retrieval failed:', error);
         // Continue without token - let the server respond with proper error
@@ -90,6 +91,39 @@ export function useAuthenticatedFetch() {
         hasAuth: !!token,
         ok: response.ok
       });
+      
+      // If we get a 401 error, try refreshing the token once
+      if (response.status === 401 && token) {
+        console.log('[AuthenticatedFetch] Got 401, attempting token refresh');
+        
+        try {
+          const newToken = await getAccessToken();
+          
+          if (newToken && newToken !== token) {
+            console.log('[AuthenticatedFetch] Token refreshed, retrying request');
+            
+            const retryHeaders = {
+              ...headers,
+              'Authorization': `Bearer ${newToken}`,
+            };
+            
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers: retryHeaders,
+            });
+            
+            console.log('[AuthenticatedFetch] Retry response:', {
+              url,
+              status: retryResponse.status,
+              ok: retryResponse.ok
+            });
+            
+            return retryResponse;
+          }
+        } catch (refreshError) {
+          console.error('[AuthenticatedFetch] Token refresh failed:', refreshError);
+        }
+      }
       
       return response;
     },
