@@ -36,7 +36,19 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
         return;
       }
 
-      console.log(`[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..."`);
+      // Check text length to prevent very long requests that might cause token expiration
+      if (cleanText.length > 5000) {
+        console.warn('[PlaySound] Text too long for TTS:', cleanText.length);
+        alert('Text is too long for audio conversion. Please try with shorter text (max 5000 characters).');
+        return;
+      }
+
+      console.log(`[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..." (${cleanText.length} chars)`);
+
+      // For longer texts, warn user that it might take a while
+      if (cleanText.length > 1000) {
+        console.log('[PlaySound] Long text detected - this may take a moment');
+      }
 
       const response = await authenticatedFetch('/api/text-to-speech', {
         method: 'POST',
