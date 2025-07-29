@@ -2,7 +2,7 @@ import { ArrowUpRightIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 const examplePrompts: string[] = (
-  process.env.NEXT_PUBLIC_EXAMPLE_PROMPTS ||
+  process.env.NEXT_PUBLIC_SUGGESTED_PROMPTS ||
   'What does this agent do?,What is an agent?,How do I use this agent?'
 ).split(',');
 
