@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json({ error: 'userId parameter is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId parameter is required', code: 'MISSING_USER_ID' }, 
+        { status: 400 }
+      );
     }
 
     if (!AGENT_ID) {

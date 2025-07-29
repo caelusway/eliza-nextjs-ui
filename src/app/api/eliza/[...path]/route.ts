@@ -9,6 +9,7 @@ import {
 } from '@/lib/auth-middleware';
 
 const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+const ELIZA_API_KEY = process.env.ELIZA_API_KEY || process.env.NEXT_PUBLIC_API_KEY;
 
 async function elizaGetHandler(
   request: NextRequest,
@@ -53,15 +54,24 @@ async function elizaGetHandler(
 
     console.log(`[Proxy] GET ${elizaUrl} for user: ${user.userId}`);
 
+    // Build headers for ElizaOS server
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      // Pass user context to ElizaOS
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Add API key if available
+    if (ELIZA_API_KEY) {
+      headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
+      headers['X-API-KEY'] = ELIZA_API_KEY;
+    }
+
     const response = await fetch(elizaUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        // Pass user context to ElizaOS
-        'X-User-ID': user.userId,
-        'X-User-Email': user.email,
-      },
+      headers,
     });
 
     const data = await response.json();
@@ -139,15 +149,24 @@ async function elizaPostHandler(
 
     console.log(`[Proxy] POST ${elizaUrl} for user: ${user.userId}`);
 
+    // Build headers for ElizaOS server
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      // Pass user context to ElizaOS
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Add API key if available
+    if (ELIZA_API_KEY) {
+      headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
+      headers['X-API-KEY'] = ELIZA_API_KEY;
+    }
+
     const response = await fetch(elizaUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        // Pass user context to ElizaOS
-        'X-User-ID': user.userId,
-        'X-User-Email': user.email,
-      },
+      headers,
       body: sanitizedBody,
     });
 
@@ -185,14 +204,23 @@ async function elizaPutHandler(
 
   console.log(`[Proxy] PUT ${elizaUrl} for user: ${user.userId}`);
 
+  // Build headers for ElizaOS server
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-User-ID': user.userId,
+    'X-User-Email': user.email,
+  };
+
+  // Add API key if available
+  if (ELIZA_API_KEY) {
+    headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
+    headers['X-API-KEY'] = ELIZA_API_KEY;
+  }
+
   const response = await fetch(elizaUrl, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'X-User-ID': user.userId,
-      'X-User-Email': user.email,
-    },
+    headers,
     body: body,
   });
 
@@ -219,14 +247,23 @@ async function elizaDeleteHandler(
 
   console.log(`[Proxy] DELETE ${elizaUrl} for user: ${user.userId}`);
 
+  // Build headers for ElizaOS server
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-User-ID': user.userId,
+    'X-User-Email': user.email,
+  };
+
+  // Add API key if available
+  if (ELIZA_API_KEY) {
+    headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
+    headers['X-API-KEY'] = ELIZA_API_KEY;
+  }
+
   const response = await fetch(elizaUrl, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'X-User-ID': user.userId,
-      'X-User-Email': user.email,
-    },
+    headers,
   });
 
   const data = await response.json();

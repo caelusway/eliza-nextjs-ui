@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
+import { useSessions } from '@/contexts/SessionsContext';
 
 interface NewChatWelcomeProps {
   userId: string;
@@ -17,6 +19,29 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
 
   const chatConfig = useUIConfigSection('chat');
   const brandingConfig = useUIConfigSection('branding');
+  const authenticatedFetch = useAuthenticatedFetch();
+  const { addNewSession } = useSessions();
+
+  const createAndAddSession = (sessionData: any, initialMessage: string) => {
+    // Create the session object in the format expected by the context
+    const newSession = {
+      id: sessionData.sessionId,
+      title: initialMessage.length > 50 ? initialMessage.substring(0, 47) + '...' : initialMessage,
+      messageCount: 0, // New session starts with 0 messages
+      lastActivity: sessionData.createdAt || new Date().toISOString(),
+      preview: '', // No preview yet
+      isFromAgent: false,
+      channelId: sessionData.channelId,
+      metadata: {
+        initialMessage: initialMessage,
+      },
+    };
+
+    // Add to context immediately for real-time sidebar update
+    addNewSession(newSession);
+    
+    return newSession;
+  };
 
   const handlePromptClick = async (prompt: string) => {
     if (!userId || isLoading) return;
@@ -27,11 +52,8 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat-session/create', {
+      const response = await authenticatedFetch('/api/chat-session/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId,
           initialMessage: prompt,
@@ -43,6 +65,9 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create chat session');
       }
+
+      // Add the new session to the context immediately for real-time sidebar update
+      createAndAddSession(data.data, prompt);
 
       // Clean the input box before redirecting
       setInput('');
@@ -65,11 +90,8 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/chat-session/create', {
+      const response = await authenticatedFetch('/api/chat-session/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId,
           initialMessage: input.trim(),
@@ -81,6 +103,9 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create chat session');
       }
+
+      // Add the new session to the context immediately for real-time sidebar update
+      createAndAddSession(data.data, input.trim());
 
       // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);

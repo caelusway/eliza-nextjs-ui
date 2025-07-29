@@ -1,4 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  withAuth,
+  validateUserOwnership,
+  sanitizeInput,
+  checkRateLimit,
+  getSecurityHeaders,
+  validateOrigin,
+  type AuthenticatedUser,
+} from '@/lib/auth-middleware';
 
 const ELIZA_SERVER_URL =
   process.env.ELIZA_SERVER_URL || process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
@@ -28,14 +37,60 @@ function generateTitle(content: string): string {
   return cleaned.length > 50 ? cleaned.substring(0, 47) + '...' : cleaned;
 }
 
-export async function POST(request: NextRequest) {
+async function createDMChannelHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
+    // Validate CSRF protection
+    if (!validateOrigin(request)) {
+      return NextResponse.json(
+        { error: 'Invalid origin', code: 'INVALID_ORIGIN' },
+        { status: 403, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Check rate limiting
+    const rateLimitResult = checkRateLimit(user.userId, 20, 60 * 1000); // 20 requests per minute
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          code: 'RATE_LIMIT_EXCEEDED',
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            ...getSecurityHeaders(),
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': rateLimitResult.remainingRequests.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     const body: GetOrCreateDMChannelRequest = await request.json();
     const { userId, agentId, sessionId, initialMessage } = body;
 
     if (!userId || !agentId) {
-      return NextResponse.json({ error: 'userId and agentId are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId and agentId are required', code: 'MISSING_PARAMS' }, 
+        { status: 400, headers: getSecurityHeaders() }
+      );
     }
+
+    // Validate user ownership - user can only create channels for themselves
+    if (!validateUserOwnership(userId, user.userId)) {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized - cannot create channel for different user',
+          code: 'UNAUTHORIZED_USER',
+        },
+        { status: 403, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Sanitize inputs
+    const sanitizedMessage = initialMessage ? sanitizeInput(initialMessage) : undefined;
 
     // First, try to find an existing DM channel for this session if sessionId is provided
     if (sessionId) {
@@ -88,8 +143,8 @@ export async function POST(request: NextRequest) {
       metadata.sessionId = sessionId;
     }
 
-    if (initialMessage) {
-      metadata.initialMessage = initialMessage;
+    if (sanitizedMessage) {
+      metadata.initialMessage = sanitizedMessage;
     }
 
     // Try to create the DM channel via ElizaOS API, with fallback for production
@@ -176,26 +231,33 @@ export async function POST(request: NextRequest) {
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    return NextResponse.json({
-      success: true,
-      channel: {
-        id: finalChannelId,
-        name: channelName,
-        type: 'DM',
-        metadata: metadata,
-        participants: [userId, agentId],
-        ...channelData,
+    return NextResponse.json(
+      {
+        success: true,
+        channel: {
+          id: finalChannelId,
+          name: channelName,
+          type: 'DM',
+          metadata: metadata,
+          participants: [userId, agentId],
+          ...channelData,
+        },
+        isNew: true,
       },
-      isNew: true,
-    });
+      { headers: getSecurityHeaders() }
+    );
   } catch (error) {
     console.error('[DM Channel API] Error in get-or-create DM channel:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500, headers: getSecurityHeaders() }
     );
   }
 }
+
+// Apply authentication middleware
+export const POST = withAuth(createDMChannelHandler);
