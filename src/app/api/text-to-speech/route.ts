@@ -1,44 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSecurityHeaders } from '@/lib/auth-middleware';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID;
 
-// Handle CORS preflight requests
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      ...getSecurityHeaders(),
-    },
-  });
-}
-
-export async function POST(request: NextRequest) {
+async function textToSpeechHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
-    // Add CORS headers for cross-origin requests
-    const origin = request.headers.get('origin');
-    const authHeader = request.headers.get('authorization');
-    
-    console.log('[TTS] Request from origin:', origin);
-    console.log('[TTS] Has auth header:', !!authHeader);
-    console.log('[TTS] User-Agent:', request.headers.get('user-agent'));
-    
-    // Add CORS headers for all responses
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': origin || '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
+    console.log('[TTS] Authenticated request from user:', user.userId);
+    console.log('[TTS] User email:', user.email);
     
     if (!ELEVENLABS_API_KEY) {
       console.error('[TTS] ElevenLabs API key not configured');
       return NextResponse.json(
         { error: 'ElevenLabs API key not configured' }, 
-        { status: 500, headers: { ...getSecurityHeaders(), ...corsHeaders } }
+        { status: 500, headers: getSecurityHeaders() }
       );
     }
 
@@ -46,7 +21,7 @@ export async function POST(request: NextRequest) {
       console.error('[TTS] ElevenLabs voice ID not configured');
       return NextResponse.json(
         { error: 'ElevenLabs voice ID not configured' }, 
-        { status: 500, headers: { ...getSecurityHeaders(), ...corsHeaders } }
+        { status: 500, headers: getSecurityHeaders() }
       );
     }
 
@@ -55,7 +30,7 @@ export async function POST(request: NextRequest) {
     if (!text) {
       return NextResponse.json(
         { error: 'Text is required' }, 
-        { status: 400, headers: { ...getSecurityHeaders(), ...corsHeaders } }
+        { status: 400, headers: getSecurityHeaders() }
       );
     }
 
@@ -88,7 +63,7 @@ export async function POST(request: NextRequest) {
       console.error(`[TTS] ElevenLabs API error (${response.status}):`, errorText);
       return NextResponse.json(
         { error: 'Failed to generate speech' }, 
-        { status: response.status, headers: { ...getSecurityHeaders(), ...corsHeaders } }
+        { status: response.status, headers: getSecurityHeaders() }
       );
     }
 
@@ -100,19 +75,15 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'audio/mpeg',
         'Content-Length': audioBuffer.byteLength.toString(),
         ...getSecurityHeaders(),
-        ...corsHeaders,
       },
     });
   } catch (error) {
     console.error('[TTS] Error:', error);
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
     return NextResponse.json(
       { error: 'Internal server error' }, 
-      { status: 500, headers: { ...getSecurityHeaders(), ...corsHeaders } }
+      { status: 500, headers: getSecurityHeaders() }
     );
   }
 }
+
+export const POST = withAuth(textToSpeechHandler);

@@ -38,26 +38,10 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
 
       console.log(`[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..."`);
 
-      // Try authenticated request first, then fallback to unauthenticated
-      let response: Response;
-      
-      try {
-        response = await authenticatedFetch('/api/text-to-speech', {
-          method: 'POST',
-          body: JSON.stringify({ text: cleanText }),
-        });
-      } catch (authError) {
-        console.warn('[PlaySound] Authenticated request failed, trying unauthenticated:', authError);
-        
-        // Fallback to unauthenticated request
-        response = await fetch('/api/text-to-speech', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text: cleanText }),
-        });
-      }
+      const response = await authenticatedFetch('/api/text-to-speech', {
+        method: 'POST',
+        body: JSON.stringify({ text: cleanText }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
