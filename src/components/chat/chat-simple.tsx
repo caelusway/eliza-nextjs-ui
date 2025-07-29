@@ -19,6 +19,7 @@ import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 import { useUserManager } from '@/lib/user-manager';
 import { PostHogTracking } from '@/lib/posthog';
+import { logUserPrompt } from '@/services/prompt-service';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -476,6 +477,26 @@ export const Chat = ({
       };
 
       setMessages((prev) => [...prev, userMessage]);
+
+      // Log user prompt to database
+      const logPrompt = async () => {
+        try {
+          console.log('[Chat] Logging user prompt to database:', {
+            userId: currentUserId,
+            content: finalMessageText,
+          });
+          const result = await logUserPrompt(currentUserId, finalMessageText);
+          if (!result.success) {
+            console.warn('[Chat] Failed to log user prompt:', result.error);
+          } else {
+            console.log('[Chat] User prompt logged successfully:', result.promptId);
+          }
+        } catch (error) {
+          console.warn('[Chat] Error logging user prompt:', error);
+        }
+      };
+
+      logPrompt();
 
       // Track message sent event
       const posthog = PostHogTracking.getInstance();
