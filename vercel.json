@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/app/api/text-to-speech/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}

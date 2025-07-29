@@ -30,17 +30,23 @@ export interface AuthenticatedUser {
  * Extract and verify Privy JWT token from request
  */
 export async function authenticateRequest(request: NextRequest): Promise<AuthenticatedUser | null> {
+  const authStartTime = Date.now();
+  
   try {
     // Extract token from Authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
+      console.warn('[Auth] No Bearer token in Authorization header');
       return null;
     }
 
     const token = authHeader.substring(7);
     if (!token) {
+      console.warn('[Auth] Empty token after Bearer prefix');
       return null;
     }
+
+    console.log('[Auth] Token found, verifying with Privy...');
 
     if (!privyClient) {
       console.error('[Auth] Privy client not initialized - missing configuration');
@@ -48,12 +54,19 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     }
 
     // Verify JWT token using Privy client
+    const verifyStartTime = Date.now();
     const verifiedClaims = await privyClient.verifyAuthToken(token);
+    const verifyTime = Date.now() - verifyStartTime;
+    
+    console.log(`[Auth] Token verification took ${verifyTime}ms`);
 
     if (!verifiedClaims) {
-      console.warn('[Auth] JWT verification failed');
+      console.warn('[Auth] JWT verification failed - token may be expired or invalid');
+      console.warn(`[Auth] Verification attempted after ${Date.now() - authStartTime}ms`);
       return null;
     }
+
+    console.log('[Auth] Token verified successfully, extracting user info...');
 
     // Extract user information from verified claims
     // verifiedClaims contains: { appId, issuer, issuedAt, expiration, sessionId, userId }
@@ -84,13 +97,25 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     const UUID_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // Same as constants
     const userId = uuidv5(email, UUID_NAMESPACE);
 
+    const totalAuthTime = Date.now() - authStartTime;
+    console.log(`[Auth] Authentication completed successfully in ${totalAuthTime}ms`);
+    console.log(`[Auth] User authenticated: ${userId} (${email})`);
+
     return {
       id: privyUserId,
       email: email,
       userId: userId,
     };
   } catch (error) {
-    console.error('[Auth] JWT verification failed:', error);
+    const totalAuthTime = Date.now() - authStartTime;
+    console.error(`[Auth] JWT verification failed after ${totalAuthTime}ms:`, error);
+    
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('[Auth] Error name:', error.name);
+      console.error('[Auth] Error message:', error.message);
+    }
+    
     return null;
   }
 }

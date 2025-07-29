@@ -36,7 +36,7 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
         return;
       }
 
-      // Check text length to prevent very long requests that might cause token expiration
+      // Check text length to prevent very long requests
       if (cleanText.length > 5000) {
         console.warn('[PlaySound] Text too long for TTS:', cleanText.length);
         alert('Text is too long for audio conversion. Please try with shorter text (max 5000 characters).');
