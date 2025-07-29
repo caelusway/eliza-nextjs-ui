@@ -16,7 +16,7 @@ export function UserProfile({ isCollapsed, userName, userId, onLogout }: UserPro
   const sidebarConfig = useUIConfigSection('sidebar');
 
   return (
-    <div className="border-t border-zinc-200 dark:border-zinc-700 p-2">
+    <div className="mt-auto border-t border-zinc-200 dark:border-zinc-700 p-2">
       {!isCollapsed && (
         <Link href="/account" className="block mb-1">
           <div className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">

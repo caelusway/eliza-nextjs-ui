@@ -316,7 +316,7 @@ export const Chat = ({
         try {
           console.log(`[Chat] Loading session from API: ${sessionId}`);
 
-          const response = await fetch(
+          const response = await authenticatedFetch(
             `/api/chat-session/${sessionId}?userId=${encodeURIComponent(currentUserId)}`
           );
 
@@ -383,13 +383,10 @@ export const Chat = ({
         setAgentStatus('checking');
 
         try {
-          const addAgentResponse = await fetch(
+          const addAgentResponse = await authenticatedFetch(
             `/api/eliza/messaging/central-channels/${centralChannelId}/agents`,
             {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
               body: JSON.stringify({
                 agentId: agentId,
               }),
@@ -578,13 +575,10 @@ export const Chat = ({
         console.log('[Chat] Ensuring agent is in channel for new session...');
 
         // Add agent to the specific session channel
-        const addAgentResponse = await fetch(
+        const addAgentResponse = await authenticatedFetch(
           `/api/eliza/messaging/central-channels/${channelId}/agents`,
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
               agentId: agentId,
             }),
@@ -614,12 +608,12 @@ export const Chat = ({
     const verifyAgentReadiness = async (): Promise<boolean> => {
       try {
         // Check if agent is in the channel participants
-        const channelResponse = await fetch(`/api/eliza/messaging/central-channels/${channelId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const channelResponse = await authenticatedFetch(
+          `/api/eliza/messaging/central-channels/${channelId}`,
+          {
+            method: 'GET',
+          }
+        );
 
         if (channelResponse.ok) {
           const channelData = await channelResponse.json();

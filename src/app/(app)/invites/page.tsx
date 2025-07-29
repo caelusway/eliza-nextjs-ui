@@ -52,9 +52,8 @@ const Toast = ({ message, isVisible }: { message: string; isVisible: boolean }) 
   <div
     className={cn(
       'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50',
-      'px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md',
+      'px-4 py-3 rounded-xl backdrop-blur-md',
       'transition-all duration-300 ease-in-out text-sm font-medium',
-      'border border-green-400/20',
       isVisible
         ? 'translate-y-0 opacity-100 scale-100'
         : 'translate-y-8 opacity-0 scale-95 pointer-events-none'
@@ -173,20 +172,28 @@ export default function InvitesPage() {
     }
   };
 
+  const isExpired = (invite: InviteCode) => {
+    if (!invite.expires_at) return false;
+    return new Date() > new Date(invite.expires_at);
+  };
+
   const getStatusBadge = (invite: InviteCode) => {
-    const status = invite.status || 'pending';
+    let status = invite.status || 'pending';
+    if (isExpired(invite)) {
+      status = 'expired';
+    }
     const colors = {
-      pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-400/30',
-      email_sent: 'bg-blue-500/20 text-blue-400 border-blue-400/30',
-      accepted: 'bg-green-500/20 text-green-400 border-green-400/30',
-      expired: 'bg-red-500/20 text-red-400 border-red-400/30',
+      pending: 'bg-yellow-500/20 text-yellow-400',
+      email_sent: 'bg-blue-500/20 text-blue-400',
+      accepted: 'bg-green-500/20 text-green-400',
+      expired: 'bg-red-500/20 text-red-400',
     };
 
     return (
       <span
         className={cn(
           'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium',
-          'border backdrop-blur-sm shadow-lg',
+          'backdrop-blur-sm',
           'transition-all duration-300 ease-in-out',
           colors[status]
         )}
@@ -194,6 +201,7 @@ export default function InvitesPage() {
         {status === 'accepted' && <Check className="w-3 h-3" />}
         {status === 'email_sent' && <Mail className="w-3 h-3" />}
         {status === 'pending' && <Clock className="w-3 h-3" />}
+        {status === 'expired' && <X className="w-3 h-3" />}
         {status.replace('_', ' ')}
       </span>
     );
@@ -201,26 +209,24 @@ export default function InvitesPage() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 pt-16 sm:pt-6 mt-6 lg:pt-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8 mt-8 sm:mt-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-12">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#FF6E71] flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#FF6E71]/50">
+            <div className="w-12 h-12 rounded-xl bg-[#FF6E71] flex items-center justify-center">
               <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                Invite Friends
+              <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+                Invite Management
               </h1>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Share your invite codes with friends
-              </p>
+              <p className="text-muted-foreground mt-1">Manage and share your invitation codes</p>
             </div>
           </div>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-xl transition-all duration-300 disabled:opacity-50 hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-md transition-colors disabled:opacity-50 text-sm font-medium"
           >
             <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
             <span className="sm:inline">Refresh</span>
@@ -228,16 +234,19 @@ export default function InvitesPage() {
         </div>
 
         {/* Invite Management */}
-        <div className="bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-xl hover:shadow-[#FF6E71]/10 border-l-4 border-[#FF6E71]/30 hover:border-[#FF6E71]/50">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-muted-foreground" />
-              Your Invite Codes
-            </h2>
+        <div className="bg-card rounded-xl p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <h2 className="text-xl font-medium text-foreground">Invitation Codes</h2>
             {inviteStats && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-4 py-2 rounded-full backdrop-blur-sm shadow-inner">
-                <Badge className="w-4 h-4 text-blue-400" />
-                <span className="font-semibold">{inviteStats.remaining_codes}</span>
+              <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-md font-medium">
+                <Badge className="w-4 h-4 text-[#FF6E71]" />
+                <span className="font-semibold">
+                  {
+                    inviteStats.invites.filter(
+                      (invite) => !isExpired(invite) && invite.status !== 'accepted'
+                    ).length
+                  }
+                </span>
                 <span className="hidden sm:inline">codes remaining</span>
               </div>
             )}
@@ -245,31 +254,34 @@ export default function InvitesPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6E71] shadow-lg"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : inviteStats ? (
-            <div className="space-y-4">
-              {inviteStats.invites.map((invite) => (
+            <div className="space-y-0">
+              {inviteStats.invites.map((invite, index) => (
                 <div
                   key={invite.id}
-                  className="group bg-secondary/30 rounded-xl p-4 transition-all duration-300 hover:bg-secondary/50"
+                  className={cn(
+                    'bg-muted/30 rounded-lg p-5 hover:bg-muted/50 transition-colors',
+                    index !== inviteStats.invites.length - 1 && 'border-b border-border/20'
+                  )}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-                        <code className="px-3 py-1.5 bg-secondary rounded-lg text-sm font-mono break-all shadow-inner">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                    <div className="min-w-0 lg:w-80 xl:w-96">
+                      <div className="flex flex-wrap items-center gap-3 mb-4">
+                        <code className="px-3 py-2 bg-secondary rounded-md text-sm font-mono font-medium">
                           {invite.code}
                         </code>
                         {getStatusBadge(invite)}
                         {invite.is_legacy && (
-                          <span className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs transition-all duration-300 backdrop-blur-sm shadow-lg border border-purple-400/20">
+                          <span className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs transition-all duration-300 backdrop-blur-sm">
                             Legacy
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5 bg-secondary/20 px-2 py-1 rounded-lg">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
                           <Calendar className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">
                             {formatDistanceToNow(new Date(invite.created_at), { addSuffix: true })}
@@ -277,14 +289,14 @@ export default function InvitesPage() {
                         </span>
 
                         {invite.email_sent_to && (
-                          <span className="flex items-center gap-1.5 bg-secondary/20 px-2 py-1 rounded-lg">
+                          <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
                             <Mail className="w-3 h-3 flex-shrink-0" />
                             <span className="truncate">{invite.email_sent_to}</span>
                           </span>
                         )}
 
                         {invite.current_uses !== undefined && invite.max_uses !== undefined && (
-                          <span className="flex items-center gap-1.5 bg-secondary/20 px-2 py-1 rounded-lg">
+                          <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
                             <Users className="w-3 h-3 flex-shrink-0" />
                             {invite.current_uses}/{invite.max_uses} uses
                           </span>
@@ -293,35 +305,65 @@ export default function InvitesPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => copyToClipboard(invite.code, 'Invite code copied!')}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg"
-                      >
-                        <Copy className="w-3 h-3" />
-                        <span className="hidden sm:inline">Copy</span>
-                      </button>
+                      {isExpired(invite) ? (
+                        <>
+                          <button
+                            disabled
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-md text-sm opacity-50 cursor-not-allowed font-medium"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span className="hidden sm:inline">Copy</span>
+                          </button>
 
-                      <button
-                        onClick={() =>
-                          copyToClipboard(
-                            `${window.location.origin}/login?invite=${invite.code}`,
-                            'Invite link copied!'
-                          )
-                        }
-                        className="flex items-center gap-1 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95 shadow-lg"
-                      >
-                        <Link className="w-3 h-3" />
-                        <span className="hidden sm:inline">Link</span>
-                      </button>
+                          <button
+                            disabled
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-md text-sm opacity-50 cursor-not-allowed font-medium"
+                          >
+                            <Link className="w-3 h-3" />
+                            <span className="hidden sm:inline">Link</span>
+                          </button>
 
-                      {invite.status !== 'accepted' && (
-                        <button
-                          onClick={() => setEmailDialogInvite(invite)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-lg transition-all duration-300 text-sm hover:scale-105 active:scale-95"
-                        >
-                          <Send className="w-3 h-3" />
-                          <span className="hidden sm:inline">Send</span>
-                        </button>
+                          <button
+                            disabled
+                            className="flex items-center gap-1 px-3 py-1.5 bg-red-500/30 text-red-400 rounded-lg text-sm opacity-50 cursor-not-allowed"
+                          >
+                            <Send className="w-3 h-3" />
+                            <span className="hidden sm:inline">Send</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => copyToClipboard(invite.code, 'Invite code copied!')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span className="hidden sm:inline">Copy</span>
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              copyToClipboard(
+                                `${window.location.origin}/login?invite=${invite.code}`,
+                                'Invite link copied!'
+                              )
+                            }
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium"
+                          >
+                            <Link className="w-3 h-3" />
+                            <span className="hidden sm:inline">Link</span>
+                          </button>
+
+                          {invite.status !== 'accepted' && (
+                            <button
+                              onClick={() => setEmailDialogInvite(invite)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors text-sm font-medium"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span className="hidden sm:inline">Send</span>
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -330,7 +372,7 @@ export default function InvitesPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              <div className="w-16 h-16 mx-auto mb-4 bg-secondary/30 rounded-2xl flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-xl flex items-center justify-center">
                 <UserPlus className="w-8 h-8 opacity-50" />
               </div>
               <p className="text-lg font-medium">No invite codes available</p>
@@ -340,20 +382,23 @@ export default function InvitesPage() {
 
         {/* Invited Users */}
         {inviteStats && inviteStats.invited_users.length > 0 && (
-          <div className="bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/10 border-l-4 border-green-500/30 hover:border-green-500/50">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2 mb-4">
+          <div className="bg-card rounded-xl p-6">
+            <h2 className="text-xl font-medium text-foreground mb-6">
               <Users className="w-5 h-5 text-muted-foreground" />
               Invited Users ({inviteStats.invited_users.length})
             </h2>
 
-            <div className="space-y-3">
+            <div className="space-y-0">
               {inviteStats.invited_users.map((invitedUser, index) => (
                 <div
                   key={index}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-secondary/30 rounded-xl transition-all duration-300 hover:bg-secondary/50"
+                  className={cn(
+                    'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors',
+                    index !== inviteStats.invited_users.length - 1 && 'border-b border-border/20'
+                  )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FF6E71] flex items-center justify-center transition-all duration-300 hover:scale-105 flex-shrink-0 shadow-lg shadow-[#FF6E71]/30">
+                    <div className="w-10 h-10 rounded-lg bg-[#FF6E71] flex items-center justify-center flex-shrink-0">
                       <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -386,7 +431,7 @@ export default function InvitesPage() {
       {/* Email Dialog */}
       {emailDialogInvite && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-card to-card/80 backdrop-blur-sm rounded-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100 shadow-2xl border-l-4 border-[#FF6E71]/30">
+          <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Send Invite</h3>
               <button
@@ -402,7 +447,7 @@ export default function InvitesPage() {
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Invite Code
                 </label>
-                <code className="block w-full px-3 py-2 bg-secondary rounded-xl text-sm font-mono break-all shadow-inner">
+                <code className="block w-full px-3 py-2 bg-secondary rounded-xl text-sm font-mono break-all">
                   {emailDialogInvite.code}
                 </code>
               </div>
@@ -416,7 +461,7 @@ export default function InvitesPage() {
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300 shadow-inner"
+                  className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300"
                 />
               </div>
 
@@ -429,21 +474,21 @@ export default function InvitesPage() {
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="friend@example.com"
-                  className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300 shadow-inner"
+                  className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300"
                 />
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setEmailDialogInvite(null)}
-                  className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-md transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleSendInvite(emailDialogInvite)}
                   disabled={!emailInput.trim() || isSending === emailDialogInvite.id}
-                  className="flex-1 px-4 py-2 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 disabled:hover:scale-100 shadow-lg shadow-[#FF6E71]/30"
+                  className="flex-1 px-4 py-2 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                 >
                   {isSending === emailDialogInvite.id ? (
                     <>

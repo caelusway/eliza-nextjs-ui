@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface ChatSession {
   id: string;
@@ -41,6 +42,8 @@ export const SessionsProvider = ({ children, userId }: SessionsProviderProps) =>
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const authenticatedFetch = useAuthenticatedFetch();
+
   // Request deduplication and rate limiting
   const MIN_FETCH_INTERVAL = 2000; // 2 seconds minimum between requests
   const RATE_LIMIT_RETRY_DELAY = 5000; // 5 seconds delay after rate limit
@@ -66,7 +69,9 @@ export const SessionsProvider = ({ children, userId }: SessionsProviderProps) =>
     setError(null);
 
     try {
-      const response = await fetch(`/api/chat-sessions?userId=${encodeURIComponent(userId)}`);
+      const response = await authenticatedFetch(
+        `/api/chat-sessions?userId=${encodeURIComponent(userId)}`
+      );
       const data = await response.json();
 
       if (!response.ok) {

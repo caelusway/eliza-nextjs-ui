@@ -68,7 +68,7 @@ export async function ensureSupabaseUser(privyUserId: string, email?: string | n
 
     const { data: existing, error } = await supabase
       .from('users')
-      .select('id, username')
+      .select('id, username, email')
       .eq('user_id', privyUserId)
       .maybeSingle();
 
@@ -93,6 +93,13 @@ export async function ensureSupabaseUser(privyUserId: string, email?: string | n
 
     if (existing) {
       console.log('[ensureSupabaseUser] User already exists:', existing);
+
+      // Check if we need to update the email
+      if (email && !existing.email) {
+        console.log('[ensureSupabaseUser] Updating missing email for existing user');
+        await supabase.from('users').update({ email }).eq('id', existing.id);
+      }
+
       // Already has username
       if (existing.username) {
         console.log('[ensureSupabaseUser] User has username, returning:', existing.username);
@@ -145,6 +152,11 @@ export async function ensureSupabaseUser(privyUserId: string, email?: string | n
           '[ensureSupabaseUser] User with deterministic ID already exists, skipping insert'
         );
         return username;
+      }
+
+      // Log if email is missing for debugging
+      if (!email) {
+        console.warn('[ensureSupabaseUser] Creating user without email:', privyUserId);
       }
 
       const insertData = {
@@ -241,6 +253,29 @@ export async function updateUserPoints(privyUserId: string, points: number) {
     return data;
   } catch (error) {
     console.error('[updateUserPoints] Failed to update user points:', error);
+    throw error;
+  }
+}
+
+export async function updateUserEmail(privyUserId: string, email: string) {
+  console.log('[updateUserEmail] Called with:', { privyUserId, email });
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ email })
+      .eq('user_id', privyUserId)
+      .select();
+
+    if (error) {
+      console.error('[updateUserEmail] Error updating user email:', error);
+      throw error;
+    }
+
+    console.log('[updateUserEmail] User email updated successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('[updateUserEmail] Failed to update user email:', error);
     throw error;
   }
 }

@@ -9,7 +9,6 @@ import {
 } from '@/lib/auth-middleware';
 
 const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
-const ELIZA_API_KEY = process.env.ELIZA_API_KEY || process.env.NEXT_PUBLIC_API_KEY;
 
 async function elizaGetHandler(
   request: NextRequest,
@@ -63,10 +62,10 @@ async function elizaGetHandler(
       'X-User-Email': user.email,
     };
 
-    // Add API key if available
-    if (ELIZA_API_KEY) {
-      headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
-      headers['X-API-KEY'] = ELIZA_API_KEY;
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
     }
 
     const response = await fetch(elizaUrl, {
@@ -158,10 +157,10 @@ async function elizaPostHandler(
       'X-User-Email': user.email,
     };
 
-    // Add API key if available
-    if (ELIZA_API_KEY) {
-      headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
-      headers['X-API-KEY'] = ELIZA_API_KEY;
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
     }
 
     const response = await fetch(elizaUrl, {
@@ -212,10 +211,10 @@ async function elizaPutHandler(
     'X-User-Email': user.email,
   };
 
-  // Add API key if available
-  if (ELIZA_API_KEY) {
-    headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
-    headers['X-API-KEY'] = ELIZA_API_KEY;
+  // Forward the original Authorization header (Privy JWT) to ElizaOS
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
   }
 
   const response = await fetch(elizaUrl, {
@@ -255,10 +254,10 @@ async function elizaDeleteHandler(
     'X-User-Email': user.email,
   };
 
-  // Add API key if available
-  if (ELIZA_API_KEY) {
-    headers['Authorization'] = `Bearer ${ELIZA_API_KEY}`;
-    headers['X-API-KEY'] = ELIZA_API_KEY;
+  // Forward the original Authorization header (Privy JWT) to ElizaOS
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
   }
 
   const response = await fetch(elizaUrl, {

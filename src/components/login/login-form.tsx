@@ -9,6 +9,7 @@ import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface LoginFormProps {
   onInviteSubmit: (code: string) => void;
+  onInviteWithEmailSubmit: (code: string, email: string) => void;
   isValidating: boolean;
   isAuthenticating: boolean;
   error: string;
@@ -17,6 +18,7 @@ interface LoginFormProps {
 
 export default function LoginForm({
   onInviteSubmit,
+  onInviteWithEmailSubmit,
   isValidating,
   isAuthenticating,
   error,
@@ -24,9 +26,12 @@ export default function LoginForm({
 }: LoginFormProps) {
   const [inviteCode, setInviteCode] = useState('');
   const [showEmbeddedForm, setShowEmbeddedForm] = useState(false);
+  const [showInviteEmailForm, setShowInviteEmailForm] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [isAwaitingVerification, setIsAwaitingVerification] = useState(false);
+  const [inviteEmailInput, setInviteEmailInput] = useState('');
+  const [validatedInviteCode, setValidatedInviteCode] = useState('');
 
   const { ready } = usePrivy();
   const {
@@ -62,7 +67,10 @@ export default function LoginForm({
   const handleInviteSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (!inviteCode.trim()) return;
-    onInviteSubmit(inviteCode);
+
+    // Store the invite code and show email form
+    setValidatedInviteCode(inviteCode);
+    setShowInviteEmailForm(true);
   };
 
   const handleExistingUserLogin = () => {
@@ -101,6 +109,20 @@ export default function LoginForm({
     setIsAwaitingVerification(false);
     setVerificationCode('');
     setEmailInput('');
+  };
+
+  const resetInviteForm = () => {
+    setShowInviteEmailForm(false);
+    setInviteEmailInput('');
+    setValidatedInviteCode('');
+  };
+
+  const handleInviteEmailSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    if (!inviteEmailInput.trim() || !validatedInviteCode) return;
+
+    // Call the parent handler with both invite code and email
+    onInviteWithEmailSubmit(validatedInviteCode, inviteEmailInput.trim());
   };
 
   return (
@@ -343,6 +365,94 @@ export default function LoginForm({
         </div>
       )}
 
+      {/* Invite Email Form - Shows when invite code is entered */}
+      {!isCheckingUser && ready && showInviteEmailForm && (
+        <div className="space-y-4">
+          {/* Back to Invite Code */}
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={resetInviteForm}
+              className="text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors"
+            >
+              ← Back to invite code
+            </button>
+          </div>
+
+          {/* Email Input for New User with Invite */}
+          <form onSubmit={handleInviteEmailSubmit} className="space-y-3">
+            <div>
+              <label
+                htmlFor="invite-email-input"
+                className="block text-xs sm:text-sm font-medium text-zinc-300 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                id="invite-email-input"
+                type="email"
+                value={inviteEmailInput}
+                onChange={(e) => setInviteEmailInput(e.target.value)}
+                placeholder="Enter your email to create account"
+                className={cn(
+                  'w-full px-3 py-3 sm:py-4 rounded-lg text-sm sm:text-base',
+                  'border text-white border-zinc-600',
+                  'placeholder:text-zinc-400',
+                  'focus:outline-none focus:ring-2 focus:border-transparent',
+                  'transition-all duration-200 shadow-sm',
+                  'hover:border-zinc-500',
+                  'min-h-[48px] sm:min-h-[52px]'
+                )}
+                style={
+                  {
+                    backgroundColor: '#383838',
+                    '--tw-ring-color': brandingConfig.primaryColor,
+                  } as React.CSSProperties & { '--tw-ring-color': string }
+                }
+                autoComplete="email"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!inviteEmailInput || isValidating || isAuthenticating}
+              className={cn(
+                'w-full min-h-[48px] sm:min-h-[52px] text-sm sm:text-base font-semibold rounded-lg',
+                'text-white',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'transition-colors duration-200',
+                'flex items-center justify-center gap-2'
+              )}
+              style={{
+                backgroundColor: brandingConfig.primaryColor,
+              }}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = getDarkerShade(
+                    brandingConfig.primaryColor
+                  );
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
+                }
+              }}
+            >
+              {isValidating || isAuthenticating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>
+                    {isValidating ? authConfig.validatingText : authConfig.authenticatingText}
+                  </span>
+                </>
+              ) : (
+                <span>Create Account with Invite</span>
+              )}
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Divider */}
       <div className="flex items-center gap-2 py-2 sm:py-2">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent" />
@@ -351,7 +461,7 @@ export default function LoginForm({
       </div>
 
       {/* Invite Code Form */}
-      {ready && (
+      {ready && !showInviteEmailForm && (
         <form onSubmit={handleInviteSubmit} className="space-y-4 sm:space-y-5">
           <div>
             <label
