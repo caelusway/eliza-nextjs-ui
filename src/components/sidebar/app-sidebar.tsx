@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { usePrivy } from '@privy-io/react-auth';
 import { cn } from '@/lib/utils';
-import { PanelLeftClose, PanelLeft } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, UserPlus } from 'lucide-react';
 import { SidebarHeader } from './sidebar-header';
 import { NewChatButton } from './new-chat-button';
 import { NavigationMenu } from './navigation-menu';
@@ -30,6 +30,7 @@ export function AppSidebar({
   onMobileMenuToggle,
 }: AppSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { getUserId, getUserName, isUserAuthenticated } = useUserManager();
   const { logout } = usePrivy();
 
@@ -69,10 +70,10 @@ export function AppSidebar({
   return (
     <div
       className={cn(
-        'flex flex-col h-screen bg-zinc-50 dark:bg-[#1f1f1f] border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
+        'flex flex-col h-full bg-zinc-50 dark:bg-[#1f1f1f] border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
         // Mobile: always full width, Desktop: respect collapsed state
         'w-72 sm:w-72 md:w-72',
-        isCollapsed ? 'lg:w-16 xl:w-20' : 'lg:w-72 xl:w-80'
+        isCollapsed ? 'lg:w-16 xl:w-16' : 'lg:w-72 xl:w-80'
       )}
     >
       {/* Header */}
@@ -88,67 +89,66 @@ export function AppSidebar({
       <div className="flex-1 overflow-y-auto">
         {/* Desktop Collapsed Mode - Icon-only layout */}
         {isCollapsed && (
-          <div className="hidden lg:flex lg:flex-col lg:items-center lg:justify-start lg:space-y-3 lg:px-2 lg:py-4 xl:space-y-4 xl:px-3">
-            {/* New Chat Button */}
-            <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={isCollapsed} />
+          <div className="hidden lg:flex lg:flex-col lg:h-full">
+            {/* Top section with New Chat and navigation icons */}
+            <div className="flex flex-col items-center space-y-3 px-2 py-4">
+              {/* New Chat Button */}
+              <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={isCollapsed} />
 
-            {/* Account Icon */}
-            <button
-              onClick={() => router.push('/account')}
-              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-[#333333] hover:bg-zinc-300 dark:hover:bg-[#404040] flex items-center justify-center transition-colors group"
-              title={sidebarConfig.accountButtonTitle}
-              style={
-                {
-                  '--tw-ring-color': `${brandingConfig.primaryColor}33`,
-                } as React.CSSProperties & { '--tw-ring-color': string }
-              }
-              onFocus={(e) => {
-                e.currentTarget.style.outlineColor = brandingConfig.primaryColor;
-              }}
-            >
-              <svg
-                className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              {/* Invite Icon */}
+              <button
+                onClick={handleInvitesNavigation}
+                className={cn(
+                  'w-10 h-10 rounded-lg flex items-center justify-center transition-colors group',
+                  pathname === '/invites'
+                    ? 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800'
+                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                )}
+                title="Invite Friends"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </button>
+                <UserPlus className="w-5 h-5" />
+              </button>
+            </div>
 
-            {/* Invite Icon */}
-            <button
-              onClick={handleInvitesNavigation}
-              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-[#333333] hover:bg-zinc-300 dark:hover:bg-[#404040] flex items-center justify-center transition-colors group"
-              title={sidebarConfig.inviteButtonTitle}
-              style={
-                {
-                  '--tw-ring-color': `${brandingConfig.primaryColor}33`,
-                } as React.CSSProperties & { '--tw-ring-color': string }
-              }
-              onFocus={(e) => {
-                e.currentTarget.style.outlineColor = brandingConfig.primaryColor;
-              }}
-            >
-              <svg
-                className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Bottom section with Account and Logout */}
+            <div className="mt-auto flex flex-col items-center space-y-3 px-2 py-4 border-t border-zinc-200 dark:border-zinc-700">
+              {/* Account Icon */}
+              <button
+                onClick={() => router.push('/account')}
+                className={cn(
+                  'w-10 h-10 rounded-lg flex items-center justify-center transition-colors group',
+                  pathname === '/account'
+                    ? 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800'
+                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                )}
+                title="Account"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-            </button>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </button>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                title={sidebarConfig.logOutText}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
 
@@ -180,13 +180,15 @@ export function AppSidebar({
         )}
       </div>
 
-      {/* Footer */}
-      <UserProfile
-        isCollapsed={isCollapsed}
-        userName={getUserName()}
-        userId={userId}
-        onLogout={handleLogout}
-      />
+      {/* Footer - Only show in expanded mode */}
+      {!isCollapsed && (
+        <UserProfile
+          isCollapsed={isCollapsed}
+          userName={getUserName()}
+          userId={userId}
+          onLogout={handleLogout}
+        />
+      )}
     </div>
   );
 }

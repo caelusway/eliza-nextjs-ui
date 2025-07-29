@@ -21,6 +21,7 @@ import { useUserManager } from '@/lib/user-manager';
 import { getUserRowIdByPrivyId } from '@/services/user-service';
 import { getVoteStats, getUserVote, toggleVote } from '@/services/vote-service';
 import { VoteStats } from '@/lib/supabase/types';
+import { cleanTextForAudio } from '@/utils/clean-text-for-audio';
 
 // Get agent ID from environment
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -270,7 +271,7 @@ export const ChatMessage = memo(function ChatMessage({
         // User Message - Right aligned with bubble
         <div className="flex justify-end mb-2">
           <div className="flex flex-col items-end max-w-[80%]">
-            <div className="bg-zinc-100 dark:bg-[#1f1f1f] text-white rounded-2xl px-4 py-3 shadow-sm">
+            <div className="bg-zinc-700 text-white rounded-2xl px-4 py-3 shadow-sm">
               <div className="text-white text-sm">
                 <ChatMarkdown content={message.text ?? ''} />
               </div>
@@ -290,11 +291,11 @@ export const ChatMessage = memo(function ChatMessage({
             {/* Action Buttons */}
             <div className="flex items-center gap-3 mt-3">
               {/* Play Sound Button */}
-              {message.text && message.text.trim() && (
-                <div className="flex items-center gap-1">
-                  <PlaySoundButton text={message.text} />
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">Play audio</span>
-                </div>
+              {message.text && message.text.trim() && cleanTextForAudio(message.text) && (
+                <PlaySoundButton
+                  text={message.text}
+                  className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors p-1 rounded hover:bg-zinc-200 dark:hover:bg-[#404040]"
+                />
               )}
 
               {/* Copy Button */}

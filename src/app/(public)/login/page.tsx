@@ -176,12 +176,45 @@ function LoginPageContent() {
     // If valid, proceed with authentication
     setIsAuthenticating(true);
     try {
-      await login();
+      await login({
+        loginMethods: ['email'],
+      });
     } catch (err) {
       setError('Authentication failed');
       setIsAuthenticating(false);
       PostHogTracking.getInstance().authError(
         'invite_login_failed',
+        err instanceof Error ? err.message : 'Authentication failed'
+      );
+    }
+  };
+
+  const handleInviteWithEmailSubmit = async (code: string, email: string) => {
+    setInviteCode(code);
+    setIsAuthenticating(true);
+    setError('');
+
+    try {
+      // Validate invite first
+      const result = await validateInvite(code);
+      if (!result) {
+        setIsAuthenticating(false);
+        return;
+      }
+
+      // Store the email and invite code for later use during authentication
+      localStorage.setItem('pending-invite-email', email);
+      localStorage.setItem('pending-invite-code', code);
+
+      // Use loginWithOAuth to create account with email
+      await login({
+        loginMethods: ['email'],
+      });
+    } catch (err) {
+      setError('Authentication failed');
+      setIsAuthenticating(false);
+      PostHogTracking.getInstance().authError(
+        'invite_email_login_failed',
         err instanceof Error ? err.message : 'Authentication failed'
       );
     }
@@ -320,6 +353,7 @@ function LoginPageContent() {
             <div className="pt-2 sm:pt-3 md:pt-4 relative">
               <LoginForm
                 onInviteSubmit={handleInviteSubmit}
+                onInviteWithEmailSubmit={handleInviteWithEmailSubmit}
                 isValidating={isValidating}
                 isAuthenticating={isAuthenticating}
                 error={error}

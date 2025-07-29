@@ -3,15 +3,16 @@
 import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { Loader2 } from 'lucide-react';
 import { useState, useRef } from 'react';
-import { Button } from '@/components/ui';
 import { PostHogTracking } from '@/lib/posthog';
+import { cleanTextForAudio } from '@/utils/clean-text-for-audio';
 
 interface PlaySoundButtonProps {
   text: string;
   className?: string;
+  onPlay?: () => void;
 }
 
-export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
+export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -19,19 +20,14 @@ export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
   const handlePlay = async () => {
     if (isLoading || isPlaying) return;
 
+    // Call the onPlay callback if provided
+    onPlay?.();
+
     try {
       setIsLoading(true);
 
-      // Clean the text - remove markdown and HTML tags
-      const cleanText = text
-        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-        .replace(/`[^`]*`/g, '') // Remove inline code
-        .replace(/\*\*([^*]*)\*\*/g, '$1') // Remove bold markdown
-        .replace(/\*([^*]*)\*/g, '$1') // Remove italic markdown
-        .replace(/#{1,6}\s+/g, '') // Remove headers
-        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Remove links, keep text
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .trim();
+      // Clean the text - remove citations, links, and other non-speakable content
+      const cleanText = cleanTextForAudio(text);
 
       if (!cleanText) {
         console.warn('[PlaySound] No text to convert after cleaning');
@@ -113,20 +109,20 @@ export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
   };
 
   return (
-    <Button
+    <button
       type="button"
       onClick={isPlaying ? handleStop : handlePlay}
       disabled={isLoading}
-      plain
       aria-label={isPlaying ? 'Stop audio' : 'Play audio'}
-      className={`size-6 ${className}`}
+      className={className}
     >
       {isLoading ? (
-        <Loader2 className="!h-3 !w-3 !shrink-0 animate-spin" />
+        <Loader2 className="w-3 h-3 shrink-0 animate-spin" />
       ) : (
-        <SpeakerWaveIcon className={`!h-3 !w-3 !shrink-0 ${isPlaying ? 'text-blue-500' : ''}`} />
+        <SpeakerWaveIcon className={`w-3 h-3 shrink-0 ${isPlaying ? 'text-blue-500' : ''}`} />
       )}
-    </Button>
+      <span>Play audio</span>
+    </button>
   );
 };
 

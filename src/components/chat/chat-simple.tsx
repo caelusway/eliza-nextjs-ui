@@ -19,6 +19,7 @@ import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 import { useUserManager } from '@/lib/user-manager';
 import { PostHogTracking } from '@/lib/posthog';
+import { logUserPrompt } from '@/services/prompt-service';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -316,7 +317,7 @@ export const Chat = ({
         try {
           console.log(`[Chat] Loading session from API: ${sessionId}`);
 
-          const response = await fetch(
+          const response = await authenticatedFetch(
             `/api/chat-session/${sessionId}?userId=${encodeURIComponent(currentUserId)}`
           );
 
@@ -383,13 +384,10 @@ export const Chat = ({
         setAgentStatus('checking');
 
         try {
-          const addAgentResponse = await fetch(
+          const addAgentResponse = await authenticatedFetch(
             `/api/eliza/messaging/central-channels/${centralChannelId}/agents`,
             {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
               body: JSON.stringify({
                 agentId: agentId,
               }),
@@ -479,6 +477,26 @@ export const Chat = ({
       };
 
       setMessages((prev) => [...prev, userMessage]);
+
+      // Log user prompt to database
+      const logPrompt = async () => {
+        try {
+          console.log('[Chat] Logging user prompt to database:', {
+            userId: currentUserId,
+            content: finalMessageText,
+          });
+          const result = await logUserPrompt(currentUserId, finalMessageText);
+          if (!result.success) {
+            console.warn('[Chat] Failed to log user prompt:', result.error);
+          } else {
+            console.log('[Chat] User prompt logged successfully:', result.promptId);
+          }
+        } catch (error) {
+          console.warn('[Chat] Error logging user prompt:', error);
+        }
+      };
+
+      logPrompt();
 
       // Track message sent event
       const posthog = PostHogTracking.getInstance();
@@ -578,13 +596,10 @@ export const Chat = ({
         console.log('[Chat] Ensuring agent is in channel for new session...');
 
         // Add agent to the specific session channel
-        const addAgentResponse = await fetch(
+        const addAgentResponse = await authenticatedFetch(
           `/api/eliza/messaging/central-channels/${channelId}/agents`,
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
               agentId: agentId,
             }),
@@ -614,12 +629,12 @@ export const Chat = ({
     const verifyAgentReadiness = async (): Promise<boolean> => {
       try {
         // Check if agent is in the channel participants
-        const channelResponse = await fetch(`/api/eliza/messaging/central-channels/${channelId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const channelResponse = await authenticatedFetch(
+          `/api/eliza/messaging/central-channels/${channelId}`,
+          {
+            method: 'GET',
+          }
+        );
 
         if (channelResponse.ok) {
           const channelData = await channelResponse.json();

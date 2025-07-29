@@ -54,9 +54,7 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
           'flex items-center rounded-lg transition-colors',
           'text-white border border-dashed border-white/20 hover:border-white/40',
           'disabled:opacity-50 disabled:cursor-not-allowed',
-          isCollapsed
-            ? 'w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 justify-center'
-            : 'w-full gap-3 p-3'
+          isCollapsed ? 'w-10 h-10 justify-center' : 'w-full gap-3 p-3'
         )}
         style={{
           backgroundColor: brandingConfig.primaryColor,
@@ -69,12 +67,7 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
         }}
         title={isCollapsed ? sidebarConfig.newChatText : undefined}
       >
-        <Plus
-          className={cn(
-            'flex-shrink-0',
-            isCollapsed ? 'w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6' : 'w-4 h-4'
-          )}
-        />
+        <Plus className={cn('flex-shrink-0', isCollapsed ? 'w-5 h-5' : 'w-4 h-4')} />
         {!isCollapsed && <span className="text-sm font-medium">{sidebarConfig.newChatText}</span>}
       </button>
     </div>

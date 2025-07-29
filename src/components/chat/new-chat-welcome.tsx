@@ -6,6 +6,7 @@ import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
 import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 import { useSessions } from '@/contexts/SessionsContext';
+import { useCachedPrompts } from '@/hooks/use-cached-prompts';
 
 interface NewChatWelcomeProps {
   userId: string;
@@ -16,11 +17,39 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clickedPrompt, setClickedPrompt] = useState<string | null>(null);
+  const [isFileUploading, setIsFileUploading] = useState(false);
 
   const chatConfig = useUIConfigSection('chat');
   const brandingConfig = useUIConfigSection('branding');
   const authenticatedFetch = useAuthenticatedFetch();
   const { addNewSession } = useSessions();
+  
+  // Use dynamic prompts with caching
+  const { prompts: dynamicPrompts, isLoading: promptsLoading, error: promptsError } = useCachedPrompts(userId);
+  
+  // Fall back to static prompts if dynamic ones fail or are loading
+  const suggestedPrompts = (dynamicPrompts.length > 0) ? dynamicPrompts : chatConfig.suggestedPrompts;
+
+  // Handler for speech-to-text input
+  const handleTranscript = (transcript: string) => {
+    setInput(prev => prev + transcript);
+  };
+
+  // Handler for file upload
+  const handleFileUpload = async (file: File, _uploadResult: any) => {
+    try {
+      // Add file reference to input if needed
+      const fileReference = `[File: ${file.name}]`;
+      setInput(prev => prev ? `${prev}\n\n${fileReference}` : fileReference);
+    } catch (error) {
+      console.error('[NewChatWelcome] File upload error:', error);
+    }
+  };
+
+  // Handler for file upload state changes
+  const handleFileUploadStateChange = (isUploading: boolean) => {
+    setIsFileUploading(isUploading);
+  };
 
   const createAndAddSession = (sessionData: any, initialMessage: string) => {
     // Create the session object in the format expected by the context
@@ -44,7 +73,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   };
 
   const handlePromptClick = async (prompt: string) => {
-    if (!userId || isLoading) return;
+    if (!userId || isLoading || isFileUploading) return;
 
     // Show the prompt in the input box first
     setInput(prompt);
@@ -85,7 +114,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const handleDirectSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
-    if (!userId || !input.trim() || isLoading) return;
+    if (!userId || !input.trim() || isLoading || isFileUploading) return;
 
     try {
       setIsLoading(true);
@@ -146,23 +175,32 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white mb-3">
               {chatConfig.tryAskingText}
+              {promptsLoading && (
+                <span className="ml-2 inline-block w-4 h-4 border-2 border-t-transparent rounded-full animate-spin opacity-60" 
+                      style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }} />
+              )}
             </h2>
             <div 
               className="w-16 h-1 mx-auto rounded-full opacity-80"
               style={{ backgroundColor: brandingConfig.primaryColor }}
             />
+            {promptsError && (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+                Using fallback prompts
+              </p>
+            )}
           </div>
 
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            {chatConfig.suggestedPrompts.map((prompt, index) => {
+            {suggestedPrompts.map((prompt, index) => {
               const isPromptLoading = clickedPrompt === prompt;
               return (
                 <button
                   key={index}
                   onClick={() => handlePromptClick(prompt)}
-                  disabled={isLoading}
+                  disabled={isLoading || isFileUploading}
                   className={`group relative p-4 md:p-5 text-left rounded-xl border transition-all duration-500 ease-out transform ${
-                    isLoading
+                    isLoading || isFileUploading
                       ? 'opacity-50 cursor-not-allowed scale-100'
                       : 'hover:scale-[1.01] hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/25 hover:-translate-y-1'
                   } ${
@@ -211,12 +249,16 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
               onSubmit={handleDirectSubmit}
               isLoading={isLoading}
               placeholder={chatConfig.newChatPlaceholder}
-              disabled={isLoading}
+              disabled={isLoading || isFileUploading}
+              onTranscript={handleTranscript}
+              onFileUpload={handleFileUpload}
+              isFileUploading={isFileUploading}
+              onFileUploadStateChange={handleFileUploadStateChange}
             />
           </div>
 
           {/* Loading feedback */}
-          {isLoading && (
+          {(isLoading || isFileUploading) && (
             <div className="flex items-center justify-center gap-3 mt-4 text-base">
               <div className="relative">
                 <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
@@ -225,7 +267,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
                      style={{ borderTopColor: `${brandingConfig.primaryColor}40` }} />
               </div>
               <span className="font-medium" style={{ color: brandingConfig.primaryColor }}>
-                {chatConfig.creatingSessionText}
+                {isFileUploading ? 'Uploading file...' : chatConfig.creatingSessionText}
               </span>
             </div>
           )}

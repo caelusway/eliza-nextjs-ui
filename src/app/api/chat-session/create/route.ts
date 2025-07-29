@@ -101,7 +101,7 @@ async function createChatSessionHandler(request: NextRequest, user: Authenticate
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': request.headers.get('Authorization') || '', // Pass through the user's auth token
+          Authorization: request.headers.get('Authorization') || '', // Pass through the user's auth token
         },
         body: JSON.stringify({
           userId: userId,

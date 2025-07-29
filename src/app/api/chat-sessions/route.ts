@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
 
-export async function GET(request: NextRequest) {
+async function getChatSessionsHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'userId parameter is required', code: 'MISSING_USER_ID' }, 
-        { status: 400 }
+        { error: 'userId parameter is required', code: 'MISSING_USER_ID' },
+        { status: 400, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Ensure user can only access their own sessions
+    if (userId !== user.userId) {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized - cannot access sessions for different user',
+          code: 'UNAUTHORIZED_USER',
+        },
+        { status: 403, headers: getSecurityHeaders() }
       );
     }
 
@@ -23,11 +35,22 @@ export async function GET(request: NextRequest) {
     const channelsUrl = `${API_BASE_URL}/api/messaging/central-servers/00000000-0000-0000-0000-000000000000/channels`;
     console.log(`[API] Fetching channels from: ${channelsUrl}`);
 
+    // Build headers for ElizaOS server including Privy JWT
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
     const response = await fetch(channelsUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -72,7 +95,7 @@ export async function GET(request: NextRequest) {
               `${API_BASE_URL}/api/messaging/central-channels/${channel.id}/messages?limit=50`,
               {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
               }
             );
 
@@ -148,7 +171,9 @@ export async function GET(request: NextRequest) {
         error: 'Failed to fetch chat sessions',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500, headers: getSecurityHeaders() }
     );
   }
 }
+
+export const GET = withAuth(getChatSessionsHandler);
