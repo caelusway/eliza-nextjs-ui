@@ -25,7 +25,7 @@ async function createChatSessionHandler(request: NextRequest, user: Authenticate
     }
 
     // Check rate limiting
-    const rateLimitResult = checkRateLimit(user.userId, 10, 60 * 1000); // 10 requests per minute
+    const rateLimitResult = checkRateLimit(user.userId, 100, 60 * 1000); // 10 requests per minute
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
