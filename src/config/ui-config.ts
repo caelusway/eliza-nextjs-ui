@@ -301,7 +301,7 @@ const DEFAULT_CONFIG: UIConfig = {
     transitionDuration: parseInt(process.env.NEXT_PUBLIC_LOGIN_SLIDER_TRANSITION_DURATION || '700'),
   },
   loginBranding: {
-    logoImage: process.env.NEXT_PUBLIC_LOGIN_LOGO_IMAGE || '/assets/aubrai_logo_white.png',
+    logoImage: process.env.NEXT_PUBLIC_LOGIN_LOGO_IMAGE || '/assets/aubrai_logo.png',
     logoAlt: process.env.NEXT_PUBLIC_LOGIN_LOGO_ALT || 'AUBRAI Logo',
     logoWidth: parseInt(process.env.NEXT_PUBLIC_LOGIN_LOGO_WIDTH || '180'),
     logoHeight: parseInt(process.env.NEXT_PUBLIC_LOGIN_LOGO_HEIGHT || '45'),
