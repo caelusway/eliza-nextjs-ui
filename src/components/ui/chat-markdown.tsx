@@ -59,10 +59,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, inline }) =>
   );
 };
 
-
 export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({ content, className = '' }) => {
   // Use content as-is without auto-structuring
-  
+
   return (
     <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
       <ReactMarkdown
@@ -94,18 +93,12 @@ export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({ content, className =
             </h3>
           ),
           p: ({ children }) => (
-            <p className="text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed text-sm">{children}</p>
-          ),
-          ul: ({ children }) => (
-            <ul className="mb-4 space-y-2 pl-4">
+            <p className="text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed text-sm">
               {children}
-            </ul>
+            </p>
           ),
-          ol: ({ children }) => (
-            <ol className="mb-4 space-y-2 pl-4">
-              {children}
-            </ol>
-          ),
+          ul: ({ children }) => <ul className="mb-4 space-y-2 pl-4">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-4 space-y-2 pl-4">{children}</ol>,
           li: ({ children }) => (
             <li className="text-zinc-700 dark:text-zinc-300 text-sm flex items-start gap-2">
               <span className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full mt-2 flex-shrink-0"></span>

@@ -306,10 +306,11 @@ export async function getUserInviteStats(userId: string): Promise<UserInviteStat
     }
 
     // Calculate actual remaining codes based on unused invites
-    const unusedInvites = (invites || []).filter(invite => 
-      invite.status !== 'accepted' && 
-      invite.current_uses < invite.max_uses &&
-      new Date(invite.expires_at) > new Date()
+    const unusedInvites = (invites || []).filter(
+      (invite) =>
+        invite.status !== 'accepted' &&
+        invite.current_uses < invite.max_uses &&
+        new Date(invite.expires_at) > new Date()
     );
 
     return {

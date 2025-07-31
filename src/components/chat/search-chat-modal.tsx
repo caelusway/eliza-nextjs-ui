@@ -143,12 +143,12 @@ export const SearchChatModal = ({ isOpen, onClose, onMobileMenuClose }: SearchCh
   // Handle session selection
   const handleSessionSelect = (session: ChatSession) => {
     if (isNavigating || clickedSessionId === session.id) return;
-    
+
     // Show immediate visual feedback
     setClickedSessionId(session.id);
     setIsNavigating(true);
     setCurrentSession(session);
-    
+
     // Small delay to show the visual feedback, then navigate
     setTimeout(() => {
       try {

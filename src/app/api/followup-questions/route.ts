@@ -6,7 +6,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 async function followupQuestionsHandler(req: NextRequest, user: AuthenticatedUser) {
   try {
     console.log('[Followup Questions] Handler called with user:', user.userId);
-    
+
     if (!OPENAI_API_KEY) {
       console.error('[Followup Questions] OpenAI API key not configured');
       return NextResponse.json(
@@ -21,7 +21,7 @@ async function followupQuestionsHandler(req: NextRequest, user: AuthenticatedUse
 
     const body = await req.json();
     const { prompt } = body;
-    
+
     if (!prompt || typeof prompt !== 'string') {
       console.error('[Followup Questions] Invalid or missing prompt');
       return NextResponse.json(
@@ -33,10 +33,10 @@ async function followupQuestionsHandler(req: NextRequest, user: AuthenticatedUse
         { status: 400, headers: getSecurityHeaders() }
       );
     }
-    
+
     console.log('[Followup Questions] Processing prompt for user:', user.userId);
     const questions = await getResponse(prompt);
-    
+
     return NextResponse.json(
       {
         success: true,
@@ -61,13 +61,13 @@ async function getResponse(prompt: string): Promise<{ questions: string[] }> {
   try {
     console.log('[Followup Questions] Making OpenAI API request...');
     const response = await makeRequestToOpenAi(prompt);
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('[Followup Questions] OpenAI API error:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorData
+        error: errorData,
       });
       return { questions: [] };
     } else {
@@ -76,9 +76,11 @@ async function getResponse(prompt: string): Promise<{ questions: string[] }> {
         hasChoices: !!rawResponseFromOai.choices,
         choicesLength: rawResponseFromOai.choices?.length,
         hasMessage: !!rawResponseFromOai.choices?.[0]?.message,
-        messageKeys: rawResponseFromOai.choices?.[0]?.message ? Object.keys(rawResponseFromOai.choices[0].message) : 'none'
+        messageKeys: rawResponseFromOai.choices?.[0]?.message
+          ? Object.keys(rawResponseFromOai.choices[0].message)
+          : 'none',
       });
-      
+
       const questionsText = rawResponseFromOai.choices[0].message.content;
       const parsedQuestions = JSON.parse(questionsText);
       console.log('[Followup Questions] Generated questions:', parsedQuestions);
@@ -96,7 +98,7 @@ async function makeRequestToOpenAi(prompt: string) {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${OPENAI_API_KEY}`,
   };
-  
+
   const body = {
     model: 'gpt-4o',
     messages: [
@@ -113,12 +115,12 @@ async function makeRequestToOpenAi(prompt: string) {
       },
     ],
     response_format: {
-      type: 'json_object'
+      type: 'json_object',
     },
     temperature: 0.7,
     max_tokens: 1000,
   };
-  
+
   console.log('[Followup Questions] Making request to:', baseUrl);
   const response = await fetch(baseUrl, {
     headers,

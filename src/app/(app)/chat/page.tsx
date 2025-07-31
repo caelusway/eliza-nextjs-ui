@@ -5,10 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { NewChatWelcome } from '@/components/chat';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
+import { useAgent } from '@/contexts/AgentContext';
 
 export default function ChatPage() {
+  return <ChatPageContent />;
+}
+
+function ChatPageContent() {
   const router = useRouter();
   const { getUserId, isUserAuthenticated, isReady } = useUserManager();
+  const { serverStatus, agentStatus, connectionStatus, isAgentReady } = useAgent();
 
   const statusConfig = useUIConfigSection('status');
   const brandingConfig = useUIConfigSection('branding');
@@ -39,6 +45,9 @@ export default function ChatPage() {
   if (!isUserAuthenticated()) {
     return null;
   }
+
+  // Agent initialization happens silently in background
+  // No loading UI shown on welcome page
 
   return <NewChatWelcome userId={userId} />;
 }
