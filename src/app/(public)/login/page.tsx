@@ -30,7 +30,6 @@ function LoginPageContent() {
   const loginConfig = useUIConfigSection('login');
   const brandingConfig = useUIConfigSection('branding');
   const loginBrandingConfig = useUIConfigSection('loginBranding');
-  const sliderConfig = useUIConfigSection('loginSlider');
 
   const [inviteCode, setInviteCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
@@ -38,7 +37,6 @@ function LoginPageContent() {
   const [validationResult, setValidationResult] = useState<InviteValidationResult | null>(null);
   const [error, setError] = useState('');
   const [isCheckingExistingUser, setIsCheckingExistingUser] = useState(false);
-  const [showExistingUserMode, setShowExistingUserMode] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Check for invite code in URL params on mount
@@ -333,7 +331,8 @@ function LoginPageContent() {
               alt={loginBrandingConfig.logoAlt}
               width={loginBrandingConfig.logoWidth}
               height={loginBrandingConfig.logoHeight}
-              className="h-4 sm:h-4 md:h-5 lg:h-6 w-auto mx-auto lg:mx-0"
+              className="max-h-8 sm:max-h-10 md:max-h-12 lg:max-h-16 w-auto mx-auto lg:mx-0"
+              priority
             />
           </div>
 

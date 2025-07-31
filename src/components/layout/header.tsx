@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, LogIn, User, ChevronDown, Settings, LogOut } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu, X, User, ChevronDown, Settings, LogOut } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,6 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const pathname = usePathname();
-  const router = useRouter();
   const { login, logout, authenticated, user, ready } = usePrivy();
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export function Header() {
     return typeof user.email === 'string' ? user.email : user.email.address;
   };
 
-  const isTerminalPage = pathname === '/terminal';
   const isLandingPage = pathname === '/';
   const isAppRoute = pathname.startsWith('/chat') || pathname.startsWith('/account');
 
