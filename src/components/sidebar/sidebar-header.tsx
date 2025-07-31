@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageSquare, PanelLeftClose, PanelLeft, X } from 'lucide-react';
+import {  PanelLeftClose, PanelLeft, X } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
@@ -18,8 +18,6 @@ interface SidebarHeaderProps {
 export function SidebarHeader({
   isCollapsed,
   onToggleCollapse,
-  isConnected,
-  isMobileMenuOpen = false,
   onMobileMenuToggle,
 }: SidebarHeaderProps) {
   const router = useRouter();
@@ -42,17 +40,17 @@ export function SidebarHeader({
           onClick={handleLogoClick}
           className="flex items-center gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7  flex items-center justify-center flex-shrink-0">
             <Image
-              src="/assets/new_logo.png"
+              src="/assets/logo_simple.png"
               alt="Logo"
-              width={32}
-              height={32}
-              className="w-8 h-8 rounded-full object-contain"
+              width={80}
+              height={80}
+              className="object-contain"
             />
           </div>
           <div className="flex items-center min-w-0">
-            <h1 className="font-semibold text-zinc-900 dark:text-white leading-tight">
+            <h1 className="font-semibold text-zinc-900 dark:text-white leading-tight text-xl">
               {brandingConfig.appName}
             </h1> {/*
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
