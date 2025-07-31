@@ -16,7 +16,10 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
   // Define public routes that don't require authentication
   const publicRoutes = ['/', '/login', '/privacy', '/terms', '/about'];
 
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/invite');
+  const isPublicRoute =
+    publicRoutes.includes(pathname) ||
+    pathname.startsWith('/invite') ||
+    pathname.startsWith('/chats/');
 
   useEffect(() => {
     if (!ready) return; // Wait for Privy to initialize

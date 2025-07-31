@@ -37,11 +37,15 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
       // Check text length to prevent very long requests
       if (cleanText.length > 5000) {
         console.warn('[PlaySound] Text too long for TTS:', cleanText.length);
-        alert('Text is too long for audio conversion. Please try with shorter text (max 5000 characters).');
+        alert(
+          'Text is too long for audio conversion. Please try with shorter text (max 5000 characters).'
+        );
         return;
       }
 
-      console.log(`[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..." (${cleanText.length} chars)`);
+      console.log(
+        `[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..." (${cleanText.length} chars)`
+      );
 
       // For longer texts, warn user that it might take a while
       if (cleanText.length > 1000) {
@@ -61,7 +65,7 @@ export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProp
         console.error('[PlaySound] TTS API error:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorData
+          error: errorData,
         });
         throw new Error(errorData.error || `TTS failed: ${response.status} ${response.statusText}`);
       }

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { usePrivy } from '@privy-io/react-auth';
 import { cn } from '@/lib/utils';
-import { PanelLeftClose, PanelLeft, UserPlus } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, UserPlus, Share2, Search } from 'lucide-react';
 import { SidebarHeader } from './sidebar-header';
 import { NewChatButton } from './new-chat-button';
 import { NavigationMenu } from './navigation-menu';
@@ -20,6 +20,7 @@ interface AppSidebarProps {
   isConnected: boolean;
   isMobileMenuOpen?: boolean;
   onMobileMenuToggle?: () => void;
+  onSearchOpen?: () => void;
 }
 
 export function AppSidebar({
@@ -28,6 +29,7 @@ export function AppSidebar({
   isConnected,
   isMobileMenuOpen = false,
   onMobileMenuToggle,
+  onSearchOpen,
 }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -57,6 +59,14 @@ export function AppSidebar({
 
   const handleInvitesNavigation = useCallback(() => {
     router.push('/invites');
+    // Close mobile menu when navigating
+    if (onMobileMenuToggle) {
+      onMobileMenuToggle();
+    }
+  }, [router, onMobileMenuToggle]);
+
+  const handleSharedSessionsNavigation = useCallback(() => {
+    router.push('/shared-sessions');
     // Close mobile menu when navigating
     if (onMobileMenuToggle) {
       onMobileMenuToggle();
@@ -95,6 +105,15 @@ export function AppSidebar({
               {/* New Chat Button */}
               <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={isCollapsed} />
 
+              {/* Search Icon */}
+              <button
+                onClick={onSearchOpen}
+                className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 transition-colors group"
+                title="Search Chats (⌘K)"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+
               {/* Invite Icon */}
               <button
                 onClick={handleInvitesNavigation}
@@ -107,6 +126,20 @@ export function AppSidebar({
                 title="Invite Friends"
               >
                 <UserPlus className="w-5 h-5" />
+              </button>
+
+              {/* Shared Sessions Icon */}
+              <button
+                onClick={handleSharedSessionsNavigation}
+                className={cn(
+                  'w-10 h-10 rounded-lg flex items-center justify-center transition-colors group',
+                  pathname === '/shared-sessions'
+                    ? 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800'
+                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                )}
+                title="Shared Sessions"
+              >
+                <Share2 className="w-5 h-5" />
               </button>
             </div>
 
@@ -162,7 +195,7 @@ export function AppSidebar({
 
             {/* Menu Section */}
             <div className="mb-1">
-              <NavigationMenu onMobileMenuClose={onMobileMenuToggle} />
+              <NavigationMenu onMobileMenuClose={onMobileMenuToggle} onSearchOpen={onSearchOpen} />
             </div>
             {/* Divider */}
             <div className="mx-4 border-t border-gray-200 dark:border-gray-600" />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Copy,
   UserPlus,
@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
+import { useUserManager } from '@/lib/user-manager';
 
 interface InviteCode {
   id: string;
@@ -74,6 +76,8 @@ const Toast = ({ message, isVisible }: { message: string; isVisible: boolean }) 
 export default function InvitesPage() {
   const router = useRouter();
   const { user } = usePrivy();
+  const { getUserId } = useUserManager();
+  const authenticatedFetch = useAuthenticatedFetch();
   const [inviteStats, setInviteStats] = useState<UserInviteStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -83,12 +87,7 @@ export default function InvitesPage() {
   const [emailDialogInvite, setEmailDialogInvite] = useState<InviteCode | null>(null);
   const [emailInput, setEmailInput] = useState('');
   const [senderName, setSenderName] = useState('');
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchInviteStats();
-    }
-  }, [user?.id]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);
@@ -96,18 +95,19 @@ export default function InvitesPage() {
     setTimeout(() => setShowToast(false), 2000);
   };
 
-  const fetchInviteStats = async () => {
-    if (!user?.id) return;
+  const fetchInviteStats = useCallback(async () => {
+    const userId = getUserId();
+    if (!userId) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/invites/my-codes', {
+      const response = await authenticatedFetch('/api/invites/my-codes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          userId: userId,
         }),
       });
 
@@ -115,14 +115,22 @@ export default function InvitesPage() {
         const data = await response.json();
         setInviteStats(data);
       } else {
-        console.error('Failed to fetch invite stats');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to fetch invite stats:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error fetching invite stats:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [authenticatedFetch]);
+
+  useEffect(() => {
+    const userId = getUserId();
+    if (userId) {
+      fetchInviteStats();
+    }
+  }, [fetchInviteStats]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -137,13 +145,43 @@ export default function InvitesPage() {
     });
   };
 
+  const handleGenerateInvites = async () => {
+    const userId = getUserId();
+    if (!userId) return;
+
+    setIsGenerating(true);
+    try {
+      const response = await authenticatedFetch('/api/invites/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+        }),
+      });
+
+      if (response.ok) {
+        showToastMessage('Invite codes generated successfully!');
+        await fetchInviteStats(); // Refresh the data
+      } else {
+        const error = await response.json().catch(() => ({}));
+        showToastMessage(`Error: ${error.error || 'Failed to generate invite codes'}`);
+      }
+    } catch (error) {
+      showToastMessage('Error generating invite codes');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleSendInvite = async (inviteCode: InviteCode) => {
     if (!emailInput.trim()) return;
 
     setIsSending(inviteCode.id);
 
     try {
-      const response = await fetch('/api/invites/send', {
+      const response = await authenticatedFetch('/api/invites/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +200,7 @@ export default function InvitesPage() {
         setEmailDialogInvite(null);
         await fetchInviteStats();
       } else {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         showToastMessage(`Error: ${error.error || 'Failed to send invite'}`);
       }
     } catch (error) {
@@ -177,17 +215,28 @@ export default function InvitesPage() {
     return new Date() > new Date(invite.expires_at);
   };
 
+  const isUsedOrAccepted = (invite: InviteCode) => {
+    return invite.status === 'accepted' || invite.current_uses >= (invite.max_uses || 1);
+  };
+
   const getStatusBadge = (invite: InviteCode) => {
     let status = invite.status || 'pending';
+    
+    // Check various conditions that affect status
     if (isExpired(invite)) {
       status = 'expired';
+    } else if (isUsedOrAccepted(invite)) {
+      status = 'accepted';
     }
+    
     const colors = {
       pending: 'bg-yellow-500/20 text-yellow-400',
       email_sent: 'bg-blue-500/20 text-blue-400',
       accepted: 'bg-green-500/20 text-green-400',
       expired: 'bg-red-500/20 text-red-400',
     };
+
+    const displayText = status === 'accepted' && invite.current_uses > 0 ? 'used' : status.replace('_', ' ');
 
     return (
       <span
@@ -202,13 +251,13 @@ export default function InvitesPage() {
         {status === 'email_sent' && <Mail className="w-3 h-3" />}
         {status === 'pending' && <Clock className="w-3 h-3" />}
         {status === 'expired' && <X className="w-3 h-3" />}
-        {status.replace('_', ' ')}
+        {displayText}
       </span>
     );
   };
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="h-full bg-background overflow-auto">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-12">
@@ -241,11 +290,7 @@ export default function InvitesPage() {
               <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-md font-medium">
                 <Badge className="w-4 h-4 text-[#FF6E71]" />
                 <span className="font-semibold">
-                  {
-                    inviteStats.invites.filter(
-                      (invite) => !isExpired(invite) && invite.status !== 'accepted'
-                    ).length
-                  }
+                  {inviteStats.remaining_codes}
                 </span>
                 <span className="hidden sm:inline">codes remaining</span>
               </div>
@@ -257,104 +302,137 @@ export default function InvitesPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : inviteStats ? (
-            <div className="space-y-0">
-              {inviteStats.invites.map((invite, index) => (
-                <div
-                  key={invite.id}
-                  className={cn(
-                    'bg-muted/30 rounded-lg p-5 hover:bg-muted/50 transition-colors',
-                    index !== inviteStats.invites.length - 1 && 'border-b border-border/20'
-                  )}
+            inviteStats.invites.length === 0 && inviteStats.remaining_codes > 0 ? (
+              // Show generate button when user has remaining codes but no actual invite codes
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-[#FF6E71]/10 rounded-xl flex items-center justify-center">
+                  <UserPlus className="w-8 h-8 text-[#FF6E71]" />
+                </div>
+                <p className="text-lg font-medium text-foreground mb-2">
+                  Ready to Generate Invite Codes
+                </p>
+                <p className="text-muted-foreground mb-6">
+                  You have {inviteStats.remaining_codes} invite code
+                  {inviteStats.remaining_codes !== 1 ? 's' : ''} available to generate.
+                </p>
+                <button
+                  onClick={handleGenerateInvites}
+                  disabled={isGenerating}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-                    <div className="min-w-0 lg:w-80 xl:w-96">
-                      <div className="flex flex-wrap items-center gap-3 mb-4">
-                        <code className="px-3 py-2 bg-secondary rounded-md text-sm font-mono font-medium">
-                          {invite.code}
-                        </code>
-                        {getStatusBadge(invite)}
-                        {invite.is_legacy && (
-                          <span className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs transition-all duration-300 backdrop-blur-sm">
-                            Legacy
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      Generate Invite Codes
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-0">
+                {inviteStats.invites.map((invite, index) => (
+                  <div
+                    key={invite.id}
+                    className={cn(
+                      'bg-muted/30 rounded-lg p-5 hover:bg-muted/50 transition-colors',
+                      index !== inviteStats.invites.length - 1 && 'border-b border-border/20'
+                    )}
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                      <div className="min-w-0 lg:w-80 xl:w-96">
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                          <code className="px-3 py-2 bg-secondary rounded-md text-sm font-mono font-medium">
+                            {invite.code}
+                          </code>
+                          {getStatusBadge(invite)}
+                          {invite.is_legacy && (
+                            <span className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs transition-all duration-300 backdrop-blur-sm">
+                              Legacy
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">
+                              {formatDistanceToNow(new Date(invite.created_at), {
+                                addSuffix: true,
+                              })}
+                            </span>
                           </span>
-                        )}
+
+                          {invite.email_sent_to && (
+                            <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
+                              <Mail className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{invite.email_sent_to}</span>
+                            </span>
+                          )}
+
+                          {invite.current_uses !== undefined && invite.max_uses !== undefined && (
+                            <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
+                              <Users className="w-3 h-3 flex-shrink-0" />
+                              {invite.current_uses}/{invite.max_uses} uses
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
-                          <Calendar className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">
-                            {formatDistanceToNow(new Date(invite.created_at), { addSuffix: true })}
-                          </span>
-                        </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {isExpired(invite) || isUsedOrAccepted(invite) ? (
+                          <>
+                            <button
+                              disabled
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-md text-sm opacity-50 cursor-not-allowed font-medium"
+                            >
+                              <Copy className="w-3 h-3" />
+                              <span className="hidden sm:inline">Copy</span>
+                            </button>
 
-                        {invite.email_sent_to && (
-                          <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
-                            <Mail className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{invite.email_sent_to}</span>
-                          </span>
-                        )}
+                            <button
+                              disabled
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-md text-sm opacity-50 cursor-not-allowed font-medium"
+                            >
+                              <Link className="w-3 h-3" />
+                              <span className="hidden sm:inline">Link</span>
+                            </button>
 
-                        {invite.current_uses !== undefined && invite.max_uses !== undefined && (
-                          <span className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded text-xs font-medium">
-                            <Users className="w-3 h-3 flex-shrink-0" />
-                            {invite.current_uses}/{invite.max_uses} uses
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                            <button
+                              disabled
+                              className="flex items-center gap-1 px-3 py-1.5 bg-red-500/30 text-red-400 rounded-lg text-sm opacity-50 cursor-not-allowed"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span className="hidden sm:inline">Send</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => copyToClipboard(invite.code, 'Invite code copied!')}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium"
+                            >
+                              <Copy className="w-3 h-3" />
+                              <span className="hidden sm:inline">Copy</span>
+                            </button>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      {isExpired(invite) ? (
-                        <>
-                          <button
-                            disabled
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-md text-sm opacity-50 cursor-not-allowed font-medium"
-                          >
-                            <Copy className="w-3 h-3" />
-                            <span className="hidden sm:inline">Copy</span>
-                          </button>
+                            <button
+                              onClick={() =>
+                                copyToClipboard(
+                                  `${window.location.origin}/login?invite=${invite.code}`,
+                                  'Invite link copied!'
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium"
+                            >
+                              <Link className="w-3 h-3" />
+                              <span className="hidden sm:inline">Link</span>
+                            </button>
 
-                          <button
-                            disabled
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-md text-sm opacity-50 cursor-not-allowed font-medium"
-                          >
-                            <Link className="w-3 h-3" />
-                            <span className="hidden sm:inline">Link</span>
-                          </button>
-
-                          <button
-                            disabled
-                            className="flex items-center gap-1 px-3 py-1.5 bg-red-500/30 text-red-400 rounded-lg text-sm opacity-50 cursor-not-allowed"
-                          >
-                            <Send className="w-3 h-3" />
-                            <span className="hidden sm:inline">Send</span>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => copyToClipboard(invite.code, 'Invite code copied!')}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium"
-                          >
-                            <Copy className="w-3 h-3" />
-                            <span className="hidden sm:inline">Copy</span>
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              copyToClipboard(
-                                `${window.location.origin}/login?invite=${invite.code}`,
-                                'Invite link copied!'
-                              )
-                            }
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium"
-                          >
-                            <Link className="w-3 h-3" />
-                            <span className="hidden sm:inline">Link</span>
-                          </button>
-
-                          {invite.status !== 'accepted' && (
                             <button
                               onClick={() => setEmailDialogInvite(invite)}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors text-sm font-medium"
@@ -362,14 +440,14 @@ export default function InvitesPage() {
                               <Send className="w-3 h-3" />
                               <span className="hidden sm:inline">Send</span>
                             </button>
-                          )}
-                        </>
-                      )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-xl flex items-center justify-center">

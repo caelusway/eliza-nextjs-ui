@@ -31,7 +31,7 @@ export interface AuthenticatedUser {
  */
 export async function authenticateRequest(request: NextRequest): Promise<AuthenticatedUser | null> {
   const authStartTime = Date.now();
-  
+
   try {
     // Extract token from Authorization header
     const authHeader = request.headers.get('authorization');
@@ -57,7 +57,7 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
     const verifyStartTime = Date.now();
     const verifiedClaims = await privyClient.verifyAuthToken(token);
     const verifyTime = Date.now() - verifyStartTime;
-    
+
     console.log(`[Auth] Token verification took ${verifyTime}ms`);
 
     if (!verifiedClaims) {
@@ -109,13 +109,13 @@ export async function authenticateRequest(request: NextRequest): Promise<Authent
   } catch (error) {
     const totalAuthTime = Date.now() - authStartTime;
     console.error(`[Auth] JWT verification failed after ${totalAuthTime}ms:`, error);
-    
+
     // Log more details about the error
     if (error instanceof Error) {
       console.error('[Auth] Error name:', error.name);
       console.error('[Auth] Error message:', error.message);
     }
-    
+
     return null;
   }
 }
@@ -295,22 +295,22 @@ export function validateOrigin(request: NextRequest): boolean {
     origin,
     referer,
     allowedOrigins,
-    vercelUrl: process.env.VERCEL_URL
+    vercelUrl: process.env.VERCEL_URL,
   });
 
   // Check origin header
   if (origin && !allowedOrigins.includes(origin)) {
     console.warn('[CSRF] Origin not allowed:', origin);
-    
+
     // In development, be more permissive
-    const isDevelopment = process.env.NODE_ENV === 'development' || 
-                         process.env.NEXT_PUBLIC_NODE_ENV === 'development';
-    
+    const isDevelopment =
+      process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_NODE_ENV === 'development';
+
     if (isDevelopment) {
       console.log('[CSRF] Allowing origin in development mode');
       return true;
     }
-    
+
     return false;
   }
 
@@ -318,7 +318,7 @@ export function validateOrigin(request: NextRequest): boolean {
   if (!origin && referer) {
     const refererUrl = new URL(referer);
     const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
-    
+
     if (!allowedOrigins.includes(refererOrigin)) {
       console.warn('[CSRF] Referer not allowed:', refererOrigin);
       return false;

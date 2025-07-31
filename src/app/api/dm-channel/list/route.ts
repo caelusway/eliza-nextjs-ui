@@ -1,23 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
 const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 
-export async function GET(request: NextRequest) {
+async function listDMChannelsHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const agentId = searchParams.get('agentId');
 
     if (!userId || !agentId) {
-      return NextResponse.json({ error: 'userId and agentId are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId and agentId are required' },
+        { status: 400, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Ensure user can only list their own channels
+    if (userId !== user.userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - cannot list channels for different user' },
+        { status: 403, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Build headers for ElizaOS server including Privy JWT
+    const elizaHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      elizaHeaders['Authorization'] = authHeader;
     }
 
     // Get all channels from the server
     const channelsResponse = await fetch(`${ELIZA_SERVER_URL}/api/messaging/central-channels`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: elizaHeaders,
     });
 
     if (!channelsResponse.ok) {
@@ -58,11 +81,14 @@ export async function GET(request: NextRequest) {
       return bDate - aDate;
     });
 
-    return NextResponse.json({
-      success: true,
-      channels: dmChannels,
-      count: dmChannels.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        channels: dmChannels,
+        count: dmChannels.length,
+      },
+      { headers: getSecurityHeaders() }
+    );
   } catch (error) {
     console.error('[DM Channel List API] Error listing DM channels:', error);
     return NextResponse.json(
@@ -70,7 +96,9 @@ export async function GET(request: NextRequest) {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500, headers: getSecurityHeaders() }
     );
   }
 }
+
+export const GET = withAuth(listDMChannelsHandler);

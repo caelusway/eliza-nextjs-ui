@@ -5,7 +5,6 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 import { Paper } from '@/types/chat-message';
-import { Dialog } from '@/components/dialogs';
 
 interface PaperCardProps {
   paper: Paper;
@@ -70,124 +69,116 @@ export function PaperCard({ paper, className }: PaperCardProps) {
         )}
       </button>
 
-      <Dialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        size="2xl"
-        className="bg-white dark:bg-[#1f1f1f] border border-zinc-200 dark:border-zinc-600 !fixed !left-[18rem] !top-0 !w-[calc(100vw-18rem)] !h-screen !max-w-none !flex !items-center !justify-center lg:!left-72 lg:!w-[calc(100vw-18rem)] xl:!left-80 xl:!w-[calc(100vw-20rem)]"
-      >
-        <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1f1f1f] rounded-2xl p-8 shadow-xl border border-zinc-200 dark:border-zinc-600">
-          {/* Header with close button */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-zinc-100 dark:bg-[#333333]">
-                <svg
-                  className="w-5 h-5 text-zinc-600 dark:text-zinc-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                  Research Paper
-                </h2>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Paper details and abstract
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsDialogOpen(false)}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#404040] transition-colors"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="space-y-6 mb-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">
-                Title
-              </h3>
-              <p className="text-base text-zinc-900 dark:text-zinc-100 leading-relaxed">
-                {paper.title}
-              </p>
-            </div>
-
-            {/* DOI */}
-            {paper.doi && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">
-                  DOI
-                </h3>
-                <p className="text-sm font-mono text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-[#333333] rounded-lg px-3 py-2 break-all">
-                  {paper.doi}
-                </p>
-              </div>
-            )}
-
-            {/* Abstract */}
-            {paper.abstract && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">
-                  Abstract
-                </h3>
-                <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-normal">
-                  {paper.abstract}
+      {isDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-[#1a1a1a] rounded-xl max-w-2xl w-full p-8 shadow-2xl border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-white tracking-tight">
+                    Research Paper
+                  </h2>
+                  <p className="text-sm text-gray-400">Paper details and abstract</p>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Footer with action button */}
-          <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-600">
-            <div className="text-xs text-zinc-500 dark:text-zinc-400">
-              Access the full research paper
+              <button
+                onClick={() => setIsDialogOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-800/50"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
             </div>
-            {canViewPaper ? (
-              <button
-                onClick={() => window.open(paperUrl, '_blank', 'noopener,noreferrer')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-sm font-medium rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-                View Paper
-              </button>
-            ) : (
-              <button
-                disabled
-                className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-200 dark:bg-[#404040] text-zinc-500 dark:text-zinc-400 text-sm font-medium rounded-lg cursor-not-allowed"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-                Unavailable
-              </button>
-            )}
+
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-300">Title</label>
+                <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-white border border-gray-700/50">
+                  {paper.title}
+                </div>
+              </div>
+
+              {paper.doi && (
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-300">DOI</label>
+                  {canViewPaper ? (
+                    <a
+                      href={paperUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full px-4 py-3 bg-gray-800/60 hover:bg-gray-800/80 rounded-xl text-blue-400 hover:text-blue-300 border border-gray-700/50 font-mono text-sm break-all transition-all duration-200 cursor-pointer"
+                    >
+                      {paper.doi}
+                    </a>
+                  ) : (
+                    <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-gray-300 border border-gray-700/50 font-mono text-sm break-all">
+                      {paper.doi}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {paper.abstract && (
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-300">Abstract</label>
+                  <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-white border border-gray-700/50 leading-relaxed max-h-48 overflow-y-auto">
+                    {paper.abstract}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-4 pt-6">
+              <div className="flex-1 text-sm text-gray-400">Access the full research paper</div>
+              {canViewPaper ? (
+                <button
+                  onClick={() => window.open(paperUrl, '_blank', 'noopener,noreferrer')}
+                  className="bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  View Paper
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="bg-gray-700 text-gray-400 px-6 py-3 rounded-xl text-sm font-medium cursor-not-allowed flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Unavailable
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </Dialog>
+      )}
     </>
   );
 }

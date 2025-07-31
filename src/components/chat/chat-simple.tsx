@@ -18,8 +18,10 @@ import type { ChatMessage } from '@/types/chat-message';
 import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 import { useUserManager } from '@/lib/user-manager';
+import { usePrivy } from '@privy-io/react-auth';
 import { PostHogTracking } from '@/lib/posthog';
 import { logUserPrompt } from '@/services/prompt-service';
+import { ShareButton } from '@/components/chat/share-button';
 
 // Simple spinner component
 const LoadingSpinner = () => (
@@ -75,6 +77,7 @@ export const Chat = ({
 
   // --- User Management ---
   const { getUserId, getUserName, getUserEmail, isUserAuthenticated, isReady } = useUserManager();
+  const { getAccessToken } = usePrivy();
 
   // --- Authenticated API ---
   const authenticatedAPI = useAuthenticatedAPI();
@@ -94,6 +97,9 @@ export const Chat = ({
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>(
     'connecting'
   );
+  const [isUserScrolled, setIsUserScrolled] = useState<boolean>(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState<boolean>(false); // Always false to prevent any auto-scroll
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [agentStatus, setAgentStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [deepResearchEnabled, setDeepResearchEnabled] = useState<boolean>(false);
@@ -119,11 +125,65 @@ export const Chat = ({
   const initStartedRef = useRef(false);
   const sessionSetupDone = useRef<string | null>(null); // Track which session has been set up
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const sendMessageRef = useRef<
     ((messageText: string, options?: { useInternalKnowledge?: boolean }) => void) | null
   >(null);
   const socketIOManager = SocketIOManager.getInstance();
   const isCurrentlyThinking = useRef<boolean>(false);
+
+  // Function to check if user is scrolled to bottom
+  const isScrolledToBottom = useCallback(() => {
+    if (!messagesContainerRef.current) return true;
+    const container = messagesContainerRef.current;
+    const threshold = 50; // Smaller threshold - must be very close to bottom
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const isAtBottom = distanceFromBottom <= threshold;
+    
+    // Debug logging
+    if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.log('[Scroll Debug]', {
+        distanceFromBottom,
+        threshold,
+        isAtBottom,
+        scrollHeight: container.scrollHeight,
+        scrollTop: container.scrollTop,
+        clientHeight: container.clientHeight
+      });
+    }
+    
+    return isAtBottom;
+  }, []);
+
+  // Scroll event handler
+  const handleScroll = useCallback(() => {
+    const isAtBottom = isScrolledToBottom();
+    const userHasScrolledUp = !isAtBottom;
+    
+    setIsUserScrolled(userHasScrolledUp);
+    // Never auto-scroll - always keep it false
+    setShouldAutoScroll(false);
+    
+    if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.log('[Scroll State]', {
+        isAtBottom,
+        userHasScrolledUp,
+        shouldAutoScroll: false // Always false
+      });
+    }
+  }, [isScrolledToBottom]);
+
+  // Function to scroll to bottom manually
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Update states after scrolling but keep auto-scroll disabled
+      setTimeout(() => {
+        setShouldAutoScroll(false); // Keep disabled
+        setIsUserScrolled(false);
+      }, 100);
+    }
+  }, []);
 
   // --- Derived Values ---
   const currentUserId = getUserId();
@@ -411,9 +471,16 @@ export const Chat = ({
           setAgentStatus('ready');
         }
 
-        // Step 2: Initialize socket connection
+        // Step 2: Initialize socket connection with authentication
         console.log('[Chat] Initializing socket connection...');
-        socketIOManager.initialize(currentUserId, serverId);
+        try {
+          const token = await getAccessToken();
+          socketIOManager.initialize(currentUserId, serverId, token);
+        } catch (error) {
+          console.error('[Chat] Failed to get access token for Socket.IO:', error);
+          // Fallback to initialize without token
+          socketIOManager.initialize(currentUserId, serverId);
+        }
 
         // Step 3: Check connection status
         const checkConnection = () => {
@@ -569,17 +636,25 @@ export const Chat = ({
     [sessionId]
   );
 
-  // scroll to view once follow up questions have been loaded
-  useEffect(() => {
-    if (followUpQues?.length) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [followUpQues]);
+  // Disable auto-scroll for follow-up questions to prevent forced scrolling
+  // useEffect(() => {
+  //   if (followUpQues?.length && shouldAutoScroll) {
+  //     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, [followUpQues, shouldAutoScroll]);
 
   useEffect(() => {
     const questions = localStorage.getItem('questions');
-    if (questions) console.log(questions);
-    setFollowUpQues(JSON.parse(questions));
+    if (questions && questions !== 'undefined' && questions !== 'null') {
+      try {
+        setFollowUpQues(JSON.parse(questions));
+      } catch (error) {
+        console.error('Error parsing questions from localStorage:', error);
+        setFollowUpQues([]);
+      }
+    } else {
+      setFollowUpQues([]);
+    }
   }, []);
 
   // --- Set up Socket Event Listeners ---
@@ -793,6 +868,9 @@ export const Chat = ({
       if (isAgentMessage && message.text) {
         // Track when we start receiving the response
         const streamStartTime = Date.now();
+        
+        // Set streaming state to prevent any scroll interference
+        setIsStreaming(true);
 
         // Add the message with empty text first
         const streamingMessage = { ...message, text: '' };
@@ -821,8 +899,7 @@ export const Chat = ({
             });
             currentIndex++;
 
-            // Scroll to bottom during streaming
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            // No scroll behavior during streaming - user maintains full control
           } else {
             clearInterval(streamInterval);
 
@@ -838,20 +915,105 @@ export const Chat = ({
 
             // Stop animation immediately when streaming is complete - this is the actual response
             console.log('[Chat] Agent response streaming complete, stopping animation');
+            setIsStreaming(false); // Clear streaming state
             safeStopAnimation();
-            // Fetch follow up questions after streaming stops
-            const body = {
-              prompt: fullText,
+            // Fetch follow up questions after streaming stops with robust authentication handling
+            const fetchFollowUpQuestions = async (retryCount = 0) => {
+              const maxRetries = 3;
+              
+              console.log('[Chat] Fetching follow-up questions... (attempt', retryCount + 1, ')');
+              
+              // Enhanced authentication checks
+              if (!isUserAuthenticated() || !isReady) {
+                if (retryCount < maxRetries) {
+                  console.log('[Chat] Auth not ready, retrying in 1 second...');
+                  setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 1000);
+                  return;
+                } else {
+                  console.warn('[Chat] User not authenticated or Privy not ready after retries, skipping follow-up questions:', {
+                    isAuthenticated: isUserAuthenticated(),
+                    isReady,
+                  });
+                  return;
+                }
+              }
+
+              // Additional check to ensure the authenticatedFetch hook is available
+              if (!authenticatedFetch) {
+                console.warn('[Chat] AuthenticatedFetch hook not available, skipping follow-up questions');
+                return;
+              }
+              
+              const body = {
+                prompt: fullText,
+              };
+              
+              try {
+                console.log('[Chat] Making authenticated request to follow-up questions API...');
+                
+                const response = await authenticatedFetch('/api/followup-questions', {
+                  body: JSON.stringify(body),
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+                
+                console.log('[Chat] Follow-up questions response:', {
+                  status: response.status,
+                  ok: response.ok,
+                  statusText: response.statusText,
+                });
+                
+                if (response.status === 401 && retryCount < maxRetries) {
+                  console.log('[Chat] Got 401, retrying with fresh token...');
+                  setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 1000);
+                  return;
+                }
+                
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('[Chat] Follow-up questions API error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText,
+                  });
+                  throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('[Chat] Follow-up questions data:', data);
+                
+                if (data.questions && Array.isArray(data.questions)) {
+                  setFollowUpQues(data.questions);
+                  localStorage.setItem('questions', JSON.stringify(data.questions));
+                } else {
+                  console.warn('[Chat] Invalid follow-up questions response format:', data);
+                }
+              } catch (error) {
+                console.error('[Chat] Follow-up questions error:', error);
+                
+                // Check if it's an authentication error and retry
+                const isAuthError = error instanceof Error && (
+                  error.message.includes('Authentication service not ready') ||
+                  error.message.includes('User not authenticated') ||
+                  error.message.includes('No access token available')
+                );
+                
+                if (isAuthError && retryCount < maxRetries) {
+                  console.log('[Chat] Authentication error, retrying follow-up questions...');
+                  setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 2000);
+                } else if (retryCount < maxRetries) {
+                  console.log('[Chat] Retrying follow-up questions due to error...');
+                  setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 1500);
+                } else {
+                  console.warn('[Chat] Max retries exceeded for follow-up questions, giving up');
+                }
+              }
             };
-            fetch('/api/followup-questions', {
-              body: JSON.stringify(body),
-              method: 'POST',
-            })
-              .then((res) => res.json())
-              .then((res) => {
-                setFollowUpQues(res.questions);
-                localStorage.setItem('questions', JSON.stringify(res.questions));
-              });
+            
+            // Start the retry-enabled fetch after a delay
+            setTimeout(() => fetchFollowUpQuestions(), 1500);
           }
         }, 10); // Adjust speed: lower = faster, higher = slower
       } else {
@@ -999,12 +1161,28 @@ export const Chat = ({
       });
   }, [channelId, agentId, connectionStatus, currentUserId]);
 
-  // --- Auto-scroll to bottom ---
+  // --- Set up scroll event listener ---
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Check initial scroll position
+    handleScroll();
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [handleScroll]);
+
+  // --- Disable auto-scroll on message updates - let user control scroll ---
+  // This effect is intentionally commented out to prevent forced scrolling
+  // useEffect(() => {
+  //   if (shouldAutoScroll && messagesEndRef.current && !isUserScrolled) {
+  //     messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, [messages, shouldAutoScroll, isUserScrolled]);
 
   // --- Update real-time session stats ---
   useEffect(() => {
@@ -1174,13 +1352,18 @@ export const Chat = ({
       <div className="flex-shrink-0 pt-10 sm:pt-8 pb-4 sm:pb-4 bg-white dark:bg-[#292929]">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-4">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-              {sessionData ? (
-                sessionData.title
-              ) : (
-                <span className="animate-pulse">Loading session...</span>
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                {sessionData ? (
+                  sessionData.title
+                ) : (
+                  <span className="animate-pulse">Loading session...</span>
+                )}
+              </h1>
+              {sessionData && (
+                <ShareButton sessionId={sessionId} sessionTitle={sessionData.title} />
               )}
-            </h1>
+            </div>
             {sessionData ? (
               <div className="flex items-center gap-3 mt-2">
                 <div className="text-gray-600 dark:text-gray-400 text-sm">
@@ -1200,7 +1383,14 @@ export const Chat = ({
       </div>
 
       {/* Scrollable Chat Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div 
+        ref={messagesContainerRef} 
+        className={`flex-1 overflow-y-auto ${isStreaming ? 'streaming-disabled-scroll' : ''}`}
+        style={{ 
+          overflowAnchor: 'none',
+          scrollBehavior: isStreaming ? 'auto' : 'smooth'
+        }}
+      >
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           {/* Connection status loading */}
           {connectionStatus === 'connecting' && !isWaitingForAgent && (
@@ -1277,11 +1467,37 @@ export const Chat = ({
                   </span>
                 </div>
               )}
+              {/* Scroll anchor - only used for manual scroll to bottom, not for auto-scroll */}
               <div ref={messagesEndRef} />
             </>
           )}
         </div>
       </div>
+
+      {/* Scroll to Bottom Button */}
+      {isUserScrolled && (
+        <div className="fixed bottom-20 right-6 z-10">
+          <button
+            onClick={scrollToBottom}
+            className="bg-white dark:bg-[#1f1f1f] hover:bg-gray-50 dark:hover:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 rounded-full p-3 border border-gray-200 dark:border-gray-600"
+            aria-label="Scroll to bottom"
+          >
+            <svg
+              className="w-5 h-5 text-gray-600 dark:text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Input Area - Fixed at Bottom */}
       <div className="flex-shrink-0 py-3 bg-white dark:bg-[#292929]">

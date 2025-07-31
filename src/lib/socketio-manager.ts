@@ -530,8 +530,9 @@ class SocketIOManager extends EventAdapter {
    * Initialize the Socket.io connection to the server
    * @param entityId The client entity ID
    * @param serverId Server ID for channel-based messaging
+   * @param authToken JWT token for authentication
    */
-  public initialize(entityId: string, serverId?: string): void {
+  public initialize(entityId: string, serverId?: string, authToken?: string): void {
     this.entityId = entityId;
     this.serverId = serverId;
     this.connectionStartTime = Date.now();
@@ -548,9 +549,9 @@ class SocketIOManager extends EventAdapter {
       data: { entityId, serverId, socketUrl: SOCKET_URL },
     });
 
-    // Create a single socket connection
+    // Create a single socket connection with authentication
     console.info('connecting to', SOCKET_URL);
-    this.socket = io(SOCKET_URL, {
+    const socketOptions: any = {
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
@@ -559,7 +560,20 @@ class SocketIOManager extends EventAdapter {
       transports: ['polling', 'websocket'], // Try polling first
       forceNew: false,
       upgrade: true,
-    });
+    };
+
+    // Add authentication if token is provided
+    if (authToken) {
+      socketOptions.auth = {
+        token: authToken,
+      };
+      socketOptions.extraHeaders = {
+        Authorization: `Bearer ${authToken}`,
+      };
+      console.info('SocketIO authentication configured with JWT token');
+    }
+
+    this.socket = io(SOCKET_URL, socketOptions);
 
     // Set up connection promise for async operations that depend on connection
     this.connectPromise = new Promise<void>((resolve) => {

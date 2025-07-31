@@ -329,8 +329,30 @@
 /* Prevent page scroll - only allow container scroll */
 html,
 body {
-  overflow: hidden;
-  height: 100%;
+  overflow: auto;
+  height: auto;
+  min-height: 100vh;
+}
+
+/* Disable scroll anchoring to prevent forced scrolling during content updates */
+* {
+  overflow-anchor: none;
+}
+
+/* Specifically disable scroll anchoring for chat containers */
+.overflow-y-auto {
+  overflow-anchor: none;
+}
+
+/* Completely prevent scroll restoration during streaming */
+.streaming-disabled-scroll {
+  overflow-anchor: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Additional scroll prevention during streaming */
+.streaming-disabled-scroll * {
+  overflow-anchor: none !important;
 }
 
 /* Custom Colors for AUBRAI */

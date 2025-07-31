@@ -86,24 +86,20 @@ export default function RootLayout({
           async={true}
         />
       </head>
-      <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
-        <div className="flex min-h-dvh w-full flex-col grow">
-          <div className="flex grow flex-col size-full min-h-dvh">
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem={false}
-              disableTransitionOnChange
-            >
-              <PrivyClientProvider>
-                <AuthWrapper>
-                  <ConditionalHeader />
-                  {children}
-                </AuthWrapper>
-              </PrivyClientProvider>
-            </ThemeProvider>
-          </div>
-        </div>
+      <body className="antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] font-geist">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <PrivyClientProvider>
+            <AuthWrapper>
+              <ConditionalHeader />
+              {children}
+            </AuthWrapper>
+          </PrivyClientProvider>
+        </ThemeProvider>
         <ProgressBar />
         <Toaster />
       </body>

@@ -197,7 +197,7 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
                   } ${
                     isPromptLoading
                       ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 shadow-lg'
-                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/80 hover:border-zinc-300/80 dark:hover:border-zinc-600/80 shadow-sm hover:shadow-md'
+                      : 'bg-zinc-50 dark:bg-[#1f1f1f] border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80 hover:border-zinc-300/80 dark:hover:border-zinc-600/80 shadow-sm hover:shadow-md'
                   }`}
                 >
                   <div className="flex items-start gap-3">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID;
@@ -16,19 +17,20 @@ export async function OPTIONS() {
   });
 }
 
-export async function POST(request: NextRequest) {
+async function textToSpeechHandler(request: NextRequest, user: AuthenticatedUser) {
   const startTime = Date.now();
-  
+
   try {
-    console.log('[TTS] === UNPROTECTED TTS REQUEST ===');
+    console.log('[TTS] === TTS REQUEST FOR USER:', user.userId, '===');
     console.log('[TTS] Request timestamp:', new Date().toISOString());
     console.log('[TTS] Environment:', process.env.NODE_ENV);
     console.log('[TTS] Has ElevenLabs API key:', !!ELEVENLABS_API_KEY);
     console.log('[TTS] Has ElevenLabs voice ID:', !!ELEVENLABS_VOICE_ID);
 
-    // Add CORS headers for cross-origin requests
+    // Get security headers with CORS
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
+      ...getSecurityHeaders(),
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     };
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
     if (!ELEVENLABS_API_KEY) {
       console.error('[TTS] ElevenLabs API key not configured');
       return NextResponse.json(
-        { error: 'ElevenLabs API key not configured' }, 
+        { error: 'ElevenLabs API key not configured' },
         { status: 500, headers: corsHeaders }
       );
     }
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (!ELEVENLABS_VOICE_ID) {
       console.error('[TTS] ElevenLabs voice ID not configured');
       return NextResponse.json(
-        { error: 'ElevenLabs voice ID not configured' }, 
+        { error: 'ElevenLabs voice ID not configured' },
         { status: 500, headers: corsHeaders }
       );
     }
@@ -53,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (!text) {
       return NextResponse.json(
-        { error: 'Text is required' }, 
+        { error: 'Text is required' },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -62,12 +64,14 @@ export async function POST(request: NextRequest) {
     if (text.length > 5000) {
       console.warn(`[TTS] Text too long: ${text.length} characters`);
       return NextResponse.json(
-        { error: 'Text too long. Maximum 5000 characters allowed.' }, 
+        { error: 'Text too long. Maximum 5000 characters allowed.' },
         { status: 400, headers: corsHeaders }
       );
     }
 
-    console.log(`[TTS] Generating speech for text: "${text.substring(0, 100)}..." (${text.length} chars)`);
+    console.log(
+      `[TTS] Generating speech for text: "${text.substring(0, 100)}..." (${text.length} chars)`
+    );
     console.log('[TTS] Request start time:', startTime);
 
     const response = await fetch(
@@ -94,12 +98,12 @@ export async function POST(request: NextRequest) {
 
     const responseTime = Date.now() - startTime;
     console.log(`[TTS] ElevenLabs API response received after ${responseTime}ms`);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[TTS] ElevenLabs API error (${response.status}):`, errorText);
       return NextResponse.json(
-        { error: 'Failed to generate speech' }, 
+        { error: 'Failed to generate speech' },
         { status: response.status, headers: corsHeaders }
       );
     }
@@ -109,7 +113,7 @@ export async function POST(request: NextRequest) {
     const audioBuffer = await response.arrayBuffer();
     const bufferTime = Date.now() - bufferStartTime;
     const totalTime = Date.now() - startTime;
-    
+
     console.log(`[TTS] Audio buffer downloaded in ${bufferTime}ms`);
     console.log(`[TTS] Total request time: ${totalTime}ms`);
     console.log(`[TTS] Successfully generated ${audioBuffer.byteLength} bytes of audio`);
@@ -124,16 +128,19 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const totalTime = Date.now() - startTime;
     console.error(`[TTS] Error after ${totalTime}ms:`, error);
-    
+
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
+      ...getSecurityHeaders(),
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     };
-    
+
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { error: 'Internal server error' },
       { status: 500, headers: corsHeaders }
     );
   }
 }
+
+export const POST = withAuth(textToSpeechHandler);
