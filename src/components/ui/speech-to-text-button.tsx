@@ -4,6 +4,7 @@ import { MicrophoneIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
 import clsx from 'clsx';
 import { PostHogTracking } from '@/lib/posthog';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface SpeechToTextButtonProps {
   onTranscript: (text: string) => void;
@@ -21,6 +22,7 @@ export default function SpeechToTextButton({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recordingStartTimeRef = useRef<number | null>(null);
+  const authenticatedFetch = useAuthenticatedFetch();
 
   const transcribeAudio = useCallback(
     async (audioBlob: Blob) => {
@@ -29,7 +31,7 @@ export default function SpeechToTextButton({
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.wav');
 
-        const res = await fetch('/api/transcribe', {
+        const res = await authenticatedFetch('/api/transcribe', {
           method: 'POST',
           body: formData,
         });
@@ -47,7 +49,7 @@ export default function SpeechToTextButton({
         setIsTranscribing(false);
       }
     },
-    [onTranscript]
+    [onTranscript, authenticatedFetch]
   );
 
   const startRecording = useCallback(async () => {
