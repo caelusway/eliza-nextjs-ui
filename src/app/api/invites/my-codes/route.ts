@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserInviteStats } from '@/services/invite-service';
+import { withAuth } from '@/lib/auth-middleware';
 
-export async function POST(request: NextRequest) {
+async function myCodesHandler(request: NextRequest, user: any) {
   try {
     // Get user ID from request body instead of headers
     const { userId } = await request.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    // User validation - only allow access to own invite codes
+    if (userId !== user.userId) {
+      return NextResponse.json({ error: 'Unauthorized access to invite codes' }, { status: 403 });
     }
 
     console.log('Fetching invite stats for user:', userId);
@@ -26,3 +32,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch invite codes' }, { status: 500 });
   }
 }
+
+export const POST = withAuth(myCodesHandler);

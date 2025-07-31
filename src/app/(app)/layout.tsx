@@ -1,24 +1,49 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode, useCallback } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useUserManager } from '@/lib/user-manager';
 import { AppSidebar } from '@/components/sidebar';
 import { SessionsProvider } from '@/contexts/SessionsContext';
 import { PanelLeft } from 'lucide-react';
 import SocketIOManager from '@/lib/socketio-manager';
 import { PostHogTracking } from '@/lib/posthog';
+import { SearchChatModal } from '@/components/chat/search-chat-modal';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
+  const { getAccessToken } = usePrivy();
   const { getUserId } = useUserManager();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const userId = getUserId();
+
+  const handleSearchModalOpen = useCallback(() => {
+    setIsSearchModalOpen(true);
+  }, []);
+
+  const handleSearchModalClose = useCallback(() => {
+    setIsSearchModalOpen(false);
+  }, []);
+
+  // Global keyboard shortcut for search (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Initialize socket connection and track connection state
   useEffect(() => {
@@ -41,9 +66,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
       return;
     }
 
-    // Initialize socket connection
+    // Initialize socket connection with authentication
     try {
-      socketIOManager.initialize(userId);
+      // Get JWT token for Socket.IO authentication
+      getAccessToken()
+        .then((token) => {
+          socketIOManager.initialize(userId, undefined, token);
+        })
+        .catch((error) => {
+          console.error('[AppLayout] Failed to get access token for Socket.IO:', error);
+          // Fallback to initialize without token
+          socketIOManager.initialize(userId);
+        });
 
       // Set up connection monitoring
       const checkConnection = () => {
@@ -91,6 +125,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               isConnected={isConnected}
               isMobileMenuOpen={isMobileMenuOpen}
               onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onSearchOpen={handleSearchModalOpen}
             />
           </div>
 
@@ -112,6 +147,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <div className="h-full overflow-hidden">{children}</div>
           </div>
         </div>
+
+        {/* Global Search Modal */}
+        <SearchChatModal
+          isOpen={isSearchModalOpen}
+          onClose={handleSearchModalClose}
+          onMobileMenuClose={() => setIsMobileMenuOpen(false)}
+        />
       </>
     </SessionsProvider>
   );

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, PanelLeftClose, PanelLeft, X } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
 
@@ -39,21 +40,24 @@ export function SidebarHeader({
       {!isCollapsed && (
         <button
           onClick={handleLogoClick}
-          className="flex items-center gap-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer"
+          className="flex items-center gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg p-2 -m-2 transition-colors cursor-pointer"
         >
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${brandingConfig.primaryColor}1A` }}
-          >
-            <MessageSquare className="w-4 h-4" style={{ color: brandingConfig.primaryColor }} />
+          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+            <Image
+              src="/assets/new_logo.png"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-full object-contain"
+            />
           </div>
-          <div>
-            <h1 className="font-semibold text-zinc-900 dark:text-white">
+          <div className="flex items-center min-w-0">
+            <h1 className="font-semibold text-zinc-900 dark:text-white leading-tight">
               {brandingConfig.appName}
-            </h1>
+            </h1> {/*
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
-              {isConnected ? sidebarConfig.connectedText : sidebarConfig.connectingText}
-            </p>
+             isConnected ? sidebarConfig.connectedText : sidebarConfig.connectingText
+            </p>*/}
           </div>
         </button>
       )}

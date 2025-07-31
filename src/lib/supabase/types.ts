@@ -183,6 +183,150 @@ export interface Database {
           },
         ];
       };
+      shared_chat_sessions: {
+        Row: {
+          id: string;
+          session_id: string;
+          owner_id: string;
+          public_id: string;
+          title: string;
+          description: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+          expires_at: string | null;
+          view_count: number;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          owner_id: string;
+          public_id: string;
+          title: string;
+          description?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          expires_at?: string | null;
+          view_count?: number;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          owner_id?: string;
+          public_id?: string;
+          title?: string;
+          description?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          expires_at?: string | null;
+          view_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'shared_chat_sessions_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      shared_chat_analytics: {
+        Row: {
+          id: string;
+          shared_session_id: string;
+          visitor_id: string;
+          ip_address: string | null;
+          user_agent: string | null;
+          referrer: string | null;
+          country: string | null;
+          city: string | null;
+          visited_at: string;
+          session_duration: number | null;
+        };
+        Insert: {
+          id?: string;
+          shared_session_id: string;
+          visitor_id: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          referrer?: string | null;
+          country?: string | null;
+          city?: string | null;
+          visited_at?: string;
+          session_duration?: number | null;
+        };
+        Update: {
+          id?: string;
+          shared_session_id?: string;
+          visitor_id?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          referrer?: string | null;
+          country?: string | null;
+          city?: string | null;
+          visited_at?: string;
+          session_duration?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'shared_chat_analytics_shared_session_id_fkey';
+            columns: ['shared_session_id'];
+            isOneToOne: false;
+            referencedRelation: 'shared_chat_sessions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      daily_analytics: {
+        Row: {
+          id: string;
+          shared_session_id: string;
+          date: string;
+          unique_visitors: number;
+          total_views: number;
+          avg_session_duration: number | null;
+          top_referrer: string | null;
+          top_country: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          shared_session_id: string;
+          date: string;
+          unique_visitors?: number;
+          total_views?: number;
+          avg_session_duration?: number | null;
+          top_referrer?: string | null;
+          top_country?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          shared_session_id?: string;
+          date?: string;
+          unique_visitors?: number;
+          total_views?: number;
+          avg_session_duration?: number | null;
+          top_referrer?: string | null;
+          top_country?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'daily_analytics_shared_session_id_fkey';
+            columns: ['shared_session_id'];
+            isOneToOne: false;
+            referencedRelation: 'shared_chat_sessions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

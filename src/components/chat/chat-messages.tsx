@@ -16,11 +16,15 @@ const isAgentMessage = (message: ChatMessageType) => {
 
 interface ChatMessagesProps {
   messages: ChatMessageType[];
-  followUpPromptsMap: Record<number, string[]>;
-  onFollowUpClick: (prompt: string) => void;
+  followUpPromptsMap?: Record<number, string[]>;
+  onFollowUpClick?: (prompt: string) => void;
 }
 
-export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: ChatMessagesProps) {
+export function ChatMessages({
+  messages,
+  followUpPromptsMap = {},
+  onFollowUpClick,
+}: ChatMessagesProps) {
   assert(
     Array.isArray(messages),
     `[ChatMessages] 'messages' prop is not an array: ${typeof messages}`
@@ -30,7 +34,7 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
     `[ChatMessages] 'followUpPromptsMap' prop is not an object: ${typeof followUpPromptsMap}`
   );
   assert(
-    typeof onFollowUpClick === 'function',
+    onFollowUpClick === undefined || typeof onFollowUpClick === 'function',
     `[ChatMessages] 'onFollowUpClick' prop is not a function: ${typeof onFollowUpClick}`
   );
 
@@ -70,7 +74,8 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
 
     if (isNewMessage) {
       lastMessageRef.current = currentText;
-      scrollToBottom('instant');
+      // Disable auto-scroll for new messages to prevent forced scrolling
+      // scrollToBottom('instant');
     }
   }, [messages]);
 
@@ -93,10 +98,11 @@ export function ChatMessages({ messages, followUpPromptsMap, onFollowUpClick }: 
       `[ChatMessages Effect 2] Invalid lastMessage.text (index ${messages.length - 1}): ${typeof lastMessage.text}`
     );
 
-    if (isAgentMessage(lastMessage)) {
-      // For container scroll, just auto-scroll to bottom for agent messages
-      setTimeout(() => scrollToBottom('smooth'), 100);
-    }
+    // Disable auto-scroll for agent messages to prevent forced scrolling
+    // Users can manually scroll using the scroll to bottom button
+    // if (isAgentMessage(lastMessage)) {
+    //   setTimeout(() => scrollToBottom('smooth'), 100);
+    // }
   }, [messages[messages.length - 1]?.text]);
 
   useEffect(() => {

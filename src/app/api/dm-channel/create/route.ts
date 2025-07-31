@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
 const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 
@@ -18,13 +19,24 @@ interface DMChannelMetadata {
   title?: string;
 }
 
-export async function POST(request: NextRequest) {
+async function createDMChannelHandler(request: NextRequest, user: AuthenticatedUser) {
   try {
     const body: CreateDMChannelRequest = await request.json();
     const { userId, agentId, channelId, title } = body;
 
     if (!userId || !agentId) {
-      return NextResponse.json({ error: 'userId and agentId are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId and agentId are required' },
+        { status: 400, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Ensure user can only create channels for themselves
+    if (userId !== user.userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - cannot create channel for different user' },
+        { status: 403, headers: getSecurityHeaders() }
+      );
     }
 
     // Generate channel ID if not provided
@@ -44,14 +56,25 @@ export async function POST(request: NextRequest) {
       metadata.title = title;
     }
 
+    // Build headers for ElizaOS server including Privy JWT
+    const elizaHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      elizaHeaders['Authorization'] = authHeader;
+    }
+
     // Create the DM channel via ElizaOS API
     const createChannelResponse = await fetch(
       `${ELIZA_SERVER_URL}/api/messaging/central-channels`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: elizaHeaders,
         body: JSON.stringify({
           id: finalChannelId,
           name: channelName,
@@ -79,9 +102,7 @@ export async function POST(request: NextRequest) {
       `${ELIZA_SERVER_URL}/api/messaging/central-channels/${finalChannelId}/agents`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: elizaHeaders,
         body: JSON.stringify({
           agentId: agentId,
         }),
@@ -94,17 +115,20 @@ export async function POST(request: NextRequest) {
       // Continue anyway - agent might already be a participant
     }
 
-    return NextResponse.json({
-      success: true,
-      channel: {
-        id: finalChannelId,
-        name: channelName,
-        type: 'DM',
-        metadata: metadata,
-        participants: [userId, agentId],
-        ...channelData,
+    return NextResponse.json(
+      {
+        success: true,
+        channel: {
+          id: finalChannelId,
+          name: channelName,
+          type: 'DM',
+          metadata: metadata,
+          participants: [userId, agentId],
+          ...channelData,
+        },
       },
-    });
+      { headers: getSecurityHeaders() }
+    );
   } catch (error) {
     console.error('[DM Channel API] Error creating DM channel:', error);
     return NextResponse.json(
@@ -112,7 +136,9 @@ export async function POST(request: NextRequest) {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500, headers: getSecurityHeaders() }
     );
   }
 }
+
+export const POST = withAuth(createDMChannelHandler);

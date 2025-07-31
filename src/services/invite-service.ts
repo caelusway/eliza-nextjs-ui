@@ -305,9 +305,16 @@ export async function getUserInviteStats(userId: string): Promise<UserInviteStat
       console.error('Error fetching invited users:', invitedError);
     }
 
+    // Calculate actual remaining codes based on unused invites
+    const unusedInvites = (invites || []).filter(invite => 
+      invite.status !== 'accepted' && 
+      invite.current_uses < invite.max_uses &&
+      new Date(invite.expires_at) > new Date()
+    );
+
     return {
       invites: invites as Invite[],
-      remaining_codes: user.invite_codes_remaining,
+      remaining_codes: unusedInvites.length,
       invited_users: (invitedUsers || []).map((u) => ({
         username: u.username,
         email: u.email,

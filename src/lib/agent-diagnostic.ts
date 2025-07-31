@@ -45,7 +45,7 @@ export class AgentDiagnostic {
         recommendations.push('Check if ElizaOS server is running and accessible');
       }
 
-      // Step 2: Test socket connection
+      // Step 2: Test socket connection (without token for diagnostic)
       console.log('🔌 Testing socket connection...');
       this.socketManager.initialize(userId);
 

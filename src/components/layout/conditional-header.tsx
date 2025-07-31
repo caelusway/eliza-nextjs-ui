@@ -10,7 +10,8 @@ export function ConditionalHeader() {
   const isAppRoute =
     pathname.startsWith('/chat') ||
     pathname.startsWith('/account') ||
-    pathname.startsWith('/invites');
+    pathname.startsWith('/invites') ||
+    pathname.startsWith('/shared-sessions');
 
   if (pathname === '/login' || isAppRoute) {
     return null;
