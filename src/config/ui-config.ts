@@ -198,7 +198,7 @@ const DEFAULT_CONFIG: UIConfig = {
       'longevity, anti-aging, AI research, health optimization, life extension, biotechnology',
     author: process.env.NEXT_PUBLIC_SEO_AUTHOR || 'AUBRAI Team',
     faviconUrl: process.env.NEXT_PUBLIC_FAVICON_URL || '/favicon.ico',
-    logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || '/logo.png',
+    logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || '/logo_simple.png',
     ogImage: process.env.NEXT_PUBLIC_OG_IMAGE || '/og-image.png',
     twitterCard:
       (process.env.NEXT_PUBLIC_TWITTER_CARD as
@@ -301,7 +301,7 @@ const DEFAULT_CONFIG: UIConfig = {
     transitionDuration: parseInt(process.env.NEXT_PUBLIC_LOGIN_SLIDER_TRANSITION_DURATION || '700'),
   },
   loginBranding: {
-    logoImage: process.env.NEXT_PUBLIC_LOGIN_LOGO_IMAGE || '/assets/aubrai_logo.png',
+    logoImage: process.env.NEXT_PUBLIC_LOGIN_LOGO_IMAGE || '/assets/logo_text.png',
     logoAlt: process.env.NEXT_PUBLIC_LOGIN_LOGO_ALT || 'AUBRAI Logo',
     logoWidth: parseInt(process.env.NEXT_PUBLIC_LOGIN_LOGO_WIDTH || '180'),
     logoHeight: parseInt(process.env.NEXT_PUBLIC_LOGIN_LOGO_HEIGHT || '45'),
