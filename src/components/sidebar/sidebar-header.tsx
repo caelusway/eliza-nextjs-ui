@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import {  PanelLeftClose, PanelLeft, X } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, X } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
@@ -52,7 +52,8 @@ export function SidebarHeader({
           <div className="flex items-center min-w-0">
             <h1 className="font-semibold text-zinc-900 dark:text-white leading-tight text-xl">
               {brandingConfig.appName}
-            </h1> {/*
+            </h1>{' '}
+            {/*
             <p className="text-xs text-zinc-600 dark:text-zinc-400">
              isConnected ? sidebarConfig.connectedText : sidebarConfig.connectingText
             </p>*/}

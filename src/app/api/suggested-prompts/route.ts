@@ -124,25 +124,58 @@ export const POST = withAuth(suggestedPromptsHandler);
 
 async function generateSuggestedPrompts(userContext?: string): Promise<string[]> {
   try {
+    // Check if OpenAI API key is available
+    if (!OPENAI_API_KEY) {
+      console.warn('[SuggestedPrompts] OpenAI API key not configured, using fallback prompts');
+      return getFallbackPrompts();
+    }
+
     const response = await makeRequestToOpenAi(userContext);
 
     if (!response.ok) {
-      console.error('OpenAI API error:', await response.json());
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[SuggestedPrompts] OpenAI API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+      });
       return getFallbackPrompts();
     }
 
     const rawResponseFromOai = await response.json();
-    const promptsText = rawResponseFromOai.output[0].content[0].text;
+
+    if (!rawResponseFromOai.choices || rawResponseFromOai.choices.length === 0) {
+      console.error('[SuggestedPrompts] No choices in OpenAI response');
+      return getFallbackPrompts();
+    }
+
+    const promptsText = rawResponseFromOai.choices[0].message.content;
+
+    if (!promptsText) {
+      console.error('[SuggestedPrompts] Empty content in OpenAI response');
+      return getFallbackPrompts();
+    }
+
     const parsedPrompts = JSON.parse(promptsText);
 
     // Ensure we have exactly 4 prompts
-    if (parsedPrompts.prompts && Array.isArray(parsedPrompts.prompts)) {
-      return parsedPrompts.prompts.slice(0, 4);
+    if (
+      parsedPrompts.prompts &&
+      Array.isArray(parsedPrompts.prompts) &&
+      parsedPrompts.prompts.length > 0
+    ) {
+      const validPrompts = parsedPrompts.prompts.filter(
+        (p) => typeof p === 'string' && p.trim().length > 0
+      );
+      if (validPrompts.length > 0) {
+        return validPrompts.slice(0, 4);
+      }
     }
 
+    console.warn('[SuggestedPrompts] Invalid prompts format from OpenAI, using fallback');
     return getFallbackPrompts();
   } catch (error) {
-    console.error('Error generating prompts:', error);
+    console.error('[SuggestedPrompts] Error generating prompts:', error);
     return getFallbackPrompts();
   }
 }
@@ -153,7 +186,7 @@ async function makeRequestToOpenAi(userContext?: string) {
     throw new Error('OpenAI API key not configured');
   }
 
-  const baseUrl = 'https://api.openai.com/v1/responses';
+  const baseUrl = 'https://api.openai.com/v1/chat/completions';
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -181,10 +214,10 @@ async function makeRequestToOpenAi(userContext?: string) {
     Make them scientifically interesting but accessible to general audience. Each prompt should be a complete question or request.`;
 
   const body = {
-    model: 'gpt-4o',
-    input: [
+    model: 'gpt-4o-mini',
+    messages: [
       {
-        role: 'developer',
+        role: 'system',
         content:
           'You are an expert at generating engaging scientific prompts. Generate exactly 4 suggested prompts as a JSON object with a "prompts" array. Each prompt should be 10-25 words, scientifically accurate, and designed to spark interesting conversations about longevity research.',
       },
@@ -193,9 +226,9 @@ async function makeRequestToOpenAi(userContext?: string) {
         content: contextualPrompt,
       },
     ],
-    text: {
-      format: {
-        type: 'json_schema',
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
         name: 'suggested_prompts',
         schema: {
           type: 'object',
@@ -213,6 +246,8 @@ async function makeRequestToOpenAi(userContext?: string) {
         strict: true,
       },
     },
+    max_tokens: 500,
+    temperature: 0.7,
   };
 
   // Add timeout and error handling for OpenAI API calls

@@ -221,14 +221,14 @@ export default function InvitesPage() {
 
   const getStatusBadge = (invite: InviteCode) => {
     let status = invite.status || 'pending';
-    
+
     // Check various conditions that affect status
     if (isExpired(invite)) {
       status = 'expired';
     } else if (isUsedOrAccepted(invite)) {
       status = 'accepted';
     }
-    
+
     const colors = {
       pending: 'bg-yellow-500/20 text-yellow-400',
       email_sent: 'bg-blue-500/20 text-blue-400',
@@ -236,7 +236,8 @@ export default function InvitesPage() {
       expired: 'bg-red-500/20 text-red-400',
     };
 
-    const displayText = status === 'accepted' && invite.current_uses > 0 ? 'used' : status.replace('_', ' ');
+    const displayText =
+      status === 'accepted' && invite.current_uses > 0 ? 'used' : status.replace('_', ' ');
 
     return (
       <span
@@ -289,9 +290,7 @@ export default function InvitesPage() {
             {inviteStats && (
               <div className="flex items-center gap-2 text-sm bg-muted px-3 py-1.5 rounded-md font-medium">
                 <Badge className="w-4 h-4 text-[#FF6E71]" />
-                <span className="font-semibold">
-                  {inviteStats.remaining_codes}
-                </span>
+                <span className="font-semibold">{inviteStats.remaining_codes}</span>
                 <span className="hidden sm:inline">codes remaining</span>
               </div>
             )}

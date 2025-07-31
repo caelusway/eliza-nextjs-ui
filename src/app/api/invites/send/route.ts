@@ -71,11 +71,11 @@ async function sendInviteHandler(request: NextRequest, user: any) {
 
     // Verify the invite code belongs to the authenticated user
     const { supabase } = await import('@/lib/supabase/client');
-    
+
     // Simplified approach to avoid TypeScript type depth issues
     let inviteCode: any = null;
     let codeError: any = null;
-    
+
     try {
       const result = await supabase
         .from('invites')
@@ -83,7 +83,7 @@ async function sendInviteHandler(request: NextRequest, user: any) {
         .eq('code', sanitizedCode)
         .eq('created_by', user.userId)
         .single();
-      
+
       inviteCode = result.data;
       codeError = result.error;
     } catch (error) {

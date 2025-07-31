@@ -48,8 +48,10 @@ export function useAuthenticatedFetch() {
           // Check if user is authenticated before trying to get token
           if (!ready) {
             if (retryCount < maxRetries) {
-              console.warn(`[AuthenticatedFetch] Privy not ready yet, retry ${retryCount + 1}/${maxRetries + 1}`);
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.warn(
+                `[AuthenticatedFetch] Privy not ready yet, retry ${retryCount + 1}/${maxRetries + 1}`
+              );
+              await new Promise((resolve) => setTimeout(resolve, 1000));
               retryCount++;
               continue;
             } else {
@@ -59,8 +61,10 @@ export function useAuthenticatedFetch() {
 
           if (!authenticated) {
             if (retryCount < maxRetries) {
-              console.warn(`[AuthenticatedFetch] User not authenticated, retry ${retryCount + 1}/${maxRetries + 1}`);
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.warn(
+                `[AuthenticatedFetch] User not authenticated, retry ${retryCount + 1}/${maxRetries + 1}`
+              );
+              await new Promise((resolve) => setTimeout(resolve, 1000));
               retryCount++;
               continue;
             } else {
@@ -73,8 +77,10 @@ export function useAuthenticatedFetch() {
 
           if (!token) {
             if (retryCount < maxRetries) {
-              console.warn(`[AuthenticatedFetch] No access token available, retry ${retryCount + 1}/${maxRetries + 1}`);
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.warn(
+                `[AuthenticatedFetch] No access token available, retry ${retryCount + 1}/${maxRetries + 1}`
+              );
+              await new Promise((resolve) => setTimeout(resolve, 1000));
               retryCount++;
               continue;
             } else {
@@ -86,9 +92,12 @@ export function useAuthenticatedFetch() {
           break; // Success, exit retry loop
         } catch (error) {
           if (retryCount < maxRetries) {
-            console.warn(`[AuthenticatedFetch] Token retrieval failed, retry ${retryCount + 1}/${maxRetries + 1}:`, error);
+            console.warn(
+              `[AuthenticatedFetch] Token retrieval failed, retry ${retryCount + 1}/${maxRetries + 1}:`,
+              error
+            );
             retryCount++;
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await new Promise((resolve) => setTimeout(resolve, 1500));
           } else {
             console.error('[AuthenticatedFetch] Token retrieval failed after all retries:', error);
             throw error;

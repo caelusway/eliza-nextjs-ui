@@ -18,12 +18,14 @@ interface ChatMessagesProps {
   messages: ChatMessageType[];
   followUpPromptsMap?: Record<number, string[]>;
   onFollowUpClick?: (prompt: string) => void;
+  lastUserMessageRef?: React.RefObject<HTMLDivElement>;
 }
 
 export function ChatMessages({
   messages,
   followUpPromptsMap = {},
   onFollowUpClick,
+  lastUserMessageRef,
 }: ChatMessagesProps) {
   assert(
     Array.isArray(messages),
@@ -135,8 +137,30 @@ export function ChatMessages({
           ? messages.slice(0, i + 1).filter((m) => isAgentMessage(m)).length - 1
           : -1;
 
+        // Check if this is the last user message for ChatGPT-like scroll behavior
+        const isUserMessage = !isAgentMessage(message);
+
+        // Find the last user message index
+        let lastUserMessageIndex = -1;
+        for (let j = messages.length - 1; j >= 0; j--) {
+          if (!isAgentMessage(messages[j])) {
+            lastUserMessageIndex = j;
+            break;
+          }
+        }
+        const isLastUserMessage = isUserMessage && i === lastUserMessageIndex;
+
         return (
-          <div key={messageKey} ref={i === messages.length - 1 ? messagesEndRef : undefined}>
+          <div
+            key={messageKey}
+            ref={
+              i === messages.length - 1
+                ? messagesEndRef
+                : isLastUserMessage && lastUserMessageRef
+                  ? lastUserMessageRef
+                  : undefined
+            }
+          >
             <ChatMessage
               message={message}
               i={i}

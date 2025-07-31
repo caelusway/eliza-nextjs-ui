@@ -290,8 +290,6 @@ export default function AccountPage() {
 
         {/* User Information */}
         <div className="bg-card rounded-xl p-6 mb-8">
-
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
               <div className="p-2 bg-blue-500/20 rounded-lg">
