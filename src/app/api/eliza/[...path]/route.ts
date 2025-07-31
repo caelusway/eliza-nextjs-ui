@@ -25,7 +25,7 @@ async function elizaGetHandler(
     }
 
     // Check rate limiting (more permissive for ElizaOS proxy)
-    const rateLimitResult = checkRateLimit(user.userId, 60, 60 * 1000); // 60 requests per minute
+    const rateLimitResult = checkRateLimit(user.userId, 100, 60 * 1000); // 60 requests per minute
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
@@ -108,7 +108,7 @@ async function elizaPostHandler(
     }
 
     // Check rate limiting
-    const rateLimitResult = checkRateLimit(user.userId, 30, 60 * 1000); // 30 requests per minute for POST
+    const rateLimitResult = checkRateLimit(user.userId, 100, 60 * 1000); // 30 requests per minute for POST
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {

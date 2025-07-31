@@ -59,114 +59,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, inline }) =>
   );
 };
 
-// Function to automatically structure wall-of-text responses
-const structureContent = (content: string): string => {
-  // If content already has markdown headers, return as-is
-  if (content.match(/^#{1,6}\s/m)) {
-    return content;
-  }
-
-  // Split content into paragraphs
-  const paragraphs = content.split('\n\n').filter(p => p.trim());
-  
-  // If it's just one long paragraph, try to structure it intelligently
-  if (paragraphs.length === 1 && paragraphs[0].length > 200) {
-    const singlePara = paragraphs[0];
-    
-    // Look for natural sections and add headers
-    let structured = singlePara;
-    
-    // Patterns that indicate section breaks with potential headers
-    const sectionBreaks = [
-      { 
-        pattern: /\b(First|Firstly|To start|Initially|Beginning with|Let me start by)\b([^.!?]*[.!?])/gi,
-        header: "## Getting Started"
-      },
-      { 
-        pattern: /\b(Second|Secondly|Next|Furthermore|Additionally|Moreover|Another important)\b([^.!?]*[.!?])/gi,
-        header: "## Key Points"
-      },
-      { 
-        pattern: /\b(However|On the other hand|Conversely|But|Nevertheless|It's important to note)\b([^.!?]*[.!?])/gi,
-        header: "## Important Considerations"
-      },
-      { 
-        pattern: /\b(For example|For instance|Specifically|In particular|Consider this)\b([^.!?]*[.!?])/gi,
-        header: "## Examples"
-      },
-      { 
-        pattern: /\b(The benefits|The advantages|Why this matters|This helps)\b([^.!?]*[.!?])/gi,
-        header: "## Benefits"
-      },
-      { 
-        pattern: /\b(The challenges|The problems|Issues include|Difficulties)\b([^.!?]*[.!?])/gi,
-        header: "## Challenges"
-      },
-      { 
-        pattern: /\b(In conclusion|Finally|Lastly|To summarize|Overall|Ultimately)\b([^.!?]*[.!?])/gi,
-        header: "## Summary"
-      },
-    ];
-    
-    // Apply section breaks and headers
-    sectionBreaks.forEach(({ pattern, header }) => {
-      structured = structured.replace(pattern, (match, trigger, rest) => {
-        return `\n\n${header}\n\n${trigger}${rest}`;
-      });
-    });
-    
-    // Look for lists and structure them
-    structured = structured.replace(/([.!?])\s+([-•·]|\d+\.)\s+/g, '$1\n\n$2 ');
-    
-    // Clean up extra spaces and normalize line breaks
-    structured = structured.replace(/\s+/g, ' ').replace(/\n+/g, '\n\n').trim();
-    
-    // If we added any headers, make sure the content starts properly
-    if (structured.includes('##') && !structured.startsWith('##')) {
-      // Add an overview header if the content doesn't start with a header
-      structured = `## Overview\n\n${structured}`;
-    }
-    
-    return structured;
-  }
-  
-  // For multi-paragraph content, try to add structure
-  if (paragraphs.length > 2 && paragraphs.length <= 5) {
-    return paragraphs.map((para, index) => {
-      // Don't modify if it's already structured
-      if (para.match(/^#{1,6}\s/) || para.match(/^\d+\.\s/) || para.match(/^[-*+]\s/)) {
-        return para;
-      }
-      
-      // Add subtle section headers for longer responses
-      if (para.length > 150 && index === 0) {
-        return `## Overview\n\n${para}`;
-      } else if (para.length > 150 && index > 0) {
-        // Try to infer section headers based on content
-        const lowerPara = para.toLowerCase();
-        if (lowerPara.includes('benefit') || lowerPara.includes('advantage')) {
-          return `## Benefits\n\n${para}`;
-        } else if (lowerPara.includes('challenge') || lowerPara.includes('problem') || lowerPara.includes('difficult')) {
-          return `## Challenges\n\n${para}`;
-        } else if (lowerPara.includes('example') || lowerPara.includes('instance')) {
-          return `## Examples\n\n${para}`;
-        } else if (lowerPara.includes('conclusion') || lowerPara.includes('summary') || index === paragraphs.length - 1) {
-          return `## Summary\n\n${para}`;
-        } else {
-          return `## Key Points\n\n${para}`;
-        }
-      }
-      
-      return para;
-    }).join('\n\n');
-  }
-  
-  return content;
-};
 
 export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({ content, className = '' }) => {
-  // Structure the content for better readability
-  const structuredContent = structureContent(content);
+  // Use content as-is without auto-structuring
   
   return (
     <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
@@ -258,7 +153,7 @@ export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({ content, className =
           hr: () => <hr className="border-zinc-300 dark:border-zinc-600 my-6" />,
         }}
       >
-        {structuredContent}
+        {content}
       </ReactMarkdown>
     </div>
   );

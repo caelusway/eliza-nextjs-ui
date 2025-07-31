@@ -48,7 +48,7 @@ async function createDMChannelHandler(request: NextRequest, user: AuthenticatedU
     }
 
     // Check rate limiting
-    const rateLimitResult = checkRateLimit(user.userId, 20, 60 * 1000); // 20 requests per minute
+    const rateLimitResult = checkRateLimit(user.userId, 100, 60 * 1000); // 20 requests per minute
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {

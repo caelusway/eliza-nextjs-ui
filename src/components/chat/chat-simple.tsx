@@ -92,6 +92,8 @@ export const Chat = ({
   const [followUpQues, setFollowUpQues] = useState<string[] | undefined>([]);
   const [channelId, setChannelId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(true);
+  const [isPositioned, setIsPositioned] = useState<boolean>(false);
+  const [hasInitiallyPositioned, setHasInitiallyPositioned] = useState<boolean>(false);
   const [isAgentThinking, setIsAgentThinking] = useState<boolean>(false);
   const [agentMessageState, setAgentMessageState] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>(
@@ -358,6 +360,8 @@ export const Chat = ({
     sessionSetupDone.current = null; // Clear session setup tracking
     setMessages([]);
     setIsLoadingHistory(true);
+    setIsPositioned(false);
+    setHasInitiallyPositioned(false);
 
     // Safe reset of thinking states
     if (!isCurrentlyThinking.current) {
@@ -886,18 +890,21 @@ export const Chat = ({
 
         const streamInterval = setInterval(() => {
           if (currentIndex < fullText.length) {
+            // Show multiple characters at once for faster streaming
+            const charsToAdd = Math.min(3, fullText.length - currentIndex);
+            currentIndex += charsToAdd;
+            
             setMessages((prev) => {
               const newMessages = [...prev];
               const messageIndex = newMessages.findIndex((msg) => msg.id === message.id);
               if (messageIndex !== -1) {
                 newMessages[messageIndex] = {
                   ...newMessages[messageIndex],
-                  text: fullText.slice(0, currentIndex + 1),
+                  text: fullText.slice(0, currentIndex),
                 };
               }
               return newMessages;
             });
-            currentIndex++;
 
             // No scroll behavior during streaming - user maintains full control
           } else {
@@ -1015,7 +1022,7 @@ export const Chat = ({
             // Start the retry-enabled fetch after a delay
             setTimeout(() => fetchFollowUpQuestions(), 1500);
           }
-        }, 10); // Adjust speed: lower = faster, higher = slower
+        }, 15); // Adjust speed: lower = faster, higher = slower
       } else {
         // For non-agent messages, add normally
         setMessages((prev) => [...prev, message]);
@@ -1150,6 +1157,38 @@ export const Chat = ({
         console.log(`[Chat] Loaded ${loadedMessages.length} messages from history`);
         setMessages(loadedMessages);
 
+        // Immediately position at bottom without animation, then reveal
+        if (loadedMessages.length > 0) {
+          // Use multiple techniques to ensure proper positioning
+          const positionAtBottom = () => {
+            if (messagesContainerRef.current && !hasInitiallyPositioned) {
+              const container = messagesContainerRef.current;
+              // Force scroll to absolute bottom - ONLY on initial load
+              container.scrollTop = container.scrollHeight - container.clientHeight;
+              setIsPositioned(true); // Now reveal the chat
+              setHasInitiallyPositioned(true); // Mark as initially positioned
+              console.log('[Chat] Initially positioned at bottom:', {
+                scrollTop: container.scrollTop,
+                scrollHeight: container.scrollHeight,
+                clientHeight: container.clientHeight
+              });
+            } else if (hasInitiallyPositioned) {
+              // Already positioned once, just reveal without repositioning
+              setIsPositioned(true);
+            }
+          };
+
+          // Try multiple frames to ensure DOM is fully rendered
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              positionAtBottom();
+            });
+          });
+        } else {
+          // No messages, can show immediately
+          setIsPositioned(true);
+        }
+
         // Note: Initial message sending is now handled in the socket event listeners setup
         // This prevents race conditions between history loading and message sending
       })
@@ -1158,8 +1197,43 @@ export const Chat = ({
       })
       .finally(() => {
         setIsLoadingHistory(false);
+        // Ensure positioning state is set even if loading fails
+        setTimeout(() => setIsPositioned(true), 100);
       });
   }, [channelId, agentId, connectionStatus, currentUserId]);
+
+  // --- Ensure positioning when messages are first loaded (ONLY ONCE) ---
+  useEffect(() => {
+    if (messages.length > 0 && !isPositioned && !hasInitiallyPositioned && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      console.log('[Chat] Backup positioning attempt (initial only)');
+      
+      const attemptPosition = () => {
+        container.scrollTop = container.scrollHeight - container.clientHeight;
+        setIsPositioned(true);
+        setHasInitiallyPositioned(true);
+      };
+
+      // Try positioning after a short delay if not already positioned
+      const timeoutId = setTimeout(attemptPosition, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages.length, isPositioned, hasInitiallyPositioned]);
+
+  // --- Force initial positioning when component is ready (ONLY ONCE) ---
+  useEffect(() => {
+    if (messagesContainerRef.current && connectionStatus === 'connected' && !isLoadingHistory && !hasInitiallyPositioned) {
+      const container = messagesContainerRef.current;
+      // Ensure we're at bottom when component is ready - ONLY on initial load
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight - container.clientHeight;
+        if (!isPositioned) {
+          setIsPositioned(true);
+        }
+        setHasInitiallyPositioned(true);
+      });
+    }
+  }, [connectionStatus, isLoadingHistory, isPositioned, hasInitiallyPositioned]);
 
   // --- Set up scroll event listener ---
   useEffect(() => {
@@ -1388,7 +1462,7 @@ export const Chat = ({
         className={`flex-1 overflow-y-auto ${isStreaming ? 'streaming-disabled-scroll' : ''}`}
         style={{ 
           overflowAnchor: 'none',
-          scrollBehavior: isStreaming ? 'auto' : 'smooth'
+          scrollBehavior: 'auto'
         }}
       >
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
@@ -1442,8 +1516,8 @@ export const Chat = ({
             </div>
           )}
 
-          {/* Show chat messages when not loading */}
-          {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && (
+          {/* Show chat messages when not loading and properly positioned */}
+          {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && isPositioned && (
             <>
               <ChatMessages
                 messages={messages}
@@ -1453,6 +1527,7 @@ export const Chat = ({
                   setInput(prompt);
                 }}
               />
+              {/* Agent thinking/processing status - back at bottom */}
               {isShowingAnimation && (
                 <div className="flex items-center gap-3 py-3 text-gray-600 dark:text-gray-400">
                   <LoadingSpinner />
@@ -1470,6 +1545,18 @@ export const Chat = ({
               {/* Scroll anchor - only used for manual scroll to bottom, not for auto-scroll */}
               <div ref={messagesEndRef} />
             </>
+          )}
+
+          {/* Show positioning indicator when messages are loaded but not yet positioned */}
+          {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && !isPositioned && (
+            <div className="flex items-center justify-center h-32">
+              <div className="flex items-center gap-3">
+                <LoadingSpinner />
+                <span className="text-gray-600 dark:text-gray-400 text-base">
+                  Positioning chat...
+                </span>
+              </div>
+            </div>
           )}
         </div>
       </div>
