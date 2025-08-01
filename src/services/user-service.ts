@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase/client';
-import { generateInitialInviteCodes } from '@/services/invite-service';
 import { generateDeterministicUUID } from '@/utils/deterministic-uuid';
 
 const adjectives = [
@@ -131,28 +130,14 @@ export async function ensureSupabaseUser(privyUserId: string, email?: string | n
       const updateResult = await supabase.from('users').update({ username }).eq('id', existing.id);
       console.log('[ensureSupabaseUser] Update result:', updateResult);
     } else {
-      // Create new user with deterministic UUID
+      // Create new user with deterministic UUID for id, Privy ID for user_id
       const deterministicId = generateDeterministicUUID(privyUserId);
       console.log(
-        '[ensureSupabaseUser] Creating new user with deterministic UUID:',
+        '[ensureSupabaseUser] Creating new user with UUID:',
         deterministicId,
         'for Privy ID:',
         privyUserId
       );
-
-      // Double-check if a user with this ID already exists
-      const { data: existingById, error: checkError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', deterministicId)
-        .maybeSingle();
-
-      if (existingById) {
-        console.log(
-          '[ensureSupabaseUser] User with deterministic ID already exists, skipping insert'
-        );
-        return username;
-      }
 
       // Log if email is missing for debugging
       if (!email) {
@@ -160,8 +145,8 @@ export async function ensureSupabaseUser(privyUserId: string, email?: string | n
       }
 
       const insertData = {
-        id: deterministicId, // Use deterministic UUID as primary key
-        user_id: privyUserId,
+        id: deterministicId, // UUID primary key
+        user_id: privyUserId, // Privy ID - this is what we make unique
         username,
         email: email ?? null,
         invite_codes_remaining: 3,

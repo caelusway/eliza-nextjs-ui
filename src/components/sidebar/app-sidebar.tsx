@@ -11,6 +11,7 @@ import { NewChatButton } from './new-chat-button';
 import { NavigationMenu } from './navigation-menu';
 import { ChatSessionsList } from './chat-sessions-list';
 import { UserProfile } from './user-profile';
+import { CollapsedUserMenu } from './collapsed-user-menu';
 import { PostHogTracking } from '@/lib/posthog';
 import { useUIConfigSection } from '@/hooks/use-ui-config';
 
@@ -143,44 +144,10 @@ export function AppSidebar({
               </button>
             </div>
 
-            {/* Bottom section with Account and Logout */}
+            {/* Bottom section with User Menu */}
             <div className="mt-auto flex flex-col items-center space-y-3 px-2 py-4 border-t border-zinc-200 dark:border-zinc-700">
-              {/* Account Icon */}
-              <button
-                onClick={() => router.push('/account')}
-                className={cn(
-                  'w-10 h-10 rounded-lg flex items-center justify-center transition-colors group',
-                  pathname === '/account'
-                    ? 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800'
-                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
-                )}
-                title="Account"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </button>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-                title={sidebarConfig.logOutText}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              </button>
+              {/* Collapsed User Menu */}
+              <CollapsedUserMenu userName={getUserName()} onLogout={handleLogout} />
             </div>
           </div>
         )}

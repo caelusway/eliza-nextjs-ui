@@ -15,10 +15,7 @@ import {
   RefreshCw,
   Calendar,
   Users,
-  Link,
   Settings,
-  Badge,
-  Clock,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -97,28 +94,7 @@ export default function AccountPage() {
   const [isSending, setIsSending] = useState<string | null>(null);
 
   const accountConfig = useUIConfigSection('account');
-  const brandingConfig = useUIConfigSection('branding');
 
-  // Helper function to get darker shade for hover states
-  const getDarkerShade = (color: string) => {
-    if (color.startsWith('#')) {
-      const hex = color.slice(1);
-      const num = parseInt(hex, 16);
-      const r = Math.max(0, (num >> 16) - 20);
-      const g = Math.max(0, ((num >> 8) & 0x00ff) - 20);
-      const b = Math.max(0, (num & 0x0000ff) - 20);
-      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-    }
-    return color;
-  };
-
-  useEffect(() => {
-    if (!authenticated) {
-      router.push('/login');
-      return;
-    }
-    fetchInviteStats();
-  }, [authenticated, router]);
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);
@@ -126,40 +102,7 @@ export default function AccountPage() {
     setTimeout(() => setShowToast(false), 2000);
   };
 
-  const fetchInviteStats = async () => {
-    if (!user?.id) return;
 
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/invites/my-codes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setInviteStats(data);
-      } else {
-        console.error('Failed to fetch invite stats');
-      }
-    } catch (error) {
-      console.error('Error fetching invite stats:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchInviteStats();
-    setIsRefreshing(false);
-    showToastMessage(accountConfig.refreshedDataText);
-  };
 
   const copyToClipboard = (text: string, message: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -167,84 +110,6 @@ export default function AccountPage() {
     });
   };
 
-  const handleSendInvite = async (inviteCode: InviteCode) => {
-    if (!emailInput.trim()) return;
-
-    setIsSending(inviteCode.id);
-
-    try {
-      const response = await fetch('/api/invites/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: inviteCode.code,
-          email: emailInput,
-          senderName: senderName || 'Someone',
-        }),
-      });
-
-      if (response.ok) {
-        showToastMessage(accountConfig.inviteSentText);
-        setEmailInput('');
-        setSenderName('');
-        setEmailDialogInvite(null);
-        await fetchInviteStats();
-      } else {
-        const error = await response.json();
-        showToastMessage(`Error: ${error.error || 'Failed to send invite'}`);
-      }
-    } catch (error) {
-      showToastMessage(accountConfig.sendInviteErrorText);
-    } finally {
-      setIsSending(null);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const isExpired = (invite: InviteCode) => {
-    if (!invite.expires_at) return false;
-    return new Date() > new Date(invite.expires_at);
-  };
-
-  const getStatusBadge = (invite: InviteCode) => {
-    let status = invite.status || 'pending';
-    if (isExpired(invite)) {
-      status = 'expired';
-    }
-    const colors = {
-      pending: 'bg-yellow-500/20 text-yellow-400',
-      email_sent: 'bg-blue-500/20 text-blue-400',
-      accepted: 'bg-green-500/20 text-green-400',
-      expired: 'bg-red-500/20 text-red-400',
-    };
-
-    return (
-      <span
-        className={cn(
-          'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium',
-          'backdrop-blur-sm',
-          'transition-all duration-300 ease-in-out',
-          colors[status]
-        )}
-      >
-        {status === 'accepted' && <Check className="w-3 h-3" />}
-        {status === 'email_sent' && <Mail className="w-3 h-3" />}
-        {status === 'pending' && <Clock className="w-3 h-3" />}
-        {status === 'expired' && <X className="w-3 h-3" />}
-        {status.replace('_', ' ')}
-      </span>
-    );
-  };
 
   const getUserEmail = () => {
     if (typeof user?.email === 'string') return user.email;
@@ -252,11 +117,6 @@ export default function AccountPage() {
     return 'No email';
   };
 
-  const getUserIdentifier = () => {
-    const email = getUserEmail();
-    if (email !== 'No email') return email;
-    return user?.id?.substring(0, 20) + '...';
-  };
 
   if (!authenticated) {
     return null;
@@ -278,46 +138,108 @@ export default function AccountPage() {
               <p className="text-muted-foreground mt-1">{accountConfig.pageDescription}</p>
             </div>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-md transition-colors disabled:opacity-50 text-sm font-medium"
-          >
-            <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
-            <span className="sm:inline">{accountConfig.refreshText}</span>
-          </button>
         </div>
 
         {/* User Information */}
         <div className="bg-card rounded-xl p-6 mb-8">
+          <h2 className="text-xl font-medium text-foreground mb-6 flex items-center gap-2">
+            <Settings className="w-5 h-5 text-muted-foreground" />
+            Account Information
+          </h2>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            {/* Email */}
+            <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {accountConfig.emailLabel}
+                  </p>
+                  <p className="font-semibold text-foreground truncate">{getUserEmail()}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {accountConfig.emailLabel}
-                </p>
-                <p className="font-semibold text-foreground truncate">{getUserEmail()}</p>
+              <button
+                onClick={() => copyToClipboard(getUserEmail(), 'Email copied to clipboard')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium flex-shrink-0"
+              >
+                <Copy className="w-3 h-3" />
+                <span className="hidden sm:inline">Copy</span>
+              </button>
+            </div>
+
+            {/* User ID */}
+            <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <User className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {accountConfig.userIdLabel}
+                  </p>
+                  <p className="font-semibold text-foreground font-mono text-sm truncate">
+                    {user?.id?.substring(0, 20)}...
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => copyToClipboard(user?.id || '', 'User ID copied to clipboard')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium flex-shrink-0"
+              >
+                <Copy className="w-3 h-3" />
+                <span className="hidden sm:inline">Copy</span>
+              </button>
+            </div>
+
+            {/* Wallet Address (if connected) */}
+            {user?.wallet?.address && (
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <ExternalLink className="w-5 h-5 text-green-400 flex-shrink-0" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-muted-foreground font-medium">
+                      Wallet Address
+                    </p>
+                    <p className="font-semibold text-foreground font-mono text-sm">
+                      {user.wallet.address.substring(0, 5)}...{user.wallet.address.substring(user.wallet.address.length - 5)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(user.wallet?.address || '', 'Wallet address copied to clipboard')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium flex-shrink-0"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span className="hidden sm:inline">Copy</span>
+                </button>
+              </div>
+            )}
+
+            {/* Account Created */}
+            <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="p-2 bg-orange-500/20 rounded-lg">
+                  <Calendar className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-muted-foreground font-medium">
+                    Account Created
+                  </p>
+                  <p className="font-semibold text-foreground">
+                    {user?.createdAt ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true }) : 'Unknown'}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <User className="w-5 h-5 text-purple-400 flex-shrink-0" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {accountConfig.userIdLabel}
-                </p>
-                <p className="font-semibold text-foreground font-mono text-sm truncate">
-                  {user?.id?.substring(0, 20)}...
-                </p>
-              </div>
-            </div>
           </div>
         </div>
+
 
         {/* Add bottom padding to ensure content doesn't get cut off */}
         <div className="h-8 sm:h-4"></div>
@@ -374,32 +296,6 @@ export default function AccountPage() {
                   className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300"
                 />
               </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setEmailDialogInvite(null)}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-md transition-colors font-medium"
-                >
-                  {accountConfig.cancelText}
-                </button>
-                <button
-                  onClick={() => handleSendInvite(emailDialogInvite)}
-                  disabled={!emailInput.trim() || isSending === emailDialogInvite.id}
-                  className="flex-1 px-4 py-2 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
-                >
-                  {isSending === emailDialogInvite.id ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span className="hidden sm:inline">{accountConfig.sendingText}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      <span className="hidden sm:inline">{accountConfig.sendText}</span>
-                    </>
-                  )}
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -408,7 +304,7 @@ export default function AccountPage() {
       <Toast
         message={toastMessage}
         isVisible={showToast}
-        primaryColor={brandingConfig.primaryColor}
+        primaryColor="#4ade80"
       />
     </div>
   );

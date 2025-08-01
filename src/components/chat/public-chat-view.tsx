@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Eye, Calendar, ExternalLink, MessageSquare, ArrowLeft, Share2 } from 'lucide-react';
-import Image from 'next/image';
 import { PublicChatMessages } from '@/components/chat/public-chat-messages';
-import { useUIConfigSection } from '@/hooks/use-ui-config';
+import { Logo } from '@/components/ui/logo';
 import type { ChatMessage } from '@/types/chat-message';
 
 interface SharedSession {
@@ -26,7 +25,6 @@ interface PublicChatViewProps {
 }
 
 export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
-  const loginBrandingConfig = useUIConfigSection('loginBranding');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,18 +47,28 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
   // Track analytics
   const trackPageView = useCallback(async () => {
     try {
+      const requestData = {
+        sharedSessionId: sharedSession.id,
+        visitorId,
+        userAgent: navigator.userAgent,
+        referrer: document.referrer,
+      };
+      console.log('[PublicChatView] Tracking page view with data:', requestData);
+      
       const response = await fetch('/api/analytics/track', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          sharedSessionId: sharedSession.id,
-          visitorId,
-          userAgent: navigator.userAgent,
-          referrer: document.referrer,
-        }),
+        body: JSON.stringify(requestData),
       });
+
+      if (!response.ok) {
+        console.error('[PublicChatView] Analytics track failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('[PublicChatView] Analytics error details:', errorText);
+        return; // Don't throw, just log and continue
+      }
 
       const result = await response.json();
       if (result.message) {
@@ -70,7 +78,8 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
         console.log('[PublicChatView] New unique view tracked');
       }
     } catch (error) {
-      console.error('Failed to track page view:', error);
+      console.error('[PublicChatView] Failed to track page view:', error);
+      // Don't let analytics failures break the component
     }
   }, [sharedSession.id, visitorId]);
 
@@ -78,19 +87,31 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
     const sessionDuration = Math.floor((Date.now() - sessionStartTime.current) / 1000);
 
     try {
-      await fetch('/api/analytics/track', {
+      const requestData = {
+        sharedSessionId: sharedSession.id,
+        visitorId,
+        sessionDuration,
+      };
+      console.log('[PublicChatView] Tracking session end with data:', requestData);
+      
+      const response = await fetch('/api/analytics/track', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          sharedSessionId: sharedSession.id,
-          visitorId,
-          sessionDuration,
-        }),
+        body: JSON.stringify(requestData),
       });
+
+      if (!response.ok) {
+        console.error('[PublicChatView] Analytics session end failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('[PublicChatView] Analytics session end error details:', errorText);
+        return; // Don't throw, just log and continue
+      }
+
+      console.log('[PublicChatView] Session end tracked successfully');
     } catch (error) {
-      console.error('Failed to track session end:', error);
+      console.error('[PublicChatView] Failed to track session end:', error);
     }
   }, [sharedSession.id, visitorId]);
 
@@ -125,22 +146,30 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
         setLoading(true);
         setError(null);
 
+        console.log('[PublicChatView] Fetching messages for public_id:', sharedSession.public_id);
+
         // Fetch live messages from the shared session (no authentication needed for public view)
         const response = await fetch(`/api/shared-sessions/${sharedSession.public_id}/messages`);
 
         if (!response.ok) {
-          throw new Error('Failed to load chat messages');
+          console.error('[PublicChatView] Messages fetch failed:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('[PublicChatView] Messages fetch error details:', errorText);
+          throw new Error(`Failed to load chat messages (${response.status}): ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('[PublicChatView] Messages fetch response:', data);
 
         if (data.success && data.data?.messages) {
+          console.log('[PublicChatView] Successfully loaded', data.data.messages.length, 'messages');
           setMessages(data.data.messages);
         } else {
+          console.log('[PublicChatView] No messages found or invalid response format');
           setMessages([]);
         }
       } catch (err) {
-        console.error('Error fetching messages:', err);
+        console.error('[PublicChatView] Error fetching messages:', err);
         setError('Failed to load chat messages');
       } finally {
         setLoading(false);
@@ -181,15 +210,13 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
     <div style={{ height: 'auto', overflow: 'visible' }} className="w-full">
       {/* Header Section */}
       <header className="bg-white dark:bg-[#1a1a1a] sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+        <div className="max-w-3xl mx-auto  px-6 sm:px-6 py-6">
           {/* Logo Section */}
           <div className="text-center lg:text-left">
-            <Image
-              src={loginBrandingConfig.logoImage}
-              alt={loginBrandingConfig.logoAlt}
-              width={loginBrandingConfig.logoWidth}
-              height={loginBrandingConfig.logoHeight}
-              className="h-6 w-auto mx-auto lg:mx-0"
+            <Logo 
+              width={180}
+              height={45}
+              className="w-auto mx-auto lg:mx-0"
             />
           </div>
         </div>

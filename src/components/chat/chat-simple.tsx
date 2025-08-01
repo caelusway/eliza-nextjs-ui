@@ -1156,84 +1156,57 @@ export const Chat = ({
       .then((loadedMessages) => {
         console.log(`[Chat] Loaded ${loadedMessages.length} messages from history`);
         setMessages(loadedMessages);
-
-        // Immediately position at bottom without animation, then reveal
-        if (loadedMessages.length > 0) {
-          // Use multiple techniques to ensure proper positioning
-          const positionAtBottom = () => {
-            if (messagesContainerRef.current && !hasInitiallyPositioned) {
-              const container = messagesContainerRef.current;
-              // Force scroll to absolute bottom - ONLY on initial load
-              container.scrollTop = container.scrollHeight - container.clientHeight;
-              setIsPositioned(true); // Now reveal the chat
-              setHasInitiallyPositioned(true); // Mark as initially positioned
-              console.log('[Chat] Initially positioned at bottom:', {
-                scrollTop: container.scrollTop,
-                scrollHeight: container.scrollHeight,
-                clientHeight: container.clientHeight
-              });
-            } else if (hasInitiallyPositioned) {
-              // Already positioned once, just reveal without repositioning
-              setIsPositioned(true);
-            }
-          };
-
-          // Try multiple frames to ensure DOM is fully rendered
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              positionAtBottom();
-            });
-          });
-        } else {
-          // No messages, can show immediately
-          setIsPositioned(true);
-        }
-
-        // Note: Initial message sending is now handled in the socket event listeners setup
-        // This prevents race conditions between history loading and message sending
+        // Positioning will be handled by the separate useEffect that watches messages.length
       })
       .catch((error) => {
         console.error('[Chat] Failed to load message history:', error);
       })
       .finally(() => {
         setIsLoadingHistory(false);
-        // Ensure positioning state is set even if loading fails
-        setTimeout(() => setIsPositioned(true), 100);
       });
   }, [channelId, agentId, connectionStatus, currentUserId]);
 
-  // --- Ensure positioning when messages are first loaded (ONLY ONCE) ---
+  // --- Position at bottom when messages are first rendered ---
   useEffect(() => {
-    if (messages.length > 0 && !isPositioned && !hasInitiallyPositioned && messagesContainerRef.current) {
+    if (messages.length > 0 && !hasInitiallyPositioned && messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      console.log('[Chat] Backup positioning attempt (initial only)');
+      console.log('[Chat] Positioning after messages rendered in DOM');
       
       const attemptPosition = () => {
-        container.scrollTop = container.scrollHeight - container.clientHeight;
-        setIsPositioned(true);
+        console.log('[Chat] Attempting position with DOM rendered:', {
+          scrollHeight: container.scrollHeight,
+          clientHeight: container.clientHeight,
+          messagesCount: messages.length
+        });
+        
+        // Scroll to bottom
+        container.scrollTop = container.scrollHeight;
+        
+        // Also use messagesEndRef as backup
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
+        }
+        
         setHasInitiallyPositioned(true);
+        setIsUserScrolled(false);
+        
+        // Verify position
+        setTimeout(() => {
+          const isAtBottom = container.scrollTop >= container.scrollHeight - container.clientHeight - 10;
+          console.log('[Chat] Final position check:', {
+            scrollTop: container.scrollTop,
+            scrollHeight: container.scrollHeight,
+            isAtBottom
+          });
+        }, 100);
       };
 
-      // Try positioning after a short delay if not already positioned
+      // Try positioning immediately and after a delay
+      attemptPosition();
       const timeoutId = setTimeout(attemptPosition, 200);
       return () => clearTimeout(timeoutId);
     }
-  }, [messages.length, isPositioned, hasInitiallyPositioned]);
-
-  // --- Force initial positioning when component is ready (ONLY ONCE) ---
-  useEffect(() => {
-    if (messagesContainerRef.current && connectionStatus === 'connected' && !isLoadingHistory && !hasInitiallyPositioned) {
-      const container = messagesContainerRef.current;
-      // Ensure we're at bottom when component is ready - ONLY on initial load
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight - container.clientHeight;
-        if (!isPositioned) {
-          setIsPositioned(true);
-        }
-        setHasInitiallyPositioned(true);
-      });
-    }
-  }, [connectionStatus, isLoadingHistory, isPositioned, hasInitiallyPositioned]);
+  }, [messages.length, hasInitiallyPositioned]);
 
   // --- Set up scroll event listener ---
   useEffect(() => {
@@ -1516,8 +1489,8 @@ export const Chat = ({
             </div>
           )}
 
-          {/* Show chat messages when not loading and properly positioned */}
-          {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && isPositioned && (
+          {/* Show chat messages when not loading */}
+          {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && (
             <>
               <ChatMessages
                 messages={messages}
@@ -1547,17 +1520,6 @@ export const Chat = ({
             </>
           )}
 
-          {/* Show positioning indicator when messages are loaded but not yet positioned */}
-          {connectionStatus === 'connected' && !isWaitingForAgent && !isLoadingHistory && !isPositioned && (
-            <div className="flex items-center justify-center h-32">
-              <div className="flex items-center gap-3">
-                <LoadingSpinner />
-                <span className="text-gray-600 dark:text-gray-400 text-base">
-                  Positioning chat...
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
