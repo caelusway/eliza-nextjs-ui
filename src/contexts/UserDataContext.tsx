@@ -10,7 +10,7 @@ import {
   useCallback,
 } from 'react';
 import { useUserManager } from '@/lib/user-manager';
-import { getUserRowIdByPrivyId, ensureSupabaseUser } from '@/services/user-service';
+import { getUserRowIdByPrivyId } from '@/services/user-service';
 
 interface UserDataContextType {
   userRowId: string | null;
@@ -79,24 +79,12 @@ export const UserDataProvider = ({ children }: UserDataProviderProps) => {
           }
         }
 
+        // Don't proactively create users - let them be created only when needed
+        // This prevents duplicate user creation race conditions
+        setUserRowId(rowId); // Will be null if user doesn't exist yet
+        
         if (!rowId) {
-          console.log('[UserDataProvider] No user row ID found, creating user in Supabase...');
-
-          try {
-            await ensureSupabaseUser(userId);
-            console.log('[UserDataProvider] User created in Supabase, retrying rowId fetch...');
-
-            // Retry getting the row ID after user creation
-            const newRowId = await getUserRowIdByPrivyId(userId);
-            console.log('[UserDataProvider] New user row ID:', newRowId);
-            setUserRowId(newRowId);
-          } catch (createError) {
-            console.error('[UserDataProvider] Failed to create user in Supabase:', createError);
-            setError('Failed to initialize user profile');
-            setUserRowId(null);
-          }
-        } else {
-          setUserRowId(rowId);
+          console.log('[UserDataProvider] No user row ID found - user will be created when they perform an action requiring database entry');
         }
       } catch (err) {
         console.error('[UserDataProvider] Failed to get user row ID:', err);

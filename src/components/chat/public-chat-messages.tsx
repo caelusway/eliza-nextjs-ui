@@ -86,7 +86,7 @@ export function PublicChatMessages({ messages }: PublicChatMessagesProps) {
                   <div className="flex-shrink-0 flex items-center justify-center">
                     <div className="w-8 h-8 rounded-full overflow-hidden  p-1  flex items-center justify-center">
                       <Image
-                        src="/assets/new_logo_simple.png"
+                        src="/assets/logo_simple.png"
                         alt="AUBRAI"
                         width={24}
                         height={24}
