@@ -87,7 +87,6 @@ export default function InvitesPage() {
   const [emailDialogInvite, setEmailDialogInvite] = useState<InviteCode | null>(null);
   const [emailInput, setEmailInput] = useState('');
   const [senderName, setSenderName] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);
@@ -99,6 +98,7 @@ export default function InvitesPage() {
     const userId = getUserId();
     if (!userId) return;
 
+    console.log('[InvitesPage] Fetching invite stats for userId:', userId);
     setIsLoading(true);
     try {
       const response = await authenticatedFetch('/api/invites/my-codes', {
@@ -111,8 +111,11 @@ export default function InvitesPage() {
         }),
       });
 
+      console.log('[InvitesPage] API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('[InvitesPage] Received invite stats:', data);
         setInviteStats(data);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -145,35 +148,6 @@ export default function InvitesPage() {
     });
   };
 
-  const handleGenerateInvites = async () => {
-    const userId = getUserId();
-    if (!userId) return;
-
-    setIsGenerating(true);
-    try {
-      const response = await authenticatedFetch('/api/invites/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId,
-        }),
-      });
-
-      if (response.ok) {
-        showToastMessage('Invite codes generated successfully!');
-        await fetchInviteStats(); // Refresh the data
-      } else {
-        const error = await response.json().catch(() => ({}));
-        showToastMessage(`Error: ${error.error || 'Failed to generate invite codes'}`);
-      }
-    } catch (error) {
-      showToastMessage('Error generating invite codes');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const handleSendInvite = async (inviteCode: InviteCode) => {
     if (!emailInput.trim()) return;
@@ -301,36 +275,13 @@ export default function InvitesPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : inviteStats ? (
-            inviteStats.invites.length === 0 && inviteStats.remaining_codes > 0 ? (
-              // Show generate button when user has remaining codes but no actual invite codes
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[#FF6E71]/10 rounded-xl flex items-center justify-center">
-                  <UserPlus className="w-8 h-8 text-[#FF6E71]" />
+            inviteStats.invites.length === 0 ? (
+              // Show message when user has no invite codes (should not happen normally)
+              <div className="text-center py-12 text-muted-foreground">
+                <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-xl flex items-center justify-center">
+                  <UserPlus className="w-8 h-8 opacity-50" />
                 </div>
-                <p className="text-lg font-medium text-foreground mb-2">
-                  Ready to Generate Invite Codes
-                </p>
-                <p className="text-muted-foreground mb-6">
-                  You have {inviteStats.remaining_codes} invite code
-                  {inviteStats.remaining_codes !== 1 ? 's' : ''} available to generate.
-                </p>
-                <button
-                  onClick={handleGenerateInvites}
-                  disabled={isGenerating}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4" />
-                      Generate Invite Codes
-                    </>
-                  )}
-                </button>
+                <p className="text-lg font-medium">No invite codes available</p>
               </div>
             ) : (
               <div className="space-y-0">
