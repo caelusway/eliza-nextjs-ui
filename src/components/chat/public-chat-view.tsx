@@ -217,6 +217,7 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
               width={180}
               height={45}
               className="w-auto mx-auto lg:mx-0"
+              src="/assets/logo_text.png"
             />
           </div>
         </div>
