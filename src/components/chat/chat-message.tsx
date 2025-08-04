@@ -22,6 +22,7 @@ import { useUserData } from '@/contexts/UserDataContext';
 import { getVoteStats, getUserVote, toggleVote } from '@/services/vote-service';
 import { VoteStats } from '@/lib/supabase/types';
 import { cleanTextForAudio } from '@/utils/clean-text-for-audio';
+import { removeCitationsFromText } from '@/utils/clean-citations';
 
 // Get agent ID from environment
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -66,6 +67,11 @@ export const ChatMessage = memo(
     // Memoize whether this is an agent message to avoid recalculation
     const isAgent = useMemo(() => isAgentMessage(message), [message]);
     const isUser = useMemo(() => isUserMessage(message), [message]);
+
+    // Memoize cleaned message text (remove citations for display)
+    const cleanedMessageText = useMemo(() => {
+      return message.text ? removeCitationsFromText(message.text) : '';
+    }, [message.text]);
 
     // Lazy load vote data only when needed (when user hovers or interacts)
     const loadVoteData = useCallback(async () => {
@@ -265,7 +271,7 @@ export const ChatMessage = memo(
             <div className="flex flex-col items-end max-w-[80%]">
               <div className="bg-zinc-700 text-white rounded-2xl px-4 py-3 shadow-sm">
                 <div className="text-white text-sm">
-                  <ChatMarkdown content={message.text ?? ''} />
+                  <ChatMarkdown content={cleanedMessageText} />
                 </div>
               </div>
               <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 px-2 font-medium">
@@ -278,23 +284,25 @@ export const ChatMessage = memo(
           <div className="mb-3">
             {/* Message Content */}
             <div className="text-sm">
-              <ChatMarkdown content={message.text ?? ''} />
+              <ChatMarkdown content={cleanedMessageText} />
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 mt-3">
                 {/* Play Sound Button */}
-                {message.text && message.text.trim() && cleanTextForAudio(message.text) && (
-                  <PlaySoundButton
-                    text={message.text}
-                    className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors p-1 rounded hover:bg-zinc-200 dark:hover:bg-[#404040]"
-                  />
-                )}
+                {cleanedMessageText &&
+                  cleanedMessageText.trim() &&
+                  cleanTextForAudio(cleanedMessageText) && (
+                    <PlaySoundButton
+                      text={cleanedMessageText}
+                      className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors p-1 rounded hover:bg-zinc-200 dark:hover:bg-[#404040]"
+                    />
+                  )}
 
                 {/* Copy Button */}
                 <button
                   onClick={() => {
-                    if (message.text) {
-                      navigator.clipboard.writeText(message.text);
+                    if (cleanedMessageText) {
+                      navigator.clipboard.writeText(cleanedMessageText);
                       toast.success('Copied to clipboard');
                     }
                   }}
@@ -312,7 +320,7 @@ export const ChatMessage = memo(
                 </button>
 
                 {/* Voting buttons - only show for authenticated users with valid userRowId and agent messages */}
-                {isAgent && message.text && message.text.trim() && (
+                {isAgent && cleanedMessageText && cleanedMessageText.trim() && (
                   <>
                     <button
                       onClick={handleThumbsUp}

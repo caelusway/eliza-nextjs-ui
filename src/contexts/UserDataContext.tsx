@@ -82,9 +82,11 @@ export const UserDataProvider = ({ children }: UserDataProviderProps) => {
         // Don't proactively create users - let them be created only when needed
         // This prevents duplicate user creation race conditions
         setUserRowId(rowId); // Will be null if user doesn't exist yet
-        
+
         if (!rowId) {
-          console.log('[UserDataProvider] No user row ID found - user will be created when they perform an action requiring database entry');
+          console.log(
+            '[UserDataProvider] No user row ID found - user will be created when they perform an action requiring database entry'
+          );
         }
       } catch (err) {
         console.error('[UserDataProvider] Failed to get user row ID:', err);

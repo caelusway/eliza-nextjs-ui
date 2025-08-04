@@ -139,9 +139,10 @@ export const Chat = ({
     if (!messagesContainerRef.current) return true;
     const container = messagesContainerRef.current;
     const threshold = 50; // Smaller threshold - must be very close to bottom
-    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
     const isAtBottom = distanceFromBottom <= threshold;
-    
+
     // Debug logging
     if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
       console.log('[Scroll Debug]', {
@@ -150,10 +151,10 @@ export const Chat = ({
         isAtBottom,
         scrollHeight: container.scrollHeight,
         scrollTop: container.scrollTop,
-        clientHeight: container.clientHeight
+        clientHeight: container.clientHeight,
       });
     }
-    
+
     return isAtBottom;
   }, []);
 
@@ -161,16 +162,16 @@ export const Chat = ({
   const handleScroll = useCallback(() => {
     const isAtBottom = isScrolledToBottom();
     const userHasScrolledUp = !isAtBottom;
-    
+
     setIsUserScrolled(userHasScrolledUp);
     // Never auto-scroll - always keep it false
     setShouldAutoScroll(false);
-    
+
     if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
       console.log('[Scroll State]', {
         isAtBottom,
         userHasScrolledUp,
-        shouldAutoScroll: false // Always false
+        shouldAutoScroll: false, // Always false
       });
     }
   }, [isScrolledToBottom]);
@@ -872,7 +873,7 @@ export const Chat = ({
       if (isAgentMessage && message.text) {
         // Track when we start receiving the response
         const streamStartTime = Date.now();
-        
+
         // Set streaming state to prevent any scroll interference
         setIsStreaming(true);
 
@@ -893,7 +894,7 @@ export const Chat = ({
             // Show multiple characters at once for faster streaming
             const charsToAdd = Math.min(3, fullText.length - currentIndex);
             currentIndex += charsToAdd;
-            
+
             setMessages((prev) => {
               const newMessages = [...prev];
               const messageIndex = newMessages.findIndex((msg) => msg.id === message.id);
@@ -927,9 +928,9 @@ export const Chat = ({
             // Fetch follow up questions after streaming stops with robust authentication handling
             const fetchFollowUpQuestions = async (retryCount = 0) => {
               const maxRetries = 3;
-              
+
               console.log('[Chat] Fetching follow-up questions... (attempt', retryCount + 1, ')');
-              
+
               // Enhanced authentication checks
               if (!isUserAuthenticated() || !isReady) {
                 if (retryCount < maxRetries) {
@@ -937,27 +938,32 @@ export const Chat = ({
                   setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 1000);
                   return;
                 } else {
-                  console.warn('[Chat] User not authenticated or Privy not ready after retries, skipping follow-up questions:', {
-                    isAuthenticated: isUserAuthenticated(),
-                    isReady,
-                  });
+                  console.warn(
+                    '[Chat] User not authenticated or Privy not ready after retries, skipping follow-up questions:',
+                    {
+                      isAuthenticated: isUserAuthenticated(),
+                      isReady,
+                    }
+                  );
                   return;
                 }
               }
 
               // Additional check to ensure the authenticatedFetch hook is available
               if (!authenticatedFetch) {
-                console.warn('[Chat] AuthenticatedFetch hook not available, skipping follow-up questions');
+                console.warn(
+                  '[Chat] AuthenticatedFetch hook not available, skipping follow-up questions'
+                );
                 return;
               }
-              
+
               const body = {
                 prompt: fullText,
               };
-              
+
               try {
                 console.log('[Chat] Making authenticated request to follow-up questions API...');
-                
+
                 const response = await authenticatedFetch('/api/followup-questions', {
                   body: JSON.stringify(body),
                   method: 'POST',
@@ -965,19 +971,19 @@ export const Chat = ({
                     'Content-Type': 'application/json',
                   },
                 });
-                
+
                 console.log('[Chat] Follow-up questions response:', {
                   status: response.status,
                   ok: response.ok,
                   statusText: response.statusText,
                 });
-                
+
                 if (response.status === 401 && retryCount < maxRetries) {
                   console.log('[Chat] Got 401, retrying with fresh token...');
                   setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 1000);
                   return;
                 }
-                
+
                 if (!response.ok) {
                   const errorText = await response.text();
                   console.error('[Chat] Follow-up questions API error:', {
@@ -987,10 +993,10 @@ export const Chat = ({
                   });
                   throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
                 }
-                
+
                 const data = await response.json();
                 console.log('[Chat] Follow-up questions data:', data);
-                
+
                 if (data.questions && Array.isArray(data.questions)) {
                   setFollowUpQues(data.questions);
                   localStorage.setItem('questions', JSON.stringify(data.questions));
@@ -999,14 +1005,14 @@ export const Chat = ({
                 }
               } catch (error) {
                 console.error('[Chat] Follow-up questions error:', error);
-                
+
                 // Check if it's an authentication error and retry
-                const isAuthError = error instanceof Error && (
-                  error.message.includes('Authentication service not ready') ||
-                  error.message.includes('User not authenticated') ||
-                  error.message.includes('No access token available')
-                );
-                
+                const isAuthError =
+                  error instanceof Error &&
+                  (error.message.includes('Authentication service not ready') ||
+                    error.message.includes('User not authenticated') ||
+                    error.message.includes('No access token available'));
+
                 if (isAuthError && retryCount < maxRetries) {
                   console.log('[Chat] Authentication error, retrying follow-up questions...');
                   setTimeout(() => fetchFollowUpQuestions(retryCount + 1), 2000);
@@ -1018,7 +1024,7 @@ export const Chat = ({
                 }
               }
             };
-            
+
             // Start the retry-enabled fetch after a delay
             setTimeout(() => fetchFollowUpQuestions(), 1500);
           }
@@ -1171,32 +1177,33 @@ export const Chat = ({
     if (messages.length > 0 && !hasInitiallyPositioned && messagesContainerRef.current) {
       const container = messagesContainerRef.current;
       console.log('[Chat] Positioning after messages rendered in DOM');
-      
+
       const attemptPosition = () => {
         console.log('[Chat] Attempting position with DOM rendered:', {
           scrollHeight: container.scrollHeight,
           clientHeight: container.clientHeight,
-          messagesCount: messages.length
+          messagesCount: messages.length,
         });
-        
+
         // Scroll to bottom
         container.scrollTop = container.scrollHeight;
-        
+
         // Also use messagesEndRef as backup
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
         }
-        
+
         setHasInitiallyPositioned(true);
         setIsUserScrolled(false);
-        
+
         // Verify position
         setTimeout(() => {
-          const isAtBottom = container.scrollTop >= container.scrollHeight - container.clientHeight - 10;
+          const isAtBottom =
+            container.scrollTop >= container.scrollHeight - container.clientHeight - 10;
           console.log('[Chat] Final position check:', {
             scrollTop: container.scrollTop,
             scrollHeight: container.scrollHeight,
-            isAtBottom
+            isAtBottom,
           });
         }, 100);
       };
@@ -1214,7 +1221,7 @@ export const Chat = ({
     if (!container) return;
 
     container.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     // Check initial scroll position
     handleScroll();
 
@@ -1430,12 +1437,12 @@ export const Chat = ({
       </div>
 
       {/* Scrollable Chat Messages */}
-      <div 
-        ref={messagesContainerRef} 
+      <div
+        ref={messagesContainerRef}
         className={`flex-1 overflow-y-auto ${isStreaming ? 'streaming-disabled-scroll' : ''}`}
-        style={{ 
+        style={{
           overflowAnchor: 'none',
-          scrollBehavior: 'auto'
+          scrollBehavior: 'auto',
         }}
       >
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
@@ -1519,7 +1526,6 @@ export const Chat = ({
               <div ref={messagesEndRef} />
             </>
           )}
-
         </div>
       </div>
 

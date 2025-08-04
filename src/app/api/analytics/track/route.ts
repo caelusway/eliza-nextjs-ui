@@ -5,12 +5,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     console.log('[Analytics POST] Received request body:', body);
-    
+
     const { sharedSessionId, visitorId, userAgent, referrer } = body;
-    console.log('[Analytics POST] Extracted values:', { sharedSessionId, visitorId, userAgent: !!userAgent, referrer: !!referrer });
+    console.log('[Analytics POST] Extracted values:', {
+      sharedSessionId,
+      visitorId,
+      userAgent: !!userAgent,
+      referrer: !!referrer,
+    });
 
     if (!sharedSessionId || !visitorId) {
-      console.error('[Analytics POST] Missing required fields:', { sharedSessionId: !!sharedSessionId, visitorId: !!visitorId });
+      console.error('[Analytics POST] Missing required fields:', {
+        sharedSessionId: !!sharedSessionId,
+        visitorId: !!visitorId,
+      });
       return NextResponse.json(
         { error: 'Shared session ID and visitor ID are required' },
         { status: 400 }
@@ -121,15 +129,19 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     console.log('[Analytics PATCH] Received request body:', body);
-    
+
     const { sharedSessionId, visitorId, sessionDuration } = body;
-    console.log('[Analytics PATCH] Extracted values:', { sharedSessionId, visitorId, sessionDuration });
+    console.log('[Analytics PATCH] Extracted values:', {
+      sharedSessionId,
+      visitorId,
+      sessionDuration,
+    });
 
     if (!sharedSessionId || !visitorId || sessionDuration === undefined) {
-      console.error('[Analytics PATCH] Missing required fields:', { 
-        sharedSessionId: !!sharedSessionId, 
-        visitorId: !!visitorId, 
-        sessionDuration: sessionDuration !== undefined 
+      console.error('[Analytics PATCH] Missing required fields:', {
+        sharedSessionId: !!sharedSessionId,
+        visitorId: !!visitorId,
+        sessionDuration: sessionDuration !== undefined,
       });
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }

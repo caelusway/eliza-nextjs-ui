@@ -148,7 +148,6 @@ export default function InvitesPage() {
     });
   };
 
-
   const handleSendInvite = async (inviteCode: InviteCode) => {
     if (!emailInput.trim()) return;
 
