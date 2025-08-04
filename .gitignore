@@ -64,3 +64,6 @@ elizaos/
 aubrai-old-ui/
 package-lock.json
 src/components/chat/new-chat-welcome.tsx
+
+.claude
+

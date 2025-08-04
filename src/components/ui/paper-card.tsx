@@ -107,7 +107,7 @@ export function PaperCard({ paper, className }: PaperCardProps) {
             <div className="space-y-6">
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-300">Title</label>
-                <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-white border border-gray-700/50">
+                <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white border border-gray-600 dark:border-gray-600">
                   {paper.title}
                 </div>
               </div>
@@ -120,12 +120,12 @@ export function PaperCard({ paper, className }: PaperCardProps) {
                       href={paperUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full px-4 py-3 bg-gray-800/60 hover:bg-gray-800/80 rounded-xl text-blue-400 hover:text-blue-300 border border-gray-700/50 font-mono text-sm break-all transition-all duration-200 cursor-pointer"
+                      className="block w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] hover:bg-[#333] dark:hover:bg-[#333] rounded-xl text-blue-400 hover:text-blue-300 border border-gray-600 dark:border-gray-600 font-mono text-sm break-all transition-all duration-200 cursor-pointer"
                     >
                       {paper.doi}
                     </a>
                   ) : (
-                    <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-gray-300 border border-gray-700/50 font-mono text-sm break-all">
+                    <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-gray-300 border border-gray-600 dark:border-gray-600 font-mono text-sm break-all">
                       {paper.doi}
                     </div>
                   )}
@@ -135,7 +135,7 @@ export function PaperCard({ paper, className }: PaperCardProps) {
               {paper.abstract && (
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-300">Abstract</label>
-                  <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-white border border-gray-700/50 leading-relaxed max-h-48 overflow-y-auto">
+                  <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white border border-gray-600 dark:border-gray-600 leading-relaxed max-h-48 overflow-y-auto">
                     {paper.abstract}
                   </div>
                 </div>

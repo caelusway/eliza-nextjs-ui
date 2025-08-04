@@ -1295,8 +1295,8 @@ export const Chat = ({
         // Set streaming state to prevent any scroll interference
         setIsStreaming(true);
 
-        // Add the message with empty text first
-        const streamingMessage = { ...message, text: '' };
+        // Add the message with empty text first and clear papers during streaming to prevent glitching
+        const streamingMessage = { ...message, text: '', papers: undefined };
         setMessages((prev) => [...prev, streamingMessage]);
 
         // Update last activity timestamp for real-time display
@@ -1388,6 +1388,19 @@ export const Chat = ({
             console.log('[Chat] Agent response streaming complete, stopping animation');
             setIsStreaming(false); // Clear streaming state
             safeStopAnimation();
+            
+            // Restore papers now that streaming is complete to prevent glitching
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              const messageIndex = newMessages.findIndex((msg) => msg.id === message.id);
+              if (messageIndex !== -1) {
+                newMessages[messageIndex] = {
+                  ...newMessages[messageIndex],
+                  papers: message.papers, // Restore original papers
+                };
+              }
+              return newMessages;
+            });
             
             // Scroll agent response to top and then remove spacing after a delay
             setTimeout(() => {
@@ -1901,31 +1914,36 @@ export const Chat = ({
       <div className="flex-shrink-0 pt-4 sm:pt-8 pb-2 sm:pb-2 bg-white dark:bg-[#292929]">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-1">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-                {sessionData ? (
-                  sessionData.title
-                ) : (
-                  <span className="animate-pulse">Loading session...</span>
-                )}
-              </h1>
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight truncate pr-2">
+                  {sessionData ? (
+                    sessionData.title
+                  ) : (
+                    <span className="animate-pulse">Loading session...</span>
+                  )}
+                </h1>
+              </div>
               {sessionData && (
-                <ShareButton sessionId={sessionId} sessionTitle={sessionData.title} />
+                <div className="flex-shrink-0">
+                  <ShareButton sessionId={sessionId} sessionTitle={sessionData.title} />
+                </div>
               )}
             </div>
             {sessionData ? (
-              <div className="flex items-center gap-3 mt-2">
-                <div className="text-gray-600 dark:text-gray-400 text-sm">
-                  {currentMessageCount} messages • Last activity{' '}
-                  {lastActivity ? formatTimeAgo(lastActivity) : 'Never'}
-                  {/* timeUpdateTrigger is used to force re-render of time display */}
-                  {timeUpdateTrigger > 0 && ''}
-                  {/* Real-time indicator */}
-                </div>
-                <div className="text-sm">{renderConnectionStatus()}</div>
+              <div className="flex items-center gap-3 mt-3 text-gray-600 dark:text-gray-400 text-sm">
+                <span className="flex-shrink-0">{currentMessageCount} messages</span>
+                <span className="flex-shrink-0">•</span>
+                <span className="flex-shrink-0">
+                  Last activity {lastActivity ? formatTimeAgo(lastActivity) : 'Never'}
+                </span>
+                <span className="flex-shrink-0">{renderConnectionStatus()}</span>
+                {/* timeUpdateTrigger is used to force re-render of time display */}
+                {timeUpdateTrigger > 0 && ''}
+                {/* Real-time indicator */}
               </div>
             ) : (
-              <div className="mt-2">{renderConnectionStatus()}</div>
+              <div className="mt-3">{renderConnectionStatus()}</div>
             )}
           </div>
         </div>

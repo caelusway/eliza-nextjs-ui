@@ -15,8 +15,8 @@ async function sendInviteHandler(request: NextRequest, user: any) {
       return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
     }
 
-    // Rate limiting - 10 email invites per hour per user to prevent spam
-    const rateLimitResult = checkRateLimit(`send-invite:${user.userId}`, 10, 60 * 60 * 1000);
+    // Rate limiting - 5 email invites per 24 hours per user to prevent spam
+    const rateLimitResult = checkRateLimit(`send-invite:${user.userId}`, 5, 24 * 60 * 60 * 1000);
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
@@ -27,7 +27,7 @@ async function sendInviteHandler(request: NextRequest, user: any) {
           status: 429,
           headers: {
             'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString(),
-            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Limit': '5',
             'X-RateLimit-Remaining': rateLimitResult.remainingRequests.toString(),
             'X-RateLimit-Reset': Math.ceil(rateLimitResult.resetTime / 1000).toString(),
           },
@@ -72,6 +72,20 @@ async function sendInviteHandler(request: NextRequest, user: any) {
     // Verify the invite code belongs to the authenticated user
     const { supabase } = await import('@/lib/supabase/client');
 
+    // Get user's internal Supabase ID first
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('user_id', user.userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
     // Simplified approach to avoid TypeScript type depth issues
     let inviteCode: any = null;
     let codeError: any = null;
@@ -81,7 +95,7 @@ async function sendInviteHandler(request: NextRequest, user: any) {
         .from('invites')
         .select('created_by, status, current_uses, max_uses')
         .eq('code', sanitizedCode)
-        .eq('created_by', user.userId)
+        .eq('created_by', userData.id)
         .single();
 
       inviteCode = result.data;

@@ -450,7 +450,7 @@ export const SharedSessionsList = ({ userId, searchQuery = '' }: SharedSessionsL
             <div className="space-y-6">
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-300">Session Title</label>
-                <div className="w-full px-4 py-3 bg-gray-800/60 rounded-xl text-white border border-gray-700/50">
+                <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white border border-gray-600 dark:border-gray-600">
                   {unshareModal.sessionTitle}
                 </div>
               </div>
@@ -467,7 +467,7 @@ export const SharedSessionsList = ({ userId, searchQuery = '' }: SharedSessionsL
             <div className="flex gap-4 pt-6">
               <button
                 onClick={cancelUnshare}
-                className="flex-1 bg-gray-800/60 hover:bg-gray-800/80 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-700/50"
+                className="flex-1 bg-[#2a2a2a] dark:bg-[#2a2a2a] hover:bg-[#333] dark:hover:bg-[#333] text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-600 dark:border-gray-600"
               >
                 Cancel
               </button>
