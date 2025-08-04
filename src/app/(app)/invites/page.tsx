@@ -148,7 +148,6 @@ export default function InvitesPage() {
     });
   };
 
-
   const handleSendInvite = async (inviteCode: InviteCode) => {
     if (!emailInput.trim()) return;
 
@@ -383,13 +382,23 @@ export default function InvitesPage() {
                               <span className="hidden sm:inline">Link</span>
                             </button>
 
-                            <button
-                              onClick={() => setEmailDialogInvite(invite)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors text-sm font-medium"
-                            >
-                              <Send className="w-3 h-3" />
-                              <span className="hidden sm:inline">Send</span>
-                            </button>
+                            {invite.email_sent_to && invite.email_sent_at ? (
+                              <button
+                                disabled
+                                className="flex items-center gap-1 px-3 py-1.5 bg-green-500/30 text-green-400 rounded-lg text-sm opacity-50 cursor-not-allowed"
+                              >
+                                <Send className="w-3 h-3" />
+                                <span className="hidden sm:inline">Sent</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setEmailDialogInvite(invite)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors text-sm font-medium"
+                              >
+                                <Send className="w-3 h-3" />
+                                <span className="hidden sm:inline">Send</span>
+                              </button>
+                            )}
                           </>
                         )}
                       </div>
@@ -458,30 +467,30 @@ export default function InvitesPage() {
 
       {/* Email Dialog */}
       {emailDialogInvite && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Send Invite</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+          <div className="bg-[#1a1a1a] rounded-xl p-8 w-full max-w-md shadow-2xl border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white tracking-tight">Send Invite</h3>
               <button
                 onClick={() => setEmailDialogInvite(null)}
-                className="text-muted-foreground hover:text-foreground transition-colors duration-200 p-2 rounded-xl hover:bg-secondary/50"
+                className="text-gray-400 hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-800/50"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Invite Code
                 </label>
-                <code className="block w-full px-3 py-2 bg-secondary rounded-xl text-sm font-mono break-all">
+                <code className="block w-full px-4 py-3 bg-[#2a2a2a] rounded-xl text-sm font-mono break-all text-white border border-gray-600">
                   {emailDialogInvite.code}
                 </code>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Your Name (optional)
                 </label>
                 <input
@@ -489,12 +498,12 @@ export default function InvitesPage() {
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300"
+                  className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 border border-gray-600 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Email Address
                 </label>
                 <input
@@ -502,31 +511,31 @@ export default function InvitesPage() {
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="friend@example.com"
-                  className="w-full px-3 py-2 bg-secondary rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300"
+                  className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 border border-gray-600 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-4 pt-4">
                 <button
                   onClick={() => setEmailDialogInvite(null)}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-md transition-colors font-medium"
+                  className="px-6 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] hover:bg-[#333] dark:hover:bg-[#333] text-white rounded-xl text-sm font-medium transition-colors border border-gray-600 dark:border-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleSendInvite(emailDialogInvite)}
                   disabled={!emailInput.trim() || isSending === emailDialogInvite.id}
-                  className="flex-1 px-4 py-2 bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
+                  className="flex-1 bg-[#FF6E71] hover:bg-[#FF6E71]/90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   {isSending === emailDialogInvite.id ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span className="hidden sm:inline">Sending...</span>
+                      <span>Sending...</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span className="hidden sm:inline">Send</span>
+                      <span>Send Invite</span>
                     </>
                   )}
                 </button>

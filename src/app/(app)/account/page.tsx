@@ -95,14 +95,11 @@ export default function AccountPage() {
 
   const accountConfig = useUIConfigSection('account');
 
-
   const showToastMessage = (message: string) => {
     setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
   };
-
-
 
   const copyToClipboard = (text: string, message: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -110,13 +107,11 @@ export default function AccountPage() {
     });
   };
 
-
   const getUserEmail = () => {
     if (typeof user?.email === 'string') return user.email;
     if (user?.email?.address) return user.email.address;
     return 'No email';
   };
-
 
   if (!authenticated) {
     return null;
@@ -146,7 +141,7 @@ export default function AccountPage() {
             <Settings className="w-5 h-5 text-muted-foreground" />
             Account Information
           </h2>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Email */}
             <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
@@ -202,16 +197,20 @@ export default function AccountPage() {
                     <ExternalLink className="w-5 h-5 text-green-400 flex-shrink-0" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-muted-foreground font-medium">
-                      Wallet Address
-                    </p>
+                    <p className="text-sm text-muted-foreground font-medium">Wallet Address</p>
                     <p className="font-semibold text-foreground font-mono text-sm">
-                      {user.wallet.address.substring(0, 5)}...{user.wallet.address.substring(user.wallet.address.length - 5)}
+                      {user.wallet.address.substring(0, 5)}...
+                      {user.wallet.address.substring(user.wallet.address.length - 5)}
                     </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(user.wallet?.address || '', 'Wallet address copied to clipboard')}
+                  onClick={() =>
+                    copyToClipboard(
+                      user.wallet?.address || '',
+                      'Wallet address copied to clipboard'
+                    )
+                  }
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md transition-colors text-sm font-medium flex-shrink-0"
                 >
                   <Copy className="w-3 h-3" />
@@ -227,19 +226,17 @@ export default function AccountPage() {
                   <Calendar className="w-5 h-5 text-orange-400 flex-shrink-0" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Account Created
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">Account Created</p>
                   <p className="font-semibold text-foreground">
-                    {user?.createdAt ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true }) : 'Unknown'}
+                    {user?.createdAt
+                      ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })
+                      : 'Unknown'}
                   </p>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
-
 
         {/* Add bottom padding to ensure content doesn't get cut off */}
         <div className="h-8 sm:h-4"></div>
@@ -301,11 +298,7 @@ export default function AccountPage() {
         </div>
       )}
 
-      <Toast
-        message={toastMessage}
-        isVisible={showToast}
-        primaryColor="#4ade80"
-      />
+      <Toast message={toastMessage} isVisible={showToast} primaryColor="#4ade80" />
     </div>
   );
 }

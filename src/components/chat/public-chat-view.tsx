@@ -54,7 +54,7 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
         referrer: document.referrer,
       };
       console.log('[PublicChatView] Tracking page view with data:', requestData);
-      
+
       const response = await fetch('/api/analytics/track', {
         method: 'POST',
         headers: {
@@ -64,7 +64,11 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
       });
 
       if (!response.ok) {
-        console.error('[PublicChatView] Analytics track failed:', response.status, response.statusText);
+        console.error(
+          '[PublicChatView] Analytics track failed:',
+          response.status,
+          response.statusText
+        );
         const errorText = await response.text();
         console.error('[PublicChatView] Analytics error details:', errorText);
         return; // Don't throw, just log and continue
@@ -93,7 +97,7 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
         sessionDuration,
       };
       console.log('[PublicChatView] Tracking session end with data:', requestData);
-      
+
       const response = await fetch('/api/analytics/track', {
         method: 'PATCH',
         headers: {
@@ -103,7 +107,11 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
       });
 
       if (!response.ok) {
-        console.error('[PublicChatView] Analytics session end failed:', response.status, response.statusText);
+        console.error(
+          '[PublicChatView] Analytics session end failed:',
+          response.status,
+          response.statusText
+        );
         const errorText = await response.text();
         console.error('[PublicChatView] Analytics session end error details:', errorText);
         return; // Don't throw, just log and continue
@@ -152,17 +160,27 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
         const response = await fetch(`/api/shared-sessions/${sharedSession.public_id}/messages`);
 
         if (!response.ok) {
-          console.error('[PublicChatView] Messages fetch failed:', response.status, response.statusText);
+          console.error(
+            '[PublicChatView] Messages fetch failed:',
+            response.status,
+            response.statusText
+          );
           const errorText = await response.text();
           console.error('[PublicChatView] Messages fetch error details:', errorText);
-          throw new Error(`Failed to load chat messages (${response.status}): ${response.statusText}`);
+          throw new Error(
+            `Failed to load chat messages (${response.status}): ${response.statusText}`
+          );
         }
 
         const data = await response.json();
         console.log('[PublicChatView] Messages fetch response:', data);
 
         if (data.success && data.data?.messages) {
-          console.log('[PublicChatView] Successfully loaded', data.data.messages.length, 'messages');
+          console.log(
+            '[PublicChatView] Successfully loaded',
+            data.data.messages.length,
+            'messages'
+          );
           setMessages(data.data.messages);
         } else {
           console.log('[PublicChatView] No messages found or invalid response format');
@@ -213,7 +231,7 @@ export const PublicChatView = ({ sharedSession }: PublicChatViewProps) => {
         <div className="max-w-3xl mx-auto  px-6 sm:px-6 py-6">
           {/* Logo Section */}
           <div className="text-center lg:text-left">
-            <Logo 
+            <Logo
               width={180}
               height={45}
               className="w-auto mx-auto lg:mx-0"

@@ -143,14 +143,14 @@ export default function CompactInviteFriendsDialog({
 
     setIsSending(invite.id);
     try {
-      const response = await fetch('/api/send-invite', {
+      const response = await fetch('/api/invites/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          code: invite.code,
           email: emailInput.trim(),
-          inviteCode: invite.code,
           senderName: senderName.trim() || undefined,
         }),
       });
@@ -161,6 +161,9 @@ export default function CompactInviteFriendsDialog({
         setEmailDialogInvite(null);
         setEmailInput('');
         setSenderName('');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to send invite' }));
+        showToastMessage(`Error: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Failed to send invite:', error);
@@ -174,20 +177,23 @@ export default function CompactInviteFriendsDialog({
 
     setIsSending(invite.id);
     try {
-      const response = await fetch('/api/send-invite', {
+      const response = await fetch('/api/invites/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          code: invite.code,
           email: invite.email_sent_to,
-          inviteCode: invite.code,
           senderName: senderName || undefined,
         }),
       });
 
       if (response.ok) {
         showToastMessage(`Invite resent to ${invite.email_sent_to}!`);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to resend invite' }));
+        showToastMessage(`Error: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Failed to resend invite:', error);
@@ -406,7 +412,7 @@ export default function CompactInviteFriendsDialog({
                             </div>
 
                             {/* Send Email */}
-                            {status === 'pending' && (
+                            {status === 'pending' && !invite.email_sent_to && !invite.email_sent_at && (
                               <div className="relative">
                                 <button
                                   onClick={() => setEmailDialogInvite(invite)}
@@ -425,6 +431,25 @@ export default function CompactInviteFriendsDialog({
                                 {hoveredButton === `send-${invite.id}` && (
                                   <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-lg">
                                     Send invite
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {/* Show "Sent" indicator for codes that have been emailed */}
+                            {invite.email_sent_to && invite.email_sent_at && (
+                              <div className="relative">
+                                <button
+                                  disabled
+                                  onMouseEnter={() => setHoveredButton(`sent-${invite.id}`)}
+                                  onMouseLeave={() => setHoveredButton(null)}
+                                  className="p-2 rounded-xl opacity-50 cursor-not-allowed"
+                                  aria-label="Invite already sent via email"
+                                >
+                                  <Mail className="h-4 w-4 text-green-500" />
+                                </button>
+                                {hoveredButton === `sent-${invite.id}` && (
+                                  <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-xs text-white dark:text-zinc-900 rounded-lg whitespace-nowrap pointer-events-none z-[100] shadow-lg">
+                                    Already sent
                                   </div>
                                 )}
                               </div>
@@ -449,8 +474,8 @@ export default function CompactInviteFriendsDialog({
         >
           <DialogPrimitive.Portal>
             <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-            <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] bg-zinc-50 dark:bg-zinc-800 rounded-3xl p-8 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none">
-              <DialogPrimitive.Title className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+            <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] bg-[#1a1a1a] rounded-xl p-8 shadow-2xl border border-gray-800 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none">
+              <DialogPrimitive.Title className="text-lg font-semibold text-white mb-4">
                 Send Invite via Email
               </DialogPrimitive.Title>
               <DialogPrimitive.Description className="sr-only">
@@ -459,13 +484,13 @@ export default function CompactInviteFriendsDialog({
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-zinc-600 dark:text-zinc-400">Email Address</label>
+                  <label className="text-sm font-medium text-gray-300">Email Address</label>
                   <input
                     type="email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     placeholder="friend@example.com"
-                    className="w-full mt-1 px-3 py-2 border rounded-xl border-zinc-200/60 dark:border-zinc-700/60 text-zinc-900 dark:text-white focus:outline-none focus:border-brand/80 focus:ring-2 focus:ring-brand/20 transition-all duration-200"
+                    className="w-full mt-1 px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 border border-gray-600 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                     onKeyPress={(e) =>
                       e.key === 'Enter' && emailInput.trim() && sendInviteEmail(emailDialogInvite)
                     }
@@ -473,7 +498,7 @@ export default function CompactInviteFriendsDialog({
                 </div>
 
                 <div>
-                  <label className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <label className="text-sm font-medium text-gray-300">
                     Your Name (Optional)
                   </label>
                   <input
@@ -481,7 +506,7 @@ export default function CompactInviteFriendsDialog({
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full mt-1 px-3 py-2 border rounded-xl border-zinc-200/60 dark:border-zinc-700/60 text-zinc-900 dark:text-white focus:outline-none focus:border-brand/80 focus:ring-2 focus:ring-brand/20 transition-all duration-200"
+                    className="w-full mt-1 px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 border border-gray-600 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                     onKeyPress={(e) =>
                       e.key === 'Enter' && emailInput.trim() && sendInviteEmail(emailDialogInvite)
                     }
@@ -491,14 +516,14 @@ export default function CompactInviteFriendsDialog({
                 <div className="flex justify-end gap-3 pt-6">
                   <button
                     onClick={() => setEmailDialogInvite(null)}
-                    className="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                    className="px-6 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] hover:bg-[#333] dark:hover:bg-[#333] text-white rounded-xl text-sm font-medium transition-colors border border-gray-600 dark:border-gray-600"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => sendInviteEmail(emailDialogInvite)}
                     disabled={!emailInput.trim() || isSending === emailDialogInvite.id}
-                    className="px-4 py-2 bg-brand text-white text-sm rounded-xl hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-sm"
+                    className="px-6 py-3 bg-[#FF6E71] hover:bg-[#FF6E71]/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition-colors"
                   >
                     {isSending === emailDialogInvite.id ? 'Sending...' : 'Send Invite'}
                   </button>

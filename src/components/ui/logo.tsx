@@ -18,11 +18,11 @@ export function Logo({ width = 120, height = 32, className = '', src }: LogoProp
   if (imageError) {
     return (
       <div className={clsx(['select-none flex items-center justify-center', className])}>
-        <span 
+        <span
           className="font-bold text-gray-900 dark:text-white"
-          style={{ 
+          style={{
             fontSize: `${Math.min(width / 8, height * 0.6)}px`,
-            lineHeight: `${height}px`
+            lineHeight: `${height}px`,
           }}
         >
           {branding.appName}

@@ -60,9 +60,7 @@ export function CollapsedUserMenu({ userName, onLogout }: CollapsedUserMenuProps
         <div className="absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50">
           {/* User Info Header */}
           <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-700">
-            <p className="text-sm font-medium text-zinc-900 dark:text-white truncate">
-              {userName}
-            </p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-white truncate">{userName}</p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">User Menu</p>
           </div>
 

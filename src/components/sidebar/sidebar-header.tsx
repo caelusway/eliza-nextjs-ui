@@ -77,7 +77,7 @@ export function SidebarHeader({
               />
             </div>
           </button>
-          
+
           {/* Expand button - Only visible on hover */}
           <button
             onClick={onToggleCollapse}

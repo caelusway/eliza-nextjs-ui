@@ -19,6 +19,8 @@ interface ChatMessagesProps {
   followUpPromptsMap?: Record<number, string[]>;
   onFollowUpClick?: (prompt: string) => void;
   lastUserMessageRef?: React.RefObject<HTMLDivElement>;
+  latestMessageRef?: React.RefObject<HTMLDivElement>;
+  showDynamicSpacing?: boolean;
 }
 
 export function ChatMessages({
@@ -26,6 +28,8 @@ export function ChatMessages({
   followUpPromptsMap = {},
   onFollowUpClick,
   lastUserMessageRef,
+  latestMessageRef,
+  showDynamicSpacing = false,
 }: ChatMessagesProps) {
   assert(
     Array.isArray(messages),
@@ -150,16 +154,68 @@ export function ChatMessages({
         }
         const isLastUserMessage = isUserMessage && i === lastUserMessageIndex;
 
+        // Debug logging for ref assignment
+        if (isLastUserMessage && lastUserMessageRef) {
+          console.log('[ChatMessages] Assigning ref to last user message at index:', i, 'messageId:', messageKey);
+        }
+
+        // Calculate dynamic spacing for conversation block end (agent messages only)
+        const getDynamicSpacing = () => {
+          if (!showDynamicSpacing) return 0;
+          
+          // Check if this is the last message in the conversation
+          const isLastMessage = i === messages.length - 1;
+          if (!isLastMessage) return 0;
+          
+          // Only apply spacing to agent messages (end of conversation block)
+          // User messages are part of the block but don't get bottom spacing
+          const isAgentMsg = isAgentMessage(message);
+          if (!isAgentMsg) return 0;
+          
+          // Use viewport height to calculate optimal spacing
+          const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+          // Reserve 60-70% of viewport height for next conversation block
+          const dynamicSpacing = Math.min(viewportHeight * 0.65, 600); // Max 600px
+          
+          console.log('[ChatMessages] Adding dynamic spacing to conversation block end (agent response):', {
+            messageIndex: i,
+            messageType: 'agent',
+            viewportHeight,
+            dynamicSpacing,
+            showDynamicSpacing,
+            isLastMessage,
+            isAgentMessage: isAgentMsg
+          });
+          
+          return dynamicSpacing;
+        };
+
+        const spacing = getDynamicSpacing();
+
+        // Check if this is the last message overall
+        const isLastMessage = i === messages.length - 1;
+
+        // Assign refs based on message type and position
+        const getMessageRef = () => {
+          if (isLastUserMessage && lastUserMessageRef) {
+            return lastUserMessageRef; // For scroll targeting user messages
+          }
+          if (isLastMessage && latestMessageRef) {
+            return latestMessageRef; // For scroll targeting latest message (user or agent)
+          }
+          if (isLastMessage) {
+            return messagesEndRef; // Fallback for scroll to bottom
+          }
+          return undefined;
+        };
+
         return (
           <div
             key={messageKey}
-            ref={
-              i === messages.length - 1
-                ? messagesEndRef
-                : isLastUserMessage && lastUserMessageRef
-                  ? lastUserMessageRef
-                  : undefined
-            }
+            data-message-sender={message.senderId}
+            data-message-index={i}
+            ref={getMessageRef()}
+            style={spacing > 0 ? { marginBottom: `${spacing}px` } : undefined}
           >
             <ChatMessage
               message={message}

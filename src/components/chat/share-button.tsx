@@ -149,11 +149,11 @@ export const ShareButton = ({ sessionId, sessionTitle }: ShareButtonProps) => {
       <button
         onClick={handleShare}
         disabled={loading}
-        className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+        className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
           sharedSession
-            ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/30'
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-        } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 shadow-sm'
+            : 'bg-white dark:bg-[#1f1f1f] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md'
+        } ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'} focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600`}
         title={sharedSession ? 'View shared session' : 'Share conversation'}
       >
         {loading ? (
@@ -161,7 +161,7 @@ export const ShareButton = ({ sessionId, sessionTitle }: ShareButtonProps) => {
         ) : (
           <Share2 className="h-4 w-4" />
         )}
-        {sharedSession ? 'Shared' : 'Share'}
+        <span className="hidden sm:inline">{sharedSession ? 'Shared' : 'Share'}</span>
       </button>
 
       {isModalOpen && (
@@ -191,7 +191,7 @@ export const ShareButton = ({ sessionId, sessionTitle }: ShareButtonProps) => {
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300 border border-gray-700"
+                      className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 border border-gray-600 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                       placeholder="Enter title"
                     />
                   </div>
@@ -203,7 +203,7 @@ export const ShareButton = ({ sessionId, sessionTitle }: ShareButtonProps) => {
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-3 bg-gray-800 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6E71] transition-all duration-300 resize-none border border-gray-700"
+                      className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 resize-none border border-gray-600 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                       placeholder="Enter description (optional)"
                     />
                   </div>
@@ -256,7 +256,7 @@ export const ShareButton = ({ sessionId, sessionTitle }: ShareButtonProps) => {
                         type="text"
                         value={sharedSession.publicUrl}
                         readOnly
-                        className="flex-1 px-4 py-3 text-sm bg-gray-700 rounded-xl text-gray-300 border border-gray-600 focus:outline-none select-all"
+                        className="flex-1 px-4 py-3 text-sm bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-gray-300 border border-gray-600 dark:border-gray-600 focus:outline-none select-all"
                       />
                       <button
                         onClick={copyToClipboard}
