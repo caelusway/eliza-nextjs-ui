@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function DashboardHeader() {
   return (
@@ -6,8 +7,16 @@ export function DashboardHeader() {
       <div className="flex items-center justify-between">
 
         {/* Center Section - AUBRAI Title */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-orange-400 font-bold">AUBRAI</span>
+        <div className="flex items-center gap-3 text-xs">
+          <div className="relative h-6 w-20">
+            <Image
+              src="/assets/logo_text.png"
+              alt="AUBRAI"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
           <span className="text-green-400">YOUR LONGEVITY CO-PILOT</span>
         </div>
 
