@@ -42,6 +42,13 @@ export default {
           900: '#B34245',
           950: '#8A3336',
         },
+        accent: {
+          DEFAULT: '#E0F58F',
+          yellow: '#E0F58F',
+        },
+      },
+      borderColor: {
+        DEFAULT: '#333333',
       },
     },
   },
