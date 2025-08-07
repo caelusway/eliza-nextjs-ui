@@ -1,48 +1,60 @@
 import Link from 'next/link';
 
+interface FooterItemProps {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}
+
+function FooterItem({ label, value }: FooterItemProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-white-400/70">{label}</span>
+      <span className="text-accent">{value}</span>
+    </div>
+  );
+}
+
+function FooterSeparator() {
+  return <span className="text-white-400/70">•</span>;
+}
+
+interface FooterLinkProps {
+  href: string;
+  children: React.ReactNode;
+}
+
+function FooterLink({ href, children }: FooterLinkProps) {
+  return (
+    <Link href={href} className="text-white-400 hover:text-white-300 transition-colors">
+      {children}
+    </Link>
+  );
+}
+
 export function DashboardFooter() {
   return (
-    <div className="border-t-2 border-white-400/30 mt-8 bg-black/90">
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        
-        <div className="flex items-center justify-center gap-8 text-xs mt-2">
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">©</span>
-            <span className="text-white-400">2025 AUBRAI</span>
+    <div className="border mt-8">
+      <div className="mx-auto px-4 py-3">
+        <div className="flex gap-8 text-xs justify-between">
+          <div className="flex gap-2">
+            <FooterItem label="©" value="2025 AUBRAI" />
+
+            <FooterItem label="Treasury" value="0xTREA5...sure" valueClassName="font-mono" />
+
+            <FooterItem label="Contract" value="0xC0N7...tract" valueClassName="font-mono" />
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">Treasury</span>
-            <span className="text-orange-400 font-mono">0xTREA5...sure</span>
+          <div className="flex gap-2">
+            <FooterItem label="Built on" value="Base" />
+
+            <FooterSeparator />
+
+            <FooterLink href="/docs">Docs</FooterLink>
+
+            <FooterSeparator />
+
+            <FooterLink href="/privacy">Privacy</FooterLink>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">Contract</span>
-            <span className="text-orange-400 font-mono">0xC0N7...tract</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">Built on</span>
-            <span className="text-white-400">Base</span>
-          </div>
-          
-          <span className="text-white-400/70">•</span>
-          
-          <Link 
-            href="/docs" 
-            className="text-white-400 hover:text-white-300 transition-colors"
-          >
-            Docs
-          </Link>
-          
-          <span className="text-white-400/70">•</span>
-          
-          <Link 
-            href="/privacy" 
-            className="text-white-400 hover:text-white-300 transition-colors"
-          >
-            Privacy
-          </Link>
         </div>
       </div>
     </div>

@@ -2,9 +2,10 @@ import { Metadata } from 'next';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardFooter } from '@/components/dashboard/dashboard-footer';
 import { StatusBanner } from '@/components/dashboard/status-banner';
-import { LiveSnapshot } from '@/components/dashboard/live-snapshot';
+import { InferenceMetrics } from '@/components/dashboard/inference-metrics';
+import { ProjectMetrics } from '@/components/dashboard/project-metrics';
 import { ArtworkSection } from '@/components/dashboard/artwork-section';
-import { PartnersSection } from '@/components/dashboard/partners-section';
+import { ProgressMetrics } from '@/components/dashboard/progress-metrics';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -19,17 +20,22 @@ export default function DashboardPage() {
 
         <StatusBanner />
 
-        {/* Main Two Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left Column - Metrics */}
-          <LiveSnapshot />
+        {/* Main Three Column Grid */}
+        <div className="grid grid-cols-12 gap-4 mb-4">
+          <div className="col-span-12 lg:col-span-4 space-y-4">
+            <InferenceMetrics />
+            <ProjectMetrics />
+          </div>
 
-          {/* Right Column - Artwork & Partners */}
-          <div className="space-y-4">
+          <div className="col-span-12 lg:col-span-6">
             <ArtworkSection />
-            <PartnersSection />
+          </div>
+
+          <div className="col-span-12 lg:col-span-2">
+            <ProgressMetrics />
           </div>
         </div>
+
       </div>
       <DashboardFooter />
     </div>
