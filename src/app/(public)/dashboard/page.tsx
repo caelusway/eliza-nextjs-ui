@@ -7,6 +7,7 @@ import { PartnersSection } from '@/components/dashboard/partners-section';
 import { InferenceSection } from '@/components/dashboard/inference-section';
 import { ProgressSection } from '@/components/dashboard/progress-section';
 import { SocialMentions } from '@/components/dashboard/social-mentions';
+import { DashboardLoader } from '@/components/dashboard/dashboard-loader';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -15,9 +16,10 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="bg-black text-white w-full lg:h-screen lg:overflow-hidden">
-      {/* Main Container - Mobile: Scrollable, Desktop: Fixed Height */}
-      <div className="min-h-screen lg:h-full flex flex-col p-2">
+    <DashboardLoader>
+      <div className="bg-black text-white w-full lg:h-screen lg:overflow-hidden">
+        {/* Main Container - Mobile: Scrollable, Desktop: Fixed Height */}
+        <div className="min-h-screen lg:h-full flex flex-col p-2">
         {/* Header Section */}
         <div className="flex-shrink-0 mb-1">
           <DashboardHeader />
@@ -70,5 +72,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </DashboardLoader>
   );
 }
