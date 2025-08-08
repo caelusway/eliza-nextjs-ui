@@ -6,7 +6,6 @@ import { InferenceMetrics } from '@/components/dashboard/inference-metrics';
 import { ProjectMetrics } from '@/components/dashboard/project-metrics';
 import { ArtworkSection } from '@/components/dashboard/artwork-section';
 import { ProgressMetrics } from '@/components/dashboard/progress-metrics';
-import { TweetBar } from '@/components/dashboard/tweet-bar';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -36,7 +35,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-      <TweetBar />
       <DashboardFooter />
     </div>
   );

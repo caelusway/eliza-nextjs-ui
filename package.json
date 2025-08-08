@@ -100,7 +100,6 @@
     "socket.io-client": "^4.8.1",
     "sonner": "^1.7.1",
     "tailwind-merge": "^3.3.1",
-    "tailwind-scrollbar": "^3.1.0",
     "uuid": "^11.1.0",
     "zod": "3.24.2"
   },
