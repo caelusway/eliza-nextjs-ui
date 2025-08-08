@@ -10,7 +10,7 @@ import { SocialMentions } from '@/components/dashboard/social-mentions';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
-  description: 'System monitoring dashboard',
+  description: 'Aubrai Longeivty Agent Dashboard',
 };
 
 export default function DashboardPage() {
