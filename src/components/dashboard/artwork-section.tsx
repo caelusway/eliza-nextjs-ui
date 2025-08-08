@@ -2,13 +2,13 @@ import Image from 'next/image';
 
 export function ArtworkSection() {
   return (
-    <div className="border border-white-400/30 bg-black/90 p-8 flex flex-col items-center justify-center min-h-[300px]">
-      <div className="relative w-48 h-48">
+    <div className="border border-white/20 bg-black/90 w-full mx-auto h-full flex flex-col min-h-[250px] md:min-h-[300px]">
+      <div className="flex-1 relative overflow-hidden">
         <Image
-          src="/assets/aubrai-character-one.png"
-          alt="Aubrai Character"
+          src="/assets/robot.png"
+          alt="AI Research Robot"
           fill
-          className="object-contain"
+          className="object-contain md:object-cover"
           priority
         />
       </div>

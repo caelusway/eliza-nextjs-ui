@@ -1,20 +1,59 @@
-import DynamicSvgIcon from '@/components/icons/DynamicSvgIcon';
+"use client";
 
-export function StatsRow() {
-  const stats = [
-    { icon: "volume", label: "Vol", value: "$12.3 M" },
-    { icon: "chart", label: "Fees", value: "$42 K" },
-    { icon: "bank", label: "Treasury", value: "$8.1 M" },
-    { icon: "pie-chart", label: "Holders", value: "8 612" },
+import DynamicSvgIcon from '@/components/icons/DynamicSvgIcon';
+import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface StatsRowProps {
+  includeResearchStats?: boolean;
+}
+
+export function StatsRow({ includeResearchStats = false }: StatsRowProps) {
+  const { tokenStats, researchStats, loading, isTokenDataAvailable, isResearchDataAvailable } = useDashboardStats();
+
+  // Base token stats
+  const tokenDisplayStats = tokenStats ? [
+    { icon: "volume", label: "vol", value: tokenStats.volume24h || "$0" },
+    { icon: "chart", label: "price", value: tokenStats.price ? `$${parseFloat(tokenStats.price).toFixed(4)}` : "$0" },
+    { icon: "bank", label: "mcap", value: tokenStats.marketCap || "$0" },
+    { icon: "pie-chart", label: "supply", value: tokenStats.totalSupply || "0" },
+  ] : [
+    { icon: "volume", label: "vol", value: "$0" },
+    { icon: "chart", label: "price", value: "$0" },
+    { icon: "bank", label: "mcap", value: "$0" },
+    { icon: "pie-chart", label: "supply", value: "0" },
   ];
 
+  // Research stats (optional)
+  const researchDisplayStats = includeResearchStats && researchStats ? [
+    { icon: "flask", label: "papers", value: researchStats.paperCount.toLocaleString() },
+    { icon: "lightbulb", label: "hypotheses", value: researchStats.hypothesisCount.toString() },
+  ] : [];
+
+  const displayStats = [...tokenDisplayStats, ...researchDisplayStats];
+
+  if (loading) {
+    const skeletonCount = includeResearchStats ? 6 : 4;
+    return (
+      <div className="flex items-center gap-16 p-2">
+        {Array.from({ length: skeletonCount }).map((_, index) => (
+          <div key={index} className="flex items-center gap-3">
+            <Skeleton className="w-4 h-4 rounded" />
+            <Skeleton className="w-8 h-4 rounded" />
+            <Skeleton className="w-12 h-4 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-6 text-xs mt-3 py-2 px-1 border border-white-400/20">
-      {stats.map((stat, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <DynamicSvgIcon iconName={stat.icon} />
-          <span className="leading-none">{stat.label}</span>
-          <span className="text-accent leading-none">{stat.value}</span>
+    <div className="flex items-center gap-16 p-2">
+      {displayStats.map((stat, index) => (
+        <div key={index} className="flex items-center gap-3">
+          <DynamicSvgIcon iconName={stat.icon} className="w-4 h-4 text-white" />
+          <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">{stat.label}</span>
+          <span className="text-sm text-[#E0F58F] font-red-hat-mono font-normal leading-[0.9]">{stat.value}</span>
         </div>
       ))}
     </div>

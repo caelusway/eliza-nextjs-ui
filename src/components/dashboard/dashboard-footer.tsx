@@ -1,49 +1,28 @@
-import Link from 'next/link';
-
 export function DashboardFooter() {
   return (
-    <div className="border-t-2 border-white-400/30 mt-8 bg-black/90">
-      <div className="max-w-7xl mx-auto px-4 py-3">
+    <div className="border border-white/20 bg-black p-2 rounded-none flex justify-between items-center">
+      {/* Left Section */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-[#757575] font-red-hat-mono font-normal leading-[0.9]">© AUBRAI</span>
         
-        <div className="flex items-center justify-center gap-8 text-xs mt-2">
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">©</span>
-            <span className="text-white-400">2025 AUBRAI</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">Treasury</span>
-            <span className="text-orange-400 font-mono">0xTREA5...sure</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">Contract</span>
-            <span className="text-orange-400 font-mono">0xC0N7...tract</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-white-400/70">Built on</span>
-            <span className="text-white-400">Base</span>
-          </div>
-          
-          <span className="text-white-400/70">•</span>
-          
-          <Link 
-            href="/docs" 
-            className="text-white-400 hover:text-white-300 transition-colors"
-          >
-            Docs
-          </Link>
-          
-          <span className="text-white-400/70">•</span>
-          
-          <Link 
-            href="/privacy" 
-            className="text-white-400 hover:text-white-300 transition-colors"
-          >
-            Privacy
-          </Link>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">treasury</span>
+          <span className="text-sm text-[#E0F58F] font-red-hat-mono font-normal leading-[0.9]">0xteas...sure</span>
         </div>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">contract</span>
+          <span className="text-sm text-[#E0F58F] font-red-hat-mono font-normal leading-[0.9]">0xc0n7...tract</span>
+        </div>
+      </div>
+      
+      {/* Right Section */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">Built on Base</span>
+        <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
+        <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">Docs</span>
+        <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
+        <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">Privacy</span>
       </div>
     </div>
   );

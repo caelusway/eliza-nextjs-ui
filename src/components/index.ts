@@ -10,8 +10,6 @@ export * from './dialogs';
 // Forms
 export * from './forms';
 
-// Icons
-export * from './icons';
 
 // Landing
 export * from './landing';
