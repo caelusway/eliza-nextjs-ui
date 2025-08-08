@@ -1,6 +1,7 @@
 export interface ResearchStats {
   paperCount: number;
   hypothesisCount: number;
+  nodeCount: number;
   latestHypothesis?: {
     id: string;
     statement: string;
@@ -72,13 +73,14 @@ class ResearchDataService {
       PREFIX schema: <https://schema.org/>
       PREFIX deo: <http://purl.org/spar/deo/>
 
-      SELECT ?paper_count ?hypothesis_count ?latest_hypothesis ?hypothesis_statement ?title
+      SELECT ?paper_count ?hypothesis_count ?node_count ?latest_hypothesis ?hypothesis_statement ?title
       ?created
       WHERE {
         {
           SELECT
             (COUNT(DISTINCT ?paper) AS ?paper_count)
             (COUNT(DISTINCT ?hypothesis) AS ?hypothesis_count)
+            (COUNT(DISTINCT ?node) AS ?node_count)
           WHERE {
             {
               GRAPH ?paper {
@@ -90,6 +92,12 @@ class ResearchDataService {
             {
               GRAPH <https://hypothesis.aubr.ai> {
                 ?hypothesis dcterms:references ?hypothesis_statement .
+              }
+            }
+            UNION
+            {
+              GRAPH ?g {
+                ?node ?p ?o .
               }
             }
           }
@@ -127,6 +135,7 @@ class ResearchDataService {
       const stats: ResearchStats = {
         paperCount: parseInt(binding.paper_count?.value || '0'),
         hypothesisCount: parseInt(binding.hypothesis_count?.value || '0'),
+        nodeCount: parseInt(binding.node_count?.value || '0'),
       };
 
       // Add latest hypothesis if available
@@ -149,6 +158,7 @@ class ResearchDataService {
       return {
         paperCount: 0,
         hypothesisCount: 0,
+        nodeCount: 0,
       };
     }
   }

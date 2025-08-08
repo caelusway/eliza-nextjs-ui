@@ -48,6 +48,7 @@ export function useDashboardStats() {
             researchStats: {
               paperCount: 0,
               hypothesisCount: 0,
+              nodeCount: 0,
             },
             meta: {
               tokenConfig: {
