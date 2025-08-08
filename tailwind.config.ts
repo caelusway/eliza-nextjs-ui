@@ -13,6 +13,8 @@ export default {
         inter: ['Inter', 'system-ui', 'sans-serif'],
         geist: ['Geist', 'sans-serif'],
         'geist-mono': ['Geist Mono', 'monospace'],
+        'red-hat-mono': ['Red Hat Mono', 'monospace'],
+        'acumin-pro': ['Acumin Pro', 'sans-serif'],
       },
       fontSize: {
         xs: ['12px', '1.4'],

@@ -3,7 +3,7 @@ import { DashboardNavigation } from '@/components/dashboard/header/dashboard-nav
 
 export function DashboardHeader() {
   return (
-    <div className="border border-[#333] bg-black/90 p-3 mb-4">
+    <div className="border border-white/20 bg-black p-3 rounded-none">
       <DashboardNavigation />
       <div className="border-b border-[#141B34] my-3" />
       <StatsRow />

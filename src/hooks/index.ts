@@ -7,3 +7,4 @@ export {
   useFeatureFlag,
   useBranding,
 } from './use-ui-config';
+export { useTokenStats } from './use-token-stats';
