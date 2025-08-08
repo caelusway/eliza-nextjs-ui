@@ -92,7 +92,7 @@ export function SocialMentions() {
                     target="_blank"
                     rel="noopener noreferrer"
                     title={`View tweet: ${tweet.url}`}
-                    className="bg-black p-4 md:p-3  flex flex-col min-w-[250px] md:min-w-[300px] cursor-pointer group border border-white/20"
+                    className="bg-black p-4 md:p-3  flex flex-col min-w-[250px] md:min-w-[300px] cursor-pointer border border-white/20"
                   >
                     <div className="flex items-center gap-2 mb-1 md:mb-2">
                       <span className="text-white font-red-hat-mono text-xs md:text-sm">{tweet.username}</span>
@@ -103,7 +103,7 @@ export function SocialMentions() {
                             {tweet.metrics.like_count > 0 && `♥ ${tweet.metrics.like_count}`}
                           </span>
                         )}
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="text-white md:w-3 md:h-3 group-hover:text-blue-400 transition-colors">
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="text-white md:w-3 md:h-3">
                           <path d="M1 11L11 1M11 1H1M11 1V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>

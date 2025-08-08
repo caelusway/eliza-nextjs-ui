@@ -20,6 +20,7 @@ export interface DashboardStats {
   researchStats: {
     paperCount: number;
     hypothesisCount: number;
+    nodeCount: number;
     latestHypothesis?: {
       id: string;
       statement: string;
@@ -105,6 +106,7 @@ class DashboardDataService {
       const fallbackData: ResearchStats = {
         paperCount: 0,
         hypothesisCount: 0,
+        nodeCount: 0,
       };
       
       return { data: fallbackData, status: 'error' };
