@@ -1,4 +1,3 @@
-export { default as useLocalStorage } from './use-local-storage';
 export { useIsMobile } from './use-mobile';
 export {
   useUIConfig,
@@ -7,4 +6,3 @@ export {
   useFeatureFlag,
   useBranding,
 } from './use-ui-config';
-export { useTokenStats } from './use-token-stats';

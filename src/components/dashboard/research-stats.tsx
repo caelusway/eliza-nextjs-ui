@@ -1,11 +1,11 @@
 "use client";
 
 import DynamicSvgIcon from '@/components/icons/DynamicSvgIcon';
-import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function ResearchStats() {
-  const { researchStats, loading, isResearchDataAvailable } = useDashboardStats();
+  const { researchStatsData: researchStats, loading, isResearchDataAvailable } = useTRPCDashboardStats();
 
   if (loading) {
     return (

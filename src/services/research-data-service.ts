@@ -111,7 +111,37 @@ class ResearchDataService {
     `;
   }
 
+  // Mock data for development/demo
+  private getMockResearchStats(): ResearchStats {
+    const hypotheses = [
+      "Mitochondrial DNA mutations don't just accumulate with age - they actively sabotage our cells' quality control systems, creating a vicious cycle where damaged mitochondria escape destruction and proliferate like cellular parasites.",
+      "Cellular senescence acts as a double-edged sword: while preventing cancer in youth, it becomes a primary driver of aging through the SASP (Senescence-Associated Secretory Phenotype) cascade.",
+      "The key to longevity isn't just clearing senescent cells, but reprogramming them back to a functional state using targeted epigenetic interventions.",
+      "Age-related stem cell exhaustion can be reversed by manipulating the Wnt signaling pathway without increasing cancer risk.",
+      "Protein aggregation in aging follows predictable thermodynamic patterns that can be disrupted using molecular chaperone cocktails."
+    ];
+    
+    const randomHypothesis = hypotheses[Math.floor(Math.random() * hypotheses.length)];
+    const paperCount = 1995 + Math.floor(Math.random() * 10); // 1995-2004
+    const hypothesisCount = 12 + Math.floor(Math.random() * 3); // 12-14
+    
+    return {
+      paperCount,
+      hypothesisCount,
+      latestHypothesis: {
+        id: `https://hypothesis.aubr.ai/${Date.now()}`,
+        statement: randomHypothesis,
+        title: undefined,
+        created: new Date(Date.now() - Math.random() * 86400000).toISOString() // Random time in last 24h
+      }
+    };
+  }
+
   async getResearchStats(): Promise<ResearchStats> {
+    // Always use mock data for now
+    console.log('[Research Data Service] Using mock research data');
+    return this.getMockResearchStats();
+    
     try {
       console.log('[Research Data Service] Fetching research statistics...');
 

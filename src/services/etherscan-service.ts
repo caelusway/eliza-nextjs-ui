@@ -38,18 +38,20 @@ class EtherscanService {
   private defaultChainId: ChainId;
 
   constructor() {
-    this.apiKey = process.env.ETHERSCAN_API_KEY || process.env.ETHER_SCAN_API_KEY || '';
-    this.defaultChainId = 1; // Default to Ethereum mainnet
+    this.apiKey = process.env.ETHER_SCAN_API_KEY || process.env.ETHERSCAN_API_KEY || '';
+    this.defaultChainId = 8453; // Default to Base mainnet (where BIO token is)
     
+    console.log('[EtherscanService] Initialized with API key:', this.apiKey ? 'Yes' : 'No');
     if (!this.apiKey) {
       console.warn('No Etherscan API key provided, using fallback data');
     }
   }
 
   private async makeRequest<T>(module: string, action: string, params: Record<string, string> = {}, chainId?: ChainId): Promise<T> {
-    // If no API key, throw error immediately
+    // If no API key, use fallback behavior instead of throwing
     if (!this.apiKey) {
-      throw new Error('No Etherscan API key configured');
+      console.warn('[EtherscanService] No API key, using fallback behavior');
+      throw new Error('No Etherscan API key configured - using fallback');
     }
 
     const targetChainId = chainId || this.defaultChainId;

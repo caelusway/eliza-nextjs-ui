@@ -1,10 +1,10 @@
 "use client";
 
-import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function StatusBanner() {
-  const { researchStats, loading, isResearchDataAvailable } = useDashboardStats();
+  const { researchStatsData: researchStats, loading, isResearchDataAvailable } = useTRPCDashboardStats();
 
   if (loading) {
     return (
