@@ -7,7 +7,6 @@ import { fontVariables } from '@/app/shared/fonts';
 import '@/app/globals.css';
 import { ProgressBar } from '@/app/core/progress-bar';
 import { Toaster } from '@/app/core/toaster';
-import { ConditionalHeader } from '@/components/layout/conditional-header';
 import { PrivyClientProvider } from './core/privy-client-provider';
 import { AuthWrapper } from '@/components/auth/auth-wrapper';
 
@@ -95,7 +94,6 @@ export default function RootLayout({
         >
           <PrivyClientProvider>
             <AuthWrapper>
-              <ConditionalHeader />
               {children}
             </AuthWrapper>
           </PrivyClientProvider>

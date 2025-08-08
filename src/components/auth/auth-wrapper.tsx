@@ -14,7 +14,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
   const { authenticated, ready, user } = usePrivy();
 
   // Define public routes that don't require authentication
-  const publicRoutes = ['/', '/login', '/privacy', '/terms', '/about'];
+  const publicRoutes = ['/', '/login', '/privacy', '/terms', '/about', '/dashboard'];
 
   const isPublicRoute =
     publicRoutes.includes(pathname) ||
