@@ -6,10 +6,11 @@ import { InferenceMetrics } from '@/components/dashboard/inference-metrics';
 import { ProjectMetrics } from '@/components/dashboard/project-metrics';
 import { ArtworkSection } from '@/components/dashboard/artwork-section';
 import { ProgressMetrics } from '@/components/dashboard/progress-metrics';
+import { TweetBar } from '@/components/dashboard/tweet-bar';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
-  description: 'System monitoring dashboard',
+  description: 'Aubrai Longeivty Agent Dashboard',
 };
 
 export default function DashboardPage() {
@@ -20,8 +21,7 @@ export default function DashboardPage() {
 
         <StatusBanner />
 
-        {/* Main Three Column Grid */}
-        <div className="grid grid-cols-12 gap-4 mb-4">
+        <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12 lg:col-span-4 space-y-4">
             <InferenceMetrics />
             <ProjectMetrics />
@@ -35,8 +35,8 @@ export default function DashboardPage() {
             <ProgressMetrics />
           </div>
         </div>
-
       </div>
+      <TweetBar />
       <DashboardFooter />
     </div>
   );

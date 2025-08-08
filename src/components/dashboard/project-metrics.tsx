@@ -17,7 +17,7 @@ const projectMetrics: ProjectMetric[] = [
 
 export function ProjectMetrics() {
   return (
-    <div className="border bg-black/90 p-4 h-full">
+    <div className="border bg-black/90 p-4">
       <div className="space-y-2 text-sm">
         {projectMetrics.map((metric, index) => (
           <div key={index} className="flex justify-between">
@@ -28,4 +28,4 @@ export function ProjectMetrics() {
       </div>
     </div>
   );
-} 
+}

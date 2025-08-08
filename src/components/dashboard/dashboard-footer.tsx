@@ -34,7 +34,7 @@ function FooterLink({ href, children }: FooterLinkProps) {
 
 export function DashboardFooter() {
   return (
-    <div className="border mt-8">
+    <div className="border">
       <div className="mx-auto px-4 py-3">
         <div className="flex gap-8 text-xs justify-between">
           <div className="flex gap-2">
