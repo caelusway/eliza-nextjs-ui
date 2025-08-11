@@ -33,13 +33,74 @@ export const SUPPORTED_CHAINS = {
 
 export type ChainId = keyof typeof SUPPORTED_CHAINS;
 
+// Rate limiter to respect Etherscan API limits (5 requests per second)
+class RateLimiter {
+  private requests: number[] = [];
+  private maxRequests: number;
+  private windowMs: number;
+
+  constructor(maxRequests: number, windowMs: number) {
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+  }
+
+  async throttle(): Promise<void> {
+    const now = Date.now();
+    
+    // Remove requests outside the current window
+    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    
+    // If we're at the limit, wait until we can make another request
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = Math.min(...this.requests);
+      const waitTime = this.windowMs - (now - oldestRequest);
+      
+      if (waitTime > 0) {
+        console.log(`[EtherscanService] Rate limit reached, waiting ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return this.throttle(); // Recursive call to check again after waiting
+      }
+    }
+    
+    // Record this request
+    this.requests.push(now);
+  }
+}
+
+// Request cache to prevent duplicate requests within a short time window
+class RequestCache {
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cacheExpiryMs = 10000; // 10 seconds cache
+
+  get<T>(key: string): T | null {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.cacheExpiryMs) {
+      console.log(`[EtherscanService] Cache hit for: ${key}`);
+      return cached.data as T;
+    }
+    return null;
+  }
+
+  set<T>(key: string, data: T): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
 class EtherscanService {
   private apiKey: string;
   private defaultChainId: ChainId;
+  private rateLimiter: RateLimiter;
+  private cache: RequestCache;
 
   constructor() {
     this.apiKey = process.env.ETHERSCAN_API_KEY || process.env.ETHER_SCAN_API_KEY || '';
     this.defaultChainId = 1; // Default to Ethereum mainnet
+    this.rateLimiter = new RateLimiter(5, 1000); // 5 requests per 1000ms (1 second)
+    this.cache = new RequestCache();
     
     if (!this.apiKey) {
       console.warn('No Etherscan API key provided, using fallback data');
@@ -58,6 +119,18 @@ class EtherscanService {
     if (!chainConfig) {
       throw new Error(`Unsupported chain ID: ${targetChainId}`);
     }
+
+    // Create cache key from request parameters
+    const cacheKey = `${targetChainId}-${module}-${action}-${JSON.stringify(params)}`;
+    
+    // Check cache first
+    const cachedResult = this.cache.get<T>(cacheKey);
+    if (cachedResult !== null) {
+      return cachedResult;
+    }
+
+    // Apply rate limiting before making request
+    await this.rateLimiter.throttle();
 
     const url = new URL(chainConfig.apiUrl);
     url.searchParams.set('module', module);
@@ -104,6 +177,9 @@ class EtherscanService {
           throw new Error(`Etherscan API error: ${data.message}`);
         }
       }
+      
+      // Cache successful result
+      this.cache.set(cacheKey, data.result);
       
       return data.result;
     } catch (error) {
@@ -362,6 +438,20 @@ class EtherscanService {
       console.error('Etherscan API connection test failed:', error);
       return false;
     }
+  }
+
+  // Method to clear cache (useful for testing or manual refresh)
+  clearCache(): void {
+    this.cache.clear();
+    console.log('[EtherscanService] Cache cleared');
+  }
+
+  // Method to get rate limiter status
+  getRateLimiterStatus(): { requestsInWindow: number; maxRequests: number } {
+    return {
+      requestsInWindow: this.rateLimiter['requests'].length,
+      maxRequests: this.rateLimiter['maxRequests']
+    };
   }
 }
 

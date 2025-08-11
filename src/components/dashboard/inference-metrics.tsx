@@ -8,12 +8,11 @@ const inferenceMetrics: InferenceMetric[] = [
   { label: 'AI models used', value: '21,400,424' },
   { label: 'Aubrai is inferencing', value: '21,400,424' },
   { label: 'Tokens per second', value: '21,400,424' },
-  { label: 'Last hp generated', value: '11:00' },
 ];
 
 const modelInfo = [
-  { model: 'LARGE_MODEL: anthropic/claude', time: '4,2 s' },
-  { model: 'SMALL_MODEL: openai/gpt-oss-12', time: '4,2 s' },
+  { model: 'LARGE_MODEL: anthropic/claude-opus-research', time: '3.4 s' },
+  { model: 'SMALL_MODEL: openai/gpt-oss-120b-bio', time: '1.8 s' },
 ];
 
 export function InferenceMetrics() {

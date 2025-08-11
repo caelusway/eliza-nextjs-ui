@@ -1878,8 +1878,8 @@ export const Chat = ({
   // Check if environment is properly configured
   if (!agentId) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-[#292929]/20">
-        <div className="text-center p-8 bg-white dark:bg-[#1f1f1f] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm max-w-md">
+      <div className="flex items-center justify-center h-full bg-black">
+        <div className="text-center p-8 bg-black/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             Configuration Error
           </h2>
@@ -1897,8 +1897,8 @@ export const Chat = ({
   // Check if user is authenticated
   if (!isReady) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-[#292929]/20">
-        <div className="text-center p-8 bg-white dark:bg-[#1f1f1f] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm max-w-md">
+      <div className="flex items-center justify-center h-full bg-black">
+        <div className="text-center p-8 bg-black/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm max-w-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Loading...</h2>
           <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
             Initializing authentication...
@@ -1909,9 +1909,9 @@ export const Chat = ({
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-white dark:bg-[#292929]">
+    <div className="h-full w-full flex flex-col bg-black">
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 pt-4 sm:pt-8 pb-2 sm:pb-2 bg-white dark:bg-[#292929]">
+      <div className="flex-shrink-0 pt-4 sm:pt-8 pb-2 sm:pb-2 bg-black">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
           <div className="mb-1">
             <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -2057,11 +2057,11 @@ export const Chat = ({
         <div className="fixed bottom-20 right-6 z-10">
           <button
             onClick={scrollToBottom}
-            className="bg-white dark:bg-[#1f1f1f] hover:bg-gray-50 dark:hover:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 rounded-full p-3 border border-gray-200 dark:border-gray-600"
+            className="bg-black/50 backdrop-blur-sm hover:bg-black/70 shadow-lg hover:shadow-xl transition-all duration-200 rounded-full p-3 border border-white/20"
             aria-label="Scroll to bottom"
           >
             <svg
-              className="w-5 h-5 text-gray-600 dark:text-gray-400"
+              className="w-5 h-5 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -2078,9 +2078,9 @@ export const Chat = ({
       )}
 
       {/* Input Area - Fixed at Bottom */}
-      <div className="flex-shrink-0 py-3 bg-white dark:bg-[#292929]">
+      <div className="flex-shrink-0 py-3 bg-black">
         <div className="max-w-4xl lg:max-w-4xl xl:max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="bg-white dark:bg-[#292929]">
+          <div className="bg-black">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}

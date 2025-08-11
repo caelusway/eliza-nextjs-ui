@@ -144,18 +144,18 @@ export const FileUploadButton = ({
         disabled={disabled || isUploading}
         aria-label="Upload file"
         className={clsx(
-          'size-10 rounded-lg border focus:outline-none transition-colors duration-200 relative',
+          'size-6 rounded-lg border focus:outline-none transition-colors duration-200 relative',
           isUploading && !disabled
             ? 'bg-brand hover:bg-brand-hover border-brand text-white shadow-md shadow-brand/20'
-            : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+            : 'bg-black hover:bg-black/80 border-white/20 hover:border-white/40 text-[#757575] hover:text-white',
           disabled && 'opacity-50 cursor-not-allowed',
           className
         )}
       >
         {isUploading && !disabled ? (
-          <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin" />
+          <Loader2 className="!h-4 !w-4 !shrink-0 animate-spin" />
         ) : (
-          <PaperClipIcon className={clsx('!h-5 !w-5 !shrink-0', 'text-zinc-400')} />
+          <PaperClipIcon className={clsx('!h-4 !w-4 !shrink-0', 'text-[#757575]')} />
         )}
 
         {/* Clean upload indicator */}

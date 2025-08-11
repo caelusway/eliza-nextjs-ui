@@ -81,7 +81,7 @@ export function AppSidebar({
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-zinc-50 dark:bg-[#1f1f1f] border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
+        'flex flex-col h-full bg-black border-r border-white/20 backdrop-blur-sm transition-all duration-300',
         // Mobile: always full width, Desktop: respect collapsed state
         'w-72 sm:w-72 md:w-72',
         isCollapsed ? 'lg:w-16 xl:w-16' : 'lg:w-72 xl:w-80'
@@ -145,7 +145,7 @@ export function AppSidebar({
             </div>
 
             {/* Bottom section with User Menu */}
-            <div className="mt-auto flex flex-col items-center space-y-3 px-2 py-4 border-t border-zinc-200 dark:border-zinc-700">
+            <div className="mt-auto flex flex-col items-center space-y-3 px-2 py-4 border-t border-white/20">
               {/* Collapsed User Menu */}
               <CollapsedUserMenu userName={getUserName()} onLogout={handleLogout} />
             </div>
@@ -165,7 +165,7 @@ export function AppSidebar({
               <NavigationMenu onMobileMenuClose={onMobileMenuToggle} onSearchOpen={onSearchOpen} />
             </div>
             {/* Divider */}
-            <div className="mx-4 border-t border-gray-200 dark:border-gray-600" />
+            <div className="mx-4 border-t border-white/20" />
 
             {/* Chat Sessions Section */}
             <div className="mb-4">
