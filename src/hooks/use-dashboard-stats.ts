@@ -24,6 +24,9 @@ export function useDashboardStats() {
           if (result.success) {
             setStats(result.data);
             console.log('[useDashboardStats] Dashboard data loaded successfully');
+            
+            // Add a small delay to ensure components have time to render with the new data
+            await new Promise(resolve => setTimeout(resolve, 500));
           } else {
             setError(result.error || 'Failed to fetch dashboard data');
             console.error('[useDashboardStats] API error:', result.error);
@@ -64,9 +67,13 @@ export function useDashboardStats() {
               lastUpdated: new Date().toISOString()
             }
           });
+          
+          // Add delay for error case as well to ensure consistent behavior
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       } finally {
         if (mounted) {
+          console.log('[useDashboardStats] Setting loading to false - components should be ready');
           setLoading(false);
         }
       }

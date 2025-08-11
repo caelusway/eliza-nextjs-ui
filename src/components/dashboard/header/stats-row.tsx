@@ -29,8 +29,9 @@ function useAnimatedNumber(targetValue: number, duration: number = 1000): number
       
       // Easing function for smooth animation
       const easeOut = 1 - Math.pow(1 - progress, 3);
-      const nextValue = Math.floor(startValue + (difference * easeOut));
+      const nextValue = startValue + (difference * easeOut);
       
+      // Don't use Math.floor for decimal numbers - preserve precision
       setCurrent(nextValue);
       
       if (progress < 1) {
@@ -48,8 +49,8 @@ function useAnimatedNumber(targetValue: number, duration: number = 1000): number
 function extractNumber(value: string): number {
   if (!value) return 0;
   
-  // Handle different formats
-  const numStr = value.replace(/[^\d.]/g, '');
+  // Handle different formats - keep decimal points!
+  const numStr = value.replace(/[^\d.-]/g, '');
   const num = parseFloat(numStr);
   
   // Handle thousands, millions, billions
@@ -78,9 +79,17 @@ function formatAnimatedValue(originalValue: string, animatedNumber: number): str
     return `${prefix}${(animatedNumber / 1000).toFixed(1)}K`;
   }
   
-  // For small numbers (like prices), preserve decimal places
+  // For small numbers (like prices), preserve appropriate decimal places
   if (hasPrefix && animatedNumber < 1000) {
-    return `${prefix}${animatedNumber.toFixed(4)}`;
+    if (animatedNumber >= 1) {
+      return `${prefix}${animatedNumber.toFixed(2)}`;
+    } else if (animatedNumber >= 0.01) {
+      return `${prefix}${animatedNumber.toFixed(4)}`;
+    } else if (animatedNumber >= 0.0001) {
+      return `${prefix}${animatedNumber.toFixed(6)}`;
+    } else if (animatedNumber > 0) {
+      return `${prefix}${animatedNumber.toExponential(3)}`;
+    }
   }
   
   return `${prefix}${animatedNumber.toLocaleString()}`;

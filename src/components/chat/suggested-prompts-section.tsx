@@ -18,39 +18,48 @@ export function SuggestedPromptsSection({
   isFileUploading = false,
   clickedPrompt = null,
 }: SuggestedPromptsSectionProps) {
-  // const chatConfig = useUIConfigSection('chat'); // TODO: @caelusway - lets discuss if we need this hook
   const brandingConfig = useUIConfigSection('branding');
 
   return (
-    <div className="w-full mb-12">
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        {prompts.map((prompt, index) => {
+    <div className="w-full flex justify-center">
+      <div className="flex flex-row gap-6 overflow-x-auto pb-4 px-4 md:px-0">
+        {prompts.slice(0, 4).map((prompt, index) => {
           const isPromptLoading = clickedPrompt === prompt;
           return (
             <button
               key={index}
               onClick={() => onPromptClick(prompt)}
               disabled={isLoading || isFileUploading}
-              className={`group relative px-3 py-2 md:px-4 md:py-3 lg:px-5 lg:py-4 text-left rounded-xl border transition-all duration-500 ease-out min-h-[4.5rem] md:min-h-[5rem] lg:min-h-[5.5rem] flex items-start ${
+              className={`group relative flex flex-row gap-3 px-3 py-4 text-left rounded-xl border transition-all duration-500 ease-out w-80 min-w-[280px] min-h-[4.5rem] flex-shrink-0 ${
                 isLoading || isFileUploading ? 'opacity-50 cursor-not-allowed' : ''
               } ${
                 isPromptLoading
-                  ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 shadow-lg'
-                  : 'bg-zinc-50 dark:bg-[#1f1f1f] border-zinc-200 dark:border-zinc-800 shadow-sm'
+                  ? 'bg-black border-white/10 shadow-lg'
+                  : 'bg-black border-white/10 shadow-sm hover:border-white/20'
               }`}
             >
-              {/* Small circle positioned in top-left corner */}
-              <div className="absolute top-3 left-3">
-                <CircleIndicator
-                  isLoading={isPromptLoading}
-                  primaryColor={brandingConfig.primaryColor}
-                  size="sm"
-                />
-              </div>
-              <div className="pl-8 pr-2 w-full">
-                <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 leading-snug">
+              {/* Arrow icon positioned on the right */}
+              <div className="flex-1 flex items-start">
+                <p className="text-sm font-normal text-[#757575] leading-relaxed">
                   {prompt}
                 </p>
+              </div>
+              
+              {/* Arrow icon */}
+              <div className="flex items-center justify-center w-4 h-4 flex-shrink-0">
+                <svg
+                  width="11"
+                  height="12"
+                  viewBox="0 0 11 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-[#E9FF98]"
+                >
+                  <path
+                    d="M2.83 2L10.37 6L2.83 10L2.83 2Z"
+                    fill="currentColor"
+                  />
+                </svg>
               </div>
             </button>
           );

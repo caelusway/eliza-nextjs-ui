@@ -115,10 +115,10 @@ export default function SpeechToTextButton({
       disabled={disabled || isTranscribing}
       aria-label={isRecording ? 'Stop recording' : 'Start recording'}
       className={clsx(
-        'size-10 rounded-lg border focus:outline-none transition-colors duration-200 relative',
+        'size-6 rounded-lg border focus:outline-none transition-colors duration-200 relative',
         isRecording && !disabled
           ? 'bg-brand hover:bg-brand-hover border-brand text-white shadow-md shadow-brand/20'
-          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+          : 'bg-black hover:bg-black/80 border-white/20 hover:border-white/40 text-[#757575] hover:text-white',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
@@ -132,8 +132,8 @@ export default function SpeechToTextButton({
       ) : (
         <MicrophoneIcon
           className={clsx(
-            '!h-5 !w-5 !shrink-0',
-            isRecording && !disabled ? 'text-white' : 'text-zinc-400'
+            '!h-4 !w-4 !shrink-0',
+            isRecording && !disabled ? 'text-white' : 'text-[#757575]'
           )}
         />
       )}

@@ -8,6 +8,7 @@ import { useUIConfigSection } from '@/hooks/use-ui-config';
 import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 import { useSessions } from '@/contexts/SessionsContext';
 import { useCachedPrompts } from '@/hooks/use-cached-prompts';
+import { Logo } from '@/components/ui/logo';
 
 interface NewChatWelcomeProps {
   userId: string;
@@ -146,49 +147,37 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-full px-4 py-12">
-      <div className="w-full max-w-4xl mx-auto">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="mb-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
-              <span className="text-zinc-900 dark:text-white">Welcome to </span>
-              <span 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-                style={{ 
-                  background: `linear-gradient(135deg, ${brandingConfig.primaryColor}, ${brandingConfig.primaryColor}CC)`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
-                {brandingConfig.appName}
-              </span>
+    <div className="flex flex-col items-center justify-center min-h-full px-4 py-12 bg-black">
+      <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-4">
+        {/* Logo Section */}
+        <div className="flex flex-col items-center gap-10 mb-4">
+          <Logo 
+            width={60} 
+            height={40} 
+            className="text-white" 
+            src="/assets/logo_simple.png"
+          />
+          
+          {/* Welcome Text */}
+          <div className="flex flex-col items-center gap-3">
+            <h1 className="text-3xl font-normal text-white text-center leading-tight">
+              Welcome
             </h1>
-            <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              {chatConfig.welcomeSubtitle}
+            <p className="text-sm text-[#757575] text-center leading-relaxed max-w-md">
+              Your AI research assistant is ready to help
             </p>
           </div>
         </div>
 
-        {/* Suggested Prompts Section */}
-        <SuggestedPromptsSection
-          prompts={suggestedPrompts}
-          onPromptClick={handlePromptClick}
-          isLoading={isLoading}
-          isFileUploading={isFileUploading}
-          clickedPrompt={clickedPrompt}
-        />
-
         {/* Input Section */}
-        <div className="w-full">
-          <div className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <div className="w-full max-w-[560px] mb-4">
+          <div className="w-full bg-black border border-white/20 rounded-2xl p-6">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}
               onSubmit={handleDirectSubmit}
               isLoading={isLoading}
-              placeholder={chatConfig.newChatPlaceholder}
+              placeholder="Ask me anything about research, insights, or analysis..."
               disabled={isLoading || isFileUploading}
               onTranscript={handleTranscript}
               onFileUpload={handleFileUpload}
@@ -211,6 +200,17 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Suggested Prompts Section */}
+        <div className="w-full max-w-[940px]">
+          <SuggestedPromptsSection
+            prompts={suggestedPrompts}
+            onPromptClick={handlePromptClick}
+            isLoading={isLoading}
+            isFileUploading={isFileUploading}
+            clickedPrompt={clickedPrompt}
+          />
         </div>
       </div>
     </div>

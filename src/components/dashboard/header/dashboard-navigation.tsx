@@ -2,10 +2,19 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { ScienceChatPopup } from '@/components/dashboard/science-chat-popup';
 
 export function DashboardNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScienceChatOpen, setIsScienceChatOpen] = useState(false);
+  const scienceChatButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleScienceChatClick = () => {
+    console.log('Science Chat clicked, current state:', isScienceChatOpen);
+    setIsScienceChatOpen(!isScienceChatOpen);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <div className="relative">
@@ -28,9 +37,23 @@ export function DashboardNavigation() {
 
         {/* Desktop Menu - Hidden on mobile */}
         <div className="hidden md:flex items-center gap-3 text-sm">
-          <button className="text-white font-red-hat-mono font-medium leading-[1.714] hover:text-gray-300 transition-colors flex items-center gap-3">
-            Science Chat
-          </button>
+          <div className="relative">
+            <button 
+              ref={scienceChatButtonRef}
+              onClick={handleScienceChatClick}
+              className={`text-white font-red-hat-mono font-medium leading-[1.714] hover:text-gray-300 transition-colors flex items-center gap-3 ${isScienceChatOpen ? 'text-[#E9FF98]' : ''}`}
+            >
+              Science Chat
+            </button>
+            
+            {/* Science Chat Popup */}
+            <ScienceChatPopup
+              isOpen={isScienceChatOpen}
+              onClose={() => setIsScienceChatOpen(false)}
+              triggerRef={scienceChatButtonRef}
+            />
+          </div>
+          
           <Link 
             href="/twitter" 
             className="text-white font-red-hat-mono font-medium leading-[1.714] hover:text-gray-300 transition-colors"
@@ -66,7 +89,7 @@ export function DashboardNavigation() {
           <div className="flex flex-col gap-4">
             <button 
               className="text-white font-red-hat-mono font-medium text-sm hover:text-gray-300 transition-colors text-left"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handleScienceChatClick}
             >
               Science Chat
             </button>

@@ -57,13 +57,13 @@ export function NewChatButton({ onNewChat, isCollapsed = false }: NewChatButtonP
           isCollapsed ? 'w-10 h-10 justify-center' : 'w-full gap-3 p-3'
         )}
         style={{
-          backgroundColor: brandingConfig.primaryColor,
+          backgroundColor: '#141414',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = getDarkerShade(brandingConfig.primaryColor);
+          e.currentTarget.style.backgroundColor = getDarkerShade('#141414');
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = brandingConfig.primaryColor;
+          e.currentTarget.style.backgroundColor = '#141414';
         }}
         title={isCollapsed ? sidebarConfig.newChatText : undefined}
       >
