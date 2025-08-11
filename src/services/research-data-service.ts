@@ -132,10 +132,12 @@ class ResearchDataService {
     const randomHypothesis = hypotheses[Math.floor(Math.random() * hypotheses.length)];
     const paperCount = 1995 + Math.floor(Math.random() * 10); // 1995-2004
     const hypothesisCount = 12 + Math.floor(Math.random() * 3); // 12-14
+    const nodeCount = 3400000 + Math.floor(Math.random() * 50000); // 3.4M-3.45M nodes
     
     return {
       paperCount,
       hypothesisCount,
+      nodeCount,
       latestHypothesis: {
         id: `https://hypothesis.aubr.ai/${Date.now()}`,
         statement: randomHypothesis,
