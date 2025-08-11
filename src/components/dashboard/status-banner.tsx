@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from 'react';
 import { useDashboardStats } from '@/hooks/use-dashboard-stats';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HypothesisOverlay } from './hypothesis-overlay';
 
 export function StatusBanner() {
   const { researchStats, loading, isResearchDataAvailable } = useDashboardStats();
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   if (loading) {
     return (
@@ -36,24 +39,35 @@ export function StatusBanner() {
   };
 
   return (
-    <div className="border border-white/20 bg-black p-2 rounded-none">
-      <div className="flex items-center gap-3 text-sm">
-        <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
-          Last hypothesis {formatHypothesisNumber()} generated 
-        </span>
-        <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
-        <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
-          {getHypothesisPreview()}
-        </span>
-        {!isResearchDataAvailable && (
-          <>
-            <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
-            <span className="text-orange-400 font-red-hat-mono font-normal leading-[0.9]">
-              research data offline
-            </span>
-          </>
-        )}
+    <div className="relative">
+      <div 
+        className="border border-white/20 bg-black p-2 rounded-none cursor-pointer hover:bg-gray-900/50 transition-colors"
+        onClick={() => setIsOverlayOpen(true)}
+      >
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
+            Last hypothesis {formatHypothesisNumber()} generated 
+          </span>
+          <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
+          <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
+            {getHypothesisPreview()}
+          </span>
+          {!isResearchDataAvailable && (
+            <>
+              <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
+              <span className="text-orange-400 font-red-hat-mono font-normal leading-[0.9]">
+                research data offline
+              </span>
+            </>
+          )}
+        </div>
       </div>
+
+      <HypothesisOverlay 
+        isOpen={isOverlayOpen} 
+        onClose={() => setIsOverlayOpen(false)}
+        researchStats={researchStats}
+      />
     </div>
   );
 }
