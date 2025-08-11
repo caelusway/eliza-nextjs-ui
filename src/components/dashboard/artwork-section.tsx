@@ -1,8 +1,9 @@
 import Image from 'next/image';
+import { PartnersSection } from './partners-section';
 
 export function ArtworkSection() {
   return (
-    <div className="border border-white/20 bg-black/90 w-full mx-auto h-full flex flex-col min-h-[250px] md:min-h-[300px]">
+    <div className="w-full border mx-auto h-full flex flex-col min-h-[250px] md:min-h-[300px]">
       <div className="flex-1 relative overflow-hidden">
         <Image
           src="/assets/robot.png"
@@ -11,6 +12,9 @@ export function ArtworkSection() {
           className="object-contain md:object-cover"
           priority
         />
+      </div>
+      <div className="flex-shrink-0 p-4">
+        <PartnersSection />
       </div>
     </div>
   );

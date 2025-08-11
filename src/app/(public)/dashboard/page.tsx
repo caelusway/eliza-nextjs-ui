@@ -1,9 +1,8 @@
 import { Metadata } from 'next';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardFooter } from '@/components/dashboard/dashboard-footer';
-import { StatusBanner } from '@/components/dashboard/status-banner';
+import { HypothesisBanner } from '@/components/dashboard/hypothesis-banner';
 import { ArtworkSection } from '@/components/dashboard/artwork-section';
-import { PartnersSection } from '@/components/dashboard/partners-section';
 import { InferenceSection } from '@/components/dashboard/inference-section';
 import { ProgressSection } from '@/components/dashboard/progress-section';
 import { SocialMentions } from '@/components/dashboard/social-mentions';
@@ -17,22 +16,19 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <DashboardLoader>
-      <div className="bg-black text-white w-full h-screen flex flex-col overflow-hidden">
-        {/* Main Container - Properly aligned elements */}
-        <div className="flex flex-col p-2 gap-1 h-full">
+      <div className="bg-black text-white w-full lg:h-screen lg:overflow-hidden">
+        {/* Main Container - Mobile: Scrollable, Desktop: Fixed Height */}
+        <div className="min-h-screen lg:h-full flex flex-col p-2">
           {/* Header Section */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 mb-1">
             <DashboardHeader />
+            <HypothesisBanner />
           </div>
 
-          {/* Top Row - Status Banner and Progress side by side */}
+          {/* Top Row - Progress side by side */}
           <div className="flex flex-col lg:flex-row gap-1 flex-1 lg:min-h-0">
-            {/* Left Column - Status Banner + Sections below */}
+            {/* Left Column - Sections below */}
             <div className="flex-1 lg:flex-[3] flex flex-col gap-1 h-full">
-              {/* Status Banner */}
-              <div className="flex-shrink-0">
-                <StatusBanner />
-              </div>
               
               {/* Mobile Only - Robot Artwork */}
               <div className="w-full min-h-[300px] md:min-h-[350px] lg:hidden flex items-center justify-center">
@@ -46,16 +42,11 @@ export default function DashboardPage() {
                   <InferenceSection />
                 </div>
                 
-                {/* Artwork Section - Right side with Partners below - fills full height */}
-                <div className="w-full lg:flex-1 flex flex-col gap-1 lg:h-full">
-                  {/* Robot Artwork - expands to fill available space */}
-                  <div className="hidden lg:flex items-center justify-center flex-1 lg:min-h-0">
+                {/* Artwork Section - Right side - fills full height */}
+                <div className="w-full lg:flex-1 lg:h-full">
+                  {/* Robot Artwork with Partners integrated - fills full height */}
+                  <div className="hidden lg:flex h-full">
                     <ArtworkSection />
-                  </div>
-                  
-                  {/* Partners Section - Fixed height at bottom */}
-                  <div className="h-[38.5px] flex-shrink-0">
-                    <PartnersSection />
                   </div>
                 </div>
               </div>

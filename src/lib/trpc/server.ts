@@ -1,5 +1,4 @@
 import { initTRPC } from '@trpc/server';
-import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
 import { ZodError } from 'zod';
 
 // Context type for tRPC
