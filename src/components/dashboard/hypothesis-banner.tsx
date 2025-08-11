@@ -1,15 +1,19 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HypothesisOverlay } from './hypothesis-overlay';
 
-export function StatusBanner() {
-  const { researchStatsData: researchStats, loading, isResearchDataAvailable } = useTRPCDashboardStats();
+export function HypothesisBanner() {
+  const {
+    researchStatsData: researchStats,
+    loading: isLoading,
+    isResearchDataAvailable,
+  } = useTRPCDashboardStats();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="border border-white/20 bg-black p-2 rounded-none">
         <div className="flex items-center gap-3 text-sm">
@@ -24,16 +28,17 @@ export function StatusBanner() {
   // Simple hypothesis preview extraction
   const getHypothesisPreview = () => {
     if (!researchStats?.latestHypothesis) {
-      return "No recent hypothesis data";
+      return 'No recent hypothesis data';
     }
 
     const statement = researchStats.latestHypothesis.statement;
+
     return statement.length > 60 ? statement.substring(0, 60) + '...' : statement;
   };
 
   const formatHypothesisNumber = () => {
-    if (!researchStats) return "#0";
-    
+    if (!researchStats) return '#0';
+
     // Use hypothesis count as the sequence number
     return `#${researchStats.hypothesisCount.toLocaleString()}`;
   };
@@ -41,12 +46,12 @@ export function StatusBanner() {
   return (
     <div className="relative">
       <div 
-        className="border border-white/20 bg-black p-2 rounded-none cursor-pointer hover:bg-gray-900/50 transition-colors"
+        className="border border-white/20 bg-black p-3 rounded-none cursor-pointer hover:bg-gray-900/50 transition-colors"
         onClick={() => setIsOverlayOpen(true)}
       >
         <div className="flex items-center gap-3 text-sm">
           <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
-            Last hypothesis {formatHypothesisNumber()} generated 
+            Last hypothesis {formatHypothesisNumber()} generated
           </span>
           <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
           <span className="text-white font-red-hat-mono font-normal leading-[0.9]">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import DynamicSvgIcon from '@/components/icons/DynamicSvgIcon';
 import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { DotTyping } from '@/components/ui/dot-typing';
 
 interface StatsRowProps {
   includeResearchStats?: boolean;
@@ -132,20 +132,6 @@ export function StatsRow({ includeResearchStats = false }: StatsRowProps) {
 
   const displayStats = [...tokenDisplayStats, ...researchDisplayStats];
 
-  if (loading) {
-    const skeletonCount = includeResearchStats ? 6 : 4;
-    return (
-      <div className="flex items-center gap-16 p-2">
-        {Array.from({ length: skeletonCount }).map((_, index) => (
-          <div key={index} className="flex items-center gap-3">
-            <Skeleton className="w-4 h-4 rounded" />
-            <Skeleton className="w-8 h-4 rounded" />
-            <Skeleton className="w-12 h-4 rounded" />
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center gap-16 p-2">
@@ -153,7 +139,13 @@ export function StatsRow({ includeResearchStats = false }: StatsRowProps) {
         <div key={index} className="flex items-center gap-3">
           <DynamicSvgIcon iconName={stat.icon} className="w-4 h-4 text-white" />
           <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">{stat.label}</span>
-          <AnimatedStatValue value={stat.value} />
+          <div className="min-w-[60px] flex justify-start">
+            {loading ? (
+              <DotTyping />
+            ) : (
+              <AnimatedStatValue value={stat.value} />
+            )}
+          </div>
         </div>
       ))}
     </div>
