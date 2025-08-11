@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HypothesisOverlay } from './hypothesis-overlay';
 
 export function StatusBanner() {
-  const { researchStats, loading, isResearchDataAvailable } = useDashboardStats();
+  const { researchStatsData: researchStats, loading, isResearchDataAvailable } = useTRPCDashboardStats();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   if (loading) {

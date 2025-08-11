@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import DynamicSvgIcon from '@/components/icons/DynamicSvgIcon';
-import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatsRowProps {
@@ -109,7 +109,7 @@ function AnimatedStatValue({ value }: { value: string }) {
 }
 
 export function StatsRow({ includeResearchStats = false }: StatsRowProps) {
-  const { tokenStats, researchStats, loading } = useDashboardStats();
+  const { tokenStatsData: tokenStats, researchStatsData: researchStats, loading, isTokenDataAvailable, isResearchDataAvailable } = useTRPCDashboardStats();
 
   // Base token stats
   const tokenDisplayStats = tokenStats ? [
