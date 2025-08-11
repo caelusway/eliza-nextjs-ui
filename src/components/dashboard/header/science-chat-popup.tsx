@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
@@ -20,7 +20,7 @@ export function ScienceChatPopup({ isOpen, onClose, triggerRef }: ScienceChatPop
       if (triggerRef?.current && triggerRef.current.contains(event.target as Node)) {
         return;
       }
-      
+
       if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
         onClose();
       }
@@ -55,21 +55,16 @@ export function ScienceChatPopup({ isOpen, onClose, triggerRef }: ScienceChatPop
   if (!isOpen) return null;
 
   const features = [
-    'Comprehensive project analysis',
-    'Chat with AIXBT',
-    'Discord & Telegram integrations',
-    'Alerts for tracked projects',
-    '3 custom daily reports',
-    'MCP'
+    'accessible to selected scientists, investors and researchers.',
+    'Conduct augmented research with Aubrai',
+    'extensive knowledge base including 4k research papers and failed experiments database',
+    'powered by SOTA LLMs',
   ];
 
   return (
     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-4 z-50">
       {/* Popup Container */}
-      <div 
-        ref={popupRef}
-        className="relative w-[345px] bg-black border border-white/20 rounded-lg"
-      >
+      <div ref={popupRef} className="relative w-[345px] bg-black border border-white/20 rounded-lg">
         {/* Triangle Pointer */}
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
           <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-b-[16px] border-l-transparent border-r-transparent border-b-white/20"></div>
@@ -95,10 +90,10 @@ export function ScienceChatPopup({ isOpen, onClose, triggerRef }: ScienceChatPop
             {/* Title and Description */}
             <div className="flex flex-col gap-2">
               <h2 className="text-[#E9FF98] text-3xl font-medium font-red-hat-mono leading-tight">
-                Science chat
+                Science AI Chat
               </h2>
               <p className="text-white text-sm font-red-hat-mono leading-tight">
-                Currently exclusively available for curated number of scientists and KOLs
+                Currently available to curated number of scientists and longevity enthusiasts.
               </p>
             </div>
 
@@ -115,6 +110,16 @@ export function ScienceChatPopup({ isOpen, onClose, triggerRef }: ScienceChatPop
                 </div>
               ))}
             </div>
+
+            {/* Get Notified Button */}
+            <a
+              href="https://typeform.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-accent text-black font-red-hat-mono font-medium text-sm py-3 px-4 rounded-md hover:bg-accent/90 transition-colors text-center block"
+            >
+              Get notified
+            </a>
           </div>
         </div>
       </div>

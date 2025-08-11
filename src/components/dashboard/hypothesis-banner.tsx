@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTRPCDashboardStats } from '@/hooks/use-trpc-dashboard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { DotTyping } from '@/components/ui/dot-typing';
 import { HypothesisOverlay } from './hypothesis-overlay';
 
 export function HypothesisBanner() {
@@ -13,17 +13,6 @@ export function HypothesisBanner() {
   } = useTRPCDashboardStats();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="border border-white/20 bg-black p-2 rounded-none">
-        <div className="flex items-center gap-3 text-sm">
-          <Skeleton className="w-48 h-4 rounded" />
-          <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
-          <Skeleton className="w-64 h-4 rounded" />
-        </div>
-      </div>
-    );
-  }
 
   // Simple hypothesis preview extraction
   const getHypothesisPreview = () => {
@@ -50,14 +39,26 @@ export function HypothesisBanner() {
         onClick={() => setIsOverlayOpen(true)}
       >
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
-            Last hypothesis {formatHypothesisNumber()} generated
-          </span>
+          <div className="min-w-[200px] flex justify-start">
+            {isLoading ? (
+              <DotTyping />
+            ) : (
+              <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
+                Last hypothesis {formatHypothesisNumber()} generated
+              </span>
+            )}
+          </div>
           <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
-          <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
-            {getHypothesisPreview()}
-          </span>
-          {!isResearchDataAvailable && (
+          <div className="min-w-[300px] flex justify-start">
+            {isLoading ? (
+              <DotTyping />
+            ) : (
+              <span className="text-white font-red-hat-mono font-normal leading-[0.9]">
+                {getHypothesisPreview()}
+              </span>
+            )}
+          </div>
+          {!isResearchDataAvailable && !isLoading && (
             <>
               <span className="text-white font-red-hat-mono font-normal leading-[0.9]">•</span>
               <span className="text-orange-400 font-red-hat-mono font-normal leading-[0.9]">

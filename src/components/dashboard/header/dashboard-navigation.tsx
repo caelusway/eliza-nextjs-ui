@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
-import { ScienceChatPopup } from '@/components/dashboard/science-chat-popup';
+import { ScienceChatPopup } from '@/components/dashboard/header/science-chat-popup';
 
 export function DashboardNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -11,7 +11,6 @@ export function DashboardNavigation() {
   const scienceChatButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleScienceChatClick = () => {
-    console.log('Science Chat clicked, current state:', isScienceChatOpen);
     setIsScienceChatOpen(!isScienceChatOpen);
     setIsMobileMenuOpen(false);
   };
@@ -44,6 +43,7 @@ export function DashboardNavigation() {
               className={`text-white font-red-hat-mono font-medium leading-[1.714] hover:text-gray-300 transition-colors flex items-center gap-3 ${isScienceChatOpen ? 'text-[#E9FF98]' : ''}`}
             >
               Science Chat
+              <div className="w-[5px] h-[5px] bg-white"></div>
             </button>
             
             {/* Science Chat Popup */}
