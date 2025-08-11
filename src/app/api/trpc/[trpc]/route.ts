@@ -7,13 +7,7 @@ const handler = (req: Request) =>
     endpoint: '/api/trpc',
     req,
     router: appRouter,
-    createContext: async () => {
-      // Create a proper context for the fetch adapter
-      return createContext({ 
-        req,
-        res: new Response()
-      });
-    },
+    createContext,
     onError:
       process.env.NODE_ENV === 'development'
         ? ({ path, error }) => {

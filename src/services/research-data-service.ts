@@ -131,7 +131,7 @@ class ResearchDataService {
       latestHypothesis: {
         id: `https://hypothesis.aubr.ai/${Date.now()}`,
         statement: randomHypothesis,
-        title: undefined,
+        title: null,
         created: new Date(Date.now() - Math.random() * 86400000).toISOString() // Random time in last 24h
       }
     };

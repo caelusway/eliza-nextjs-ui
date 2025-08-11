@@ -26,11 +26,15 @@ export function useTRPCDashboardStats() {
 
   // Always use public query
   const activeQuery = publicStats;
+  
+  // Extract the actual data from the tRPC response
+  const publicStatsData = activeQuery.data?.data;
+  const tokenStatsData = tokenStats.data?.data;
 
   return {
     // Data
-    stats: activeQuery.data?.data,
-    tokenStats: activeQuery.data?.data?.tokenStats || tokenStats.data?.data,
+    stats: publicStatsData,
+    tokenStats: publicStatsData?.tokenStats || tokenStatsData,
     
     // Loading states
     loading: activeQuery.isLoading || tokenStats.isLoading,
@@ -43,17 +47,17 @@ export function useTRPCDashboardStats() {
     errorTokenStats: tokenStats.error,
     
     // Status
-    isTokenDataAvailable: activeQuery.data?.data?.tokenStats || tokenStats.data?.data ? true : false,
-    isResearchDataAvailable: activeQuery.data?.data?.researchStats ? true : false,
+    isTokenDataAvailable: !!(publicStatsData?.tokenStats || tokenStatsData),
+    isResearchDataAvailable: !!publicStatsData?.researchStats,
     
     // Refetch functions
     refetch: activeQuery.refetch,
     refetchTokenStats: tokenStats.refetch,
     
     // Helper getters
-    tokenStatsData: activeQuery.data?.data?.tokenStats || tokenStats.data?.data,
-    researchStatsData: activeQuery.data?.data?.researchStats,
-    meta: activeQuery.data?.data?.meta,
+    tokenStatsData: publicStatsData?.tokenStats || tokenStatsData,
+    researchStatsData: publicStatsData?.researchStats,
+    meta: publicStatsData?.meta,
   };
 }
 

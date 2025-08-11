@@ -14,7 +14,11 @@ export function TRPCProvider({ children }: TRPCProviderProps) {
       queries: {
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 10 * 60 * 1000, // 10 minutes
-        retry: (failureCount, error) => {
+        retry: (failureCount, error: any) => {
+          // Don't retry on 4xx errors
+          if (error?.data?.httpStatus >= 400 && error?.data?.httpStatus < 500) {
+            return false;
+          }
           return failureCount < 3;
         },
         refetchOnWindowFocus: false,
@@ -22,6 +26,9 @@ export function TRPCProvider({ children }: TRPCProviderProps) {
       },
       mutations: {
         retry: false,
+        onError: (error) => {
+          console.error('[tRPC Mutation Error]', error);
+        },
       },
     },
   }));
