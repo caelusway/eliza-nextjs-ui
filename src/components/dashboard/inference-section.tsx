@@ -106,17 +106,17 @@ export function InferenceSection() {
     { label: 'IPTs minted', value: loading ? '0' : '2.1M', isHighlight: true },
     { 
       label: 'Papers ingested', 
-      value: loading ? '0' : (researchStats ? researchStats.paperCount.toLocaleString() : '847.3K'), 
+      value: loading ? '0' : (researchStats?.paperCount ? researchStats.paperCount.toLocaleString() : '847.3K'), 
       isHighlight: true 
     },
     { 
       label: 'Hypotheses generated', 
-      value: loading ? '0' : (researchStats ? researchStats.hypothesisCount.toLocaleString() : '156.8K'), 
+      value: loading ? '0' : (researchStats?.hypothesisCount ? researchStats.hypothesisCount.toLocaleString() : '156.8K'), 
       isHighlight: true 
     },
     { 
       label: 'Knowledge nodes', 
-      value: loading ? '0' : (researchStats ? researchStats.nodeCount.toLocaleString() : '3.4M'), 
+      value: loading ? '0' : (researchStats?.nodeCount ? researchStats.nodeCount.toLocaleString() : '3.4M'), 
       isHighlight: true 
     },
     { label: 'Experiments designed', value: loading ? '0' : '42.7K', isHighlight: true },
