@@ -3,7 +3,6 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardFooter } from '@/components/dashboard/dashboard-footer';
 import { HypothesisBanner } from '@/components/dashboard/hypothesis-banner';
 import { ArtworkSection } from '@/components/dashboard/artwork-section';
-import { PartnersSection } from '@/components/dashboard/partners-section';
 import { InferenceSection } from '@/components/dashboard/inference-section';
 import { ProgressSection } from '@/components/dashboard/progress-section';
 import { SocialMentions } from '@/components/dashboard/social-mentions';
@@ -43,16 +42,11 @@ export default function DashboardPage() {
                   <InferenceSection />
                 </div>
                 
-                {/* Artwork Section - Right side with Partners below - fills full height */}
-                <div className="w-full lg:flex-1 flex flex-col gap-1 lg:h-full">
-                  {/* Robot Artwork - expands to fill available space */}
-                  <div className="hidden lg:flex items-center justify-center flex-1 lg:min-h-0">
+                {/* Artwork Section - Right side - fills full height */}
+                <div className="w-full lg:flex-1 lg:h-full">
+                  {/* Robot Artwork with Partners integrated - fills full height */}
+                  <div className="hidden lg:flex h-full">
                     <ArtworkSection />
-                  </div>
-                  
-                  {/* Partners Section - Fixed height at bottom */}
-                  <div className="h-[38.5px] flex-shrink-0">
-                    <PartnersSection />
                   </div>
                 </div>
               </div>

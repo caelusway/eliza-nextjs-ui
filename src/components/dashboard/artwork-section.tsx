@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { PartnersSection } from './partners-section';
 
 export function ArtworkSection() {
   return (
@@ -11,6 +12,9 @@ export function ArtworkSection() {
           className="object-contain md:object-cover"
           priority
         />
+      </div>
+      <div className="flex-shrink-0 p-4">
+        <PartnersSection />
       </div>
     </div>
   );

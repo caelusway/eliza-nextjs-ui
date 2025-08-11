@@ -1,36 +1,38 @@
+import Image from 'next/image';
+
 export function PartnersSection() {
   const partners = [
-    { name: 'VitaDAO', hasTriangle: true },
-    { name: 'LEVF', hasTriangle: false },
-    { name: 'bio protocol', hasTriangle: false },
-    { name: 'Eliza framework', hasTriangle: false },
+    { 
+      name: 'VitaDAO',
+      logo: '/assets/partner/vita-logo.svg'
+    },
+    { 
+      name: 'LEVF',
+      logo: '/assets/partner/lev-logo.png'
+    },
+    { 
+      name: 'bio protocol',
+      logo: '/assets/partner/bio-logo.svg'
+    },
+    { 
+      name: 'Eliza framework',
+      logo: '/assets/partner/eliza-logo.svg'
+    },
   ];
 
   return (
-    <div className="border border-white/20 bg-black p-3 rounded-none">
+    <div className="border border-white/20 p-3 rounded-none">
       <div className="flex items-center justify-center">
-        {/* Single row with all partners repeated */}
         <div className="flex items-center gap-8">
-          {/* First set */}
           {partners.map((partner, index) => (
-            <div key={index} className="flex items-center gap-1">
-              <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">{partner.name}</span>
-              {partner.hasTriangle && (
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-[#FFDD35]">
-                  <path d="M4 6L1 2H7L4 6Z" fill="currentColor"/>
-                </svg>
-              )}
-            </div>
-          ))}
-          {/* Second set */}
-          {partners.map((partner, index) => (
-            <div key={`second-${index}`} className="flex items-center gap-1">
-              <span className="text-sm text-white font-red-hat-mono font-normal leading-[0.9]">{partner.name}</span>
-              {partner.hasTriangle && (
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-[#FFDD35]">
-                  <path d="M4 6L1 2H7L4 6Z" fill="currentColor"/>
-                </svg>
-              )}
+            <div key={index} className="flex items-center">
+              <Image 
+                src={partner.logo}
+                alt={partner.name}
+                width={80}
+                height={24}
+                className="h-5 w-auto"
+              />
             </div>
           ))}
         </div>
