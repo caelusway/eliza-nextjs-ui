@@ -7,8 +7,8 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to login page as the default landing
-    router.push('/login');
+    // Redirect to dashboard as the default landing
+    router.push('/dashboard');
   }, [router]);
 
   // Show loading state while redirecting

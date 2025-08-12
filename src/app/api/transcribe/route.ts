@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
-export async function POST(req: NextRequest) {
-  const formData = await req.formData();
+async function transcribeHandler(request: NextRequest, user: AuthenticatedUser) {
+  const formData = await request.formData();
   const audioFile = formData.get('audio') as File;
 
   if (!audioFile) {
-    return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'No audio file provided' },
+      { status: 400, headers: getSecurityHeaders() }
+    );
   }
 
   const elevenlabsApiKey = process.env.ELEVENLABS_API_KEY!;
@@ -26,14 +30,19 @@ export async function POST(req: NextRequest) {
 
     if (!apiRes.ok) {
       const error = await apiRes.text();
-      return NextResponse.json({ error }, { status: apiRes.status });
+      return NextResponse.json({ error }, { status: apiRes.status, headers: getSecurityHeaders() });
     }
 
     const data = await apiRes.json();
     console.log('Transcribed audio:', data.text);
-    return NextResponse.json(data);
+    return NextResponse.json(data, { headers: getSecurityHeaders() });
   } catch (error) {
     console.error('Error transcribing audio:', error);
-    return NextResponse.json({ error: 'Failed to transcribe audio' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to transcribe audio' },
+      { status: 500, headers: getSecurityHeaders() }
+    );
   }
 }
+
+export const POST = withAuth(transcribeHandler);

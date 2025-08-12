@@ -1,26 +1,76 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  withAuth,
+  checkRateLimit,
+  getSecurityHeaders,
+  validateOrigin,
+  sanitizeInput,
+  type AuthenticatedUser,
+} from '@/lib/auth-middleware';
 
 const ELIZA_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 
-export async function GET(
+async function elizaGetHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
+    // Validate CSRF protection
+    if (!validateOrigin(request)) {
+      return NextResponse.json(
+        { error: 'Invalid origin', code: 'INVALID_ORIGIN' },
+        { status: 403, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Check rate limiting (more permissive for ElizaOS proxy)
+    const rateLimitResult = checkRateLimit(user.userId, 100, 60 * 1000); // 60 requests per minute
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          code: 'RATE_LIMIT_EXCEEDED',
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            ...getSecurityHeaders(),
+            'X-RateLimit-Limit': '60',
+            'X-RateLimit-Remaining': rateLimitResult.remainingRequests.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     const resolvedParams = await params;
     const path = resolvedParams.path.join('/');
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.toString();
     const elizaUrl = `${ELIZA_SERVER_URL}/api/${path}${query ? `?${query}` : ''}`;
 
-    console.log(`[Proxy] GET ${elizaUrl}`);
+    console.log(`[Proxy] GET ${elizaUrl} for user: ${user.userId}`);
+
+    // Build headers for ElizaOS server
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      // Pass user context to ElizaOS
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
 
     const response = await fetch(elizaUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+      headers,
     });
 
     const data = await response.json();
@@ -28,36 +78,95 @@ export async function GET(
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        ...getSecurityHeaders(),
+        'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
       },
     });
   } catch (error) {
     console.error('[Proxy] Error:', error);
-    return NextResponse.json({ error: 'Failed to connect to ElizaOS server' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to connect to ElizaOS server', code: 'PROXY_ERROR' },
+      { status: 500, headers: getSecurityHeaders() }
+    );
   }
 }
 
-export async function POST(
+async function elizaPostHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
+    // Validate CSRF protection
+    if (!validateOrigin(request)) {
+      return NextResponse.json(
+        { error: 'Invalid origin', code: 'INVALID_ORIGIN' },
+        { status: 403, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Check rate limiting
+    const rateLimitResult = checkRateLimit(user.userId, 100, 60 * 1000); // 30 requests per minute for POST
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          code: 'RATE_LIMIT_EXCEEDED',
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            ...getSecurityHeaders(),
+            'X-RateLimit-Limit': '30',
+            'X-RateLimit-Remaining': rateLimitResult.remainingRequests.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     const resolvedParams = await params;
     const path = resolvedParams.path.join('/');
     const body = await request.text();
+
+    // Sanitize body if it's a JSON string
+    let sanitizedBody = body;
+    try {
+      const jsonBody = JSON.parse(body);
+      if (jsonBody.message) {
+        jsonBody.message = sanitizeInput(jsonBody.message);
+        sanitizedBody = JSON.stringify(jsonBody);
+      }
+    } catch {
+      // Not JSON, keep as is
+    }
+
     const elizaUrl = `${ELIZA_SERVER_URL}/api/${path}`;
 
-    console.log(`[Proxy] POST ${elizaUrl}`);
+    console.log(`[Proxy] POST ${elizaUrl} for user: ${user.userId}`);
+
+    // Build headers for ElizaOS server
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      // Pass user context to ElizaOS
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
 
     const response = await fetch(elizaUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: body,
+      headers,
+      body: sanitizedBody,
     });
 
     const data = await response.json();
@@ -65,96 +174,123 @@ export async function POST(
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        ...getSecurityHeaders(),
+        'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
       },
     });
   } catch (error) {
     console.error('[Proxy] Error:', error);
-    return NextResponse.json({ error: 'Failed to connect to ElizaOS server' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to connect to ElizaOS server', code: 'PROXY_ERROR' },
+      { status: 500, headers: getSecurityHeaders() }
+    );
   }
 }
 
-export async function PUT(
+// Create authenticated handlers for PUT and DELETE
+async function elizaPutHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
-  try {
-    const resolvedParams = await params;
-    const path = resolvedParams.path.join('/');
-    const body = await request.text();
-    const elizaUrl = `${ELIZA_SERVER_URL}/api/${path}`;
+  // Similar implementation to POST
+  const resolvedParams = await params;
+  const path = resolvedParams.path.join('/');
+  const body = await request.text();
+  const elizaUrl = `${ELIZA_SERVER_URL}/api/${path}`;
 
-    console.log(`[Proxy] PUT ${elizaUrl}`);
+  console.log(`[Proxy] PUT ${elizaUrl} for user: ${user.userId}`);
 
-    const response = await fetch(elizaUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: body,
-    });
+  // Build headers for ElizaOS server
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-User-ID': user.userId,
+    'X-User-Email': user.email,
+  };
 
-    const data = await response.json();
-
-    return NextResponse.json(data, {
-      status: response.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
-      },
-    });
-  } catch (error) {
-    console.error('[Proxy] Error:', error);
-    return NextResponse.json({ error: 'Failed to connect to ElizaOS server' }, { status: 500 });
+  // Forward the original Authorization header (Privy JWT) to ElizaOS
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
   }
+
+  const response = await fetch(elizaUrl, {
+    method: 'PUT',
+    headers,
+    body: body,
+  });
+
+  const data = await response.json();
+  return NextResponse.json(data, {
+    status: response.status,
+    headers: {
+      ...getSecurityHeaders(),
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
+    },
+  });
 }
 
-export async function DELETE(
+async function elizaDeleteHandler(
   request: NextRequest,
+  user: AuthenticatedUser,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
-  try {
-    const resolvedParams = await params;
-    const path = resolvedParams.path.join('/');
-    const elizaUrl = `${ELIZA_SERVER_URL}/api/${path}`;
+  const resolvedParams = await params;
+  const path = resolvedParams.path.join('/');
+  const elizaUrl = `${ELIZA_SERVER_URL}/api/${path}`;
 
-    console.log(`[Proxy] DELETE ${elizaUrl}`);
+  console.log(`[Proxy] DELETE ${elizaUrl} for user: ${user.userId}`);
 
-    const response = await fetch(elizaUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
+  // Build headers for ElizaOS server
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-User-ID': user.userId,
+    'X-User-Email': user.email,
+  };
 
-    const data = await response.json();
-
-    return NextResponse.json(data, {
-      status: response.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
-      },
-    });
-  } catch (error) {
-    console.error('[Proxy] Error:', error);
-    return NextResponse.json({ error: 'Failed to connect to ElizaOS server' }, { status: 500 });
+  // Forward the original Authorization header (Privy JWT) to ElizaOS
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
   }
+
+  const response = await fetch(elizaUrl, {
+    method: 'DELETE',
+    headers,
+  });
+
+  const data = await response.json();
+  return NextResponse.json(data, {
+    status: response.status,
+    headers: {
+      ...getSecurityHeaders(),
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
+    },
+  });
 }
 
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...getSecurityHeaders(),
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
     },
   });
 }
+
+// Apply authentication middleware to all methods
+export const GET = withAuth(elizaGetHandler);
+export const POST = withAuth(elizaPostHandler);
+export const PUT = withAuth(elizaPutHandler);
+export const DELETE = withAuth(elizaDeleteHandler);

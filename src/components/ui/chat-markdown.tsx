@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
-import { Check, Copy } from "lucide-react";
-import { Button } from "./button";
+import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import { Check, Copy } from 'lucide-react';
+import { Button } from './button';
 
 // Import highlight.js CSS theme
-import "highlight.js/styles/github-dark.css";
+import 'highlight.js/styles/github-dark.css';
 
 interface ChatMarkdownProps {
   content: string;
@@ -23,14 +23,14 @@ interface CodeBlockProps {
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, inline }) => {
   const [copied, setCopied] = useState(false);
-  
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(String(children));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy text: ", err);
+      console.error('Failed to copy text: ', err);
     }
   };
 
@@ -59,10 +59,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, inline }) =>
   );
 };
 
-export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({
-  content,
-  className = "",
-}) => {
+export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({ content, className = '' }) => {
+  // Use content as-is without auto-structuring
+
   return (
     <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
       <ReactMarkdown
@@ -72,40 +71,42 @@ export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({
           code: CodeBlock,
           pre: ({ children }) => <>{children}</>,
           h1: ({ children }) => (
-            <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4 mt-6">
-              {children}
-            </h1>
+            <div className="border-b border-zinc-200 dark:border-zinc-700 pb-2 mb-4 mt-8 first:mt-0">
+              <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
+                {children}
+              </h1>
+            </div>
           ),
           h2: ({ children }) => (
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3 mt-5">
-              {children}
-            </h2>
+            <div className="mb-3 mt-6 first:mt-0">
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2 pb-1">
+                <span className="w-0.5 h-5 bg-zinc-400 dark:bg-zinc-500 rounded-full"></span>
+                {children}
+              </h2>
+            </div>
           ),
           h3: ({ children }) => (
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2 mt-4">
+            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2 mt-5 first:mt-0 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full"></span>
               {children}
             </h3>
           ),
           p: ({ children }) => (
-            <p className="text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed">
+            <p className="text-zinc-700 dark:text-zinc-300 mb-4 leading-relaxed text-sm">
               {children}
             </p>
           ),
-          ul: ({ children }) => (
-            <ul className="list-disc list-inside text-zinc-700 dark:text-zinc-300 mb-4 space-y-1">
-              {children}
-            </ul>
-          ),
-          ol: ({ children }) => (
-            <ol className="list-decimal list-inside text-zinc-700 dark:text-zinc-300 mb-4 space-y-1">
-              {children}
-            </ol>
-          ),
+          ul: ({ children }) => <ul className="mb-4 space-y-2 pl-4">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-4 space-y-2 pl-4">{children}</ol>,
           li: ({ children }) => (
-            <li className="text-zinc-700 dark:text-zinc-300">{children}</li>
+            <li className="text-zinc-700 dark:text-zinc-300 text-sm flex items-start gap-2">
+              <span className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full mt-2 flex-shrink-0"></span>
+              <span>{children}</span>
+            </li>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic text-zinc-600 dark:text-zinc-400 mb-4">
+            <blockquote className="border-l-4 border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/10 pl-4 pr-4 py-3 italic text-zinc-700 dark:text-zinc-300 mb-4 rounded-r-lg">
               {children}
             </blockquote>
           ),
@@ -120,9 +121,7 @@ export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({
             </a>
           ),
           strong: ({ children }) => (
-            <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
-              {children}
-            </strong>
+            <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{children}</strong>
           ),
           em: ({ children }) => (
             <em className="italic text-zinc-700 dark:text-zinc-300">{children}</em>
@@ -144,9 +143,7 @@ export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({
               {children}
             </td>
           ),
-          hr: () => (
-            <hr className="border-zinc-300 dark:border-zinc-600 my-6" />
-          ),
+          hr: () => <hr className="border-zinc-300 dark:border-zinc-600 my-6" />,
         }}
       >
         {content}
@@ -155,4 +152,4 @@ export const ChatMarkdown: React.FC<ChatMarkdownProps> = ({
   );
 };
 
-export default ChatMarkdown; 
+export default ChatMarkdown;

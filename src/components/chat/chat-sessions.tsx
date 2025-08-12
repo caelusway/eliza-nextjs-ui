@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useSessions } from '@/contexts/SessionsContext';
 import { PostHogTracking } from '@/lib/posthog';
@@ -57,6 +57,16 @@ export const ChatSessions = ({
 }: ChatSessionsProps) => {
   const { sessions, loading, error, setCurrentSession } = useSessions();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Get current session ID from URL or props
+  const activeSessionId = useMemo(() => {
+    if (currentSessionId) return currentSessionId;
+
+    // Extract session ID from pathname like /chat/session-id
+    const match = pathname.match(/\/chat\/([^/?]+)/);
+    return match ? match[1] : null;
+  }, [currentSessionId, pathname]);
 
   // Group sessions by time periods like the old UI
   const groupedSessions = useMemo(() => {
@@ -66,19 +76,19 @@ export const ChatSessions = ({
     yesterday.setDate(yesterday.getDate() - 1);
     const lastWeek = new Date(today);
     lastWeek.setDate(lastWeek.getDate() - 7);
-    
+
     const groups: { [key: string]: any[] } = {
-      'Today': [],
-      'Yesterday': [],
+      Today: [],
+      Yesterday: [],
       'Previous 7 days': [],
-      'Older': []
+      Older: [],
     };
-    
+
     const filteredSessions = showSwitcher
-      ? sessions.filter((s) => s.id !== currentSessionId)
+      ? sessions.filter((s) => s.id !== activeSessionId)
       : sessions;
-    
-    filteredSessions.forEach(session => {
+
+    filteredSessions.forEach((session) => {
       const sessionDate = new Date(session.lastActivity);
       if (sessionDate >= today) {
         groups['Today'].push(session);
@@ -90,20 +100,20 @@ export const ChatSessions = ({
         groups['Older'].push(session);
       }
     });
-    
+
     return groups;
-  }, [sessions, currentSessionId, showSwitcher]);
+  }, [sessions, activeSessionId, showSwitcher]);
 
   const handleSessionClick = (session: any) => {
     // Set current session in context
     setCurrentSession(session);
-    
+
     // Track session selection
     PostHogTracking.getInstance().sessionSelected(session.id, session.messageCount);
-    
+
     // Navigate to the chat session page
     router.push(`/chat/${session.id}`);
-    
+
     // Close mobile menu if provided
     onMobileMenuClose?.();
   };
@@ -128,34 +138,48 @@ export const ChatSessions = ({
     return Object.entries(groupedSessions).map(([group, groupSessions]) => {
       const sessions = groupSessions as ChatSession[];
       if (sessions.length === 0) return null;
-      
+
       return (
         <div key={group} className="mb-4">
           <div className="text-xs text-zinc-500 dark:text-zinc-400 px-1 py-1 font-medium">
             {group}
           </div>
           <div className="space-y-1">
-            {sessions.map(session => (
-              <div
-                key={session.id}
-                className={cn(
-                  "group flex items-center rounded-lg transition-colors duration-200 cursor-pointer",
-                  currentSessionId === session.id
-                    ? "bg-zinc-200 dark:bg-zinc-800"
-                    : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                )}
-                onClick={() => handleSessionClick(session)}
-              >
-                <div className="flex-1 flex items-center px-3 py-2 text-sm text-zinc-900 dark:text-white text-left min-w-0">
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate font-normal">
-                      {session.title || 'New conversation'}
+            {sessions.map((session) => {
+              const isActive = activeSessionId === session.id;
+              return (
+                <div
+                  key={session.id}
+                  className={cn(
+                    'group flex items-center rounded-lg transition-all duration-300 cursor-pointer',
+                    isActive
+                      ? 'bg-zinc-200 dark:bg-zinc-800 shadow-sm'
+                      : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/70 opacity-70 hover:opacity-100'
+                  )}
+                  onClick={() => handleSessionClick(session)}
+                >
+                  <div className="flex-1 flex items-center px-3 py-2 text-sm text-left min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className={cn(
+                          'truncate transition-all duration-300',
+                          isActive
+                            ? 'font-medium text-zinc-900 dark:text-white'
+                            : 'font-normal text-zinc-700 dark:text-zinc-300'
+                        )}
+                      >
+                        {session.title || 'New conversation'}
+                      </div>
                     </div>
-                    
+                    {isActive && (
+                      <div className="flex-shrink-0 ml-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
@@ -209,7 +233,7 @@ export const ChatSessions = ({
   // For non-sidebar views, use the old card-based layout
   if (!showSidebar) {
     const filteredSessions = showSwitcher
-      ? sessions.filter((s) => s.id !== currentSessionId)
+      ? sessions.filter((s) => s.id !== activeSessionId)
       : sessions;
 
     if (showSwitcher && filteredSessions.length === 0) {
@@ -235,61 +259,72 @@ export const ChatSessions = ({
         )}
 
         <div className="space-y-2">
-          {filteredSessions.map((session) => (
-            <div
-              key={session.id}
-              onClick={() => handleSessionClick(session)}
-              className="group cursor-pointer bg-white dark:bg-zinc-950 border border-zinc-950/10 dark:border-white/10 rounded-lg p-4 hover:bg-zinc-950/[2.5%] dark:hover:bg-white/[2.5%] transition-all duration-200"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-zinc-900 dark:text-white text-sm group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors line-clamp-1">
-                    {session.title || 'New conversation'}
-                  </h4>
-                  {session.preview && (
-                    <p className="text-zinc-600 dark:text-zinc-400 text-xs mt-1 line-clamp-2">
-                      {session.isFromAgent ? '🤖 ' : ''}
-                      {session.preview}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2 mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    <span>
-                      {session.messageCount} message
-                      {session.messageCount !== 1 ? 's' : ''}
-                    </span>
-                    <span>•</span>
-                    <span>{formatTimeAgo(session.lastActivity)}</span>
+          {filteredSessions.map((session) => {
+            const isActive = activeSessionId === session.id;
+            return (
+              <div
+                key={session.id}
+                onClick={() => handleSessionClick(session)}
+                className={cn(
+                  'group cursor-pointer border rounded-lg p-4 transition-all duration-300',
+                  isActive
+                    ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 shadow-sm'
+                    : 'bg-white dark:bg-zinc-950 border-zinc-950/10 dark:border-white/10 hover:bg-zinc-950/[2.5%] dark:hover:bg-white/[2.5%] opacity-80 hover:opacity-100'
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4
+                      className={cn(
+                        'text-sm transition-colors line-clamp-1',
+                        isActive
+                          ? 'font-semibold text-blue-900 dark:text-blue-100'
+                          : 'font-medium text-zinc-900 dark:text-white group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
+                      )}
+                    >
+                      {session.title || 'New conversation'}
+                    </h4>
+                    {session.preview && (
+                      <p className="text-zinc-600 dark:text-zinc-400 text-xs mt-1 line-clamp-2">
+                        {session.isFromAgent ? '🤖 ' : ''}
+                        {session.preview}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                      <span>
+                        {session.messageCount} message
+                        {session.messageCount !== 1 ? 's' : ''}
+                      </span>
+                      <span>•</span>
+                      <span>{formatTimeAgo(session.lastActivity)}</span>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </div>
                 </div>
-                <div className="flex-shrink-0">
-                  <svg
-                    className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   }
 
   // For sidebar view, use the grouped layout like the old UI
-  return (
-    <div className="space-y-1">
-      {renderConversationGroups()}
-    </div>
-  );
+  return <div className="space-y-1">{renderConversationGroups()}</div>;
 };
 
 export default ChatSessions;

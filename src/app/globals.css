@@ -1,3 +1,7 @@
+/* Google Fonts Imports */
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Acumin+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
 /* Geist Sans */
 @font-face {
   font-family: 'Geist';
@@ -322,17 +326,48 @@
   src: url(/fonts/GeistMono-Italic[wght].woff2) format('woff2-variations');
 }
 
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent page scroll - only allow container scroll */
+html,
+body {
+  overflow: auto;
+  height: auto;
+  min-height: 100vh;
+}
+
+/* Disable scroll anchoring to prevent forced scrolling during content updates */
+* {
+  overflow-anchor: none;
+}
+
+/* Specifically disable scroll anchoring for chat containers */
+.overflow-y-auto {
+  overflow-anchor: none;
+}
+
+/* Completely prevent scroll restoration during streaming */
+.streaming-disabled-scroll {
+  overflow-anchor: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Additional scroll prevention during streaming */
+.streaming-disabled-scroll * {
+  overflow-anchor: none !important;
+}
+
 /* Custom Colors for AUBRAI */
 :root {
-  --color-brand: #FF6E71;
-  --color-brand-hover: #FF5A5E;
-  --color-brand-light: #FFE8E8;
-  --color-brand-dark: #E55A5D;
-  
+  --color-brand: #ff6e71;
+  --color-brand-hover: #ff5a5e;
+  --color-brand-light: #ffe8e8;
+  --color-brand-dark: #e55a5d;
+
   /* Font Variables */
   --font-geist: 'Geist', sans-serif;
   --font-geist-mono: 'Geist Mono', monospace;
@@ -340,26 +375,58 @@
 }
 
 /* Define custom color utilities */
-.text-brand { color: var(--color-brand); }
-.bg-brand { background-color: var(--color-brand); }
-.border-brand { border-color: var(--color-brand); }
-.hover\:bg-brand:hover { background-color: var(--color-brand-hover); }
-.hover\:text-brand:hover { color: var(--color-brand-hover); }
-.focus\:ring-brand:focus { --tw-ring-color: var(--color-brand); }
-.focus\:border-brand:focus { border-color: var(--color-brand); }
+.text-brand {
+  color: var(--color-brand);
+}
+.bg-brand {
+  background-color: var(--color-brand);
+}
+.border-brand {
+  border-color: var(--color-brand);
+}
+.hover\:bg-brand:hover {
+  background-color: var(--color-brand-hover);
+}
+.hover\:text-brand:hover {
+  color: var(--color-brand-hover);
+}
+.focus\:ring-brand:focus {
+  --tw-ring-color: var(--color-brand);
+}
+.focus\:border-brand:focus {
+  border-color: var(--color-brand);
+}
 
 /* Brand color with opacity */
-.bg-brand\/10 { background-color: rgb(255 110 113 / 0.1); }
-.bg-brand\/20 { background-color: rgb(255 110 113 / 0.2); }
-.bg-brand\/30 { background-color: rgb(255 110 113 / 0.3); }
-.bg-brand\/90 { background-color: rgb(255 110 113 / 0.9); }
-.border-brand\/30 { border-color: rgb(255 110 113 / 0.3); }
-.ring-brand\/20 { --tw-ring-color: rgb(255 110 113 / 0.2); }
-.hover\:border-brand\/30:hover { border-color: rgb(255 110 113 / 0.3); }
+.bg-brand\/10 {
+  background-color: rgb(255 110 113 / 0.1);
+}
+.bg-brand\/20 {
+  background-color: rgb(255 110 113 / 0.2);
+}
+.bg-brand\/30 {
+  background-color: rgb(255 110 113 / 0.3);
+}
+.bg-brand\/90 {
+  background-color: rgb(255 110 113 / 0.9);
+}
+.border-brand\/30 {
+  border-color: rgb(255 110 113 / 0.3);
+}
+.ring-brand\/20 {
+  --tw-ring-color: rgb(255 110 113 / 0.2);
+}
+.hover\:border-brand\/30:hover {
+  border-color: rgb(255 110 113 / 0.3);
+}
 
 /* Common spinner colors */
-.border-brand { border-color: var(--color-brand); }
-.border-b-2.border-brand { border-bottom-color: var(--color-brand); }
+.border-brand {
+  border-color: var(--color-brand);
+}
+.border-b-2.border-brand {
+  border-bottom-color: var(--color-brand);
+}
 
 .prose :where(pre):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
   @apply !px-0 !py-0;
@@ -471,86 +538,160 @@
 
 [data-privy-modal] * {
   background-color: #000000 !important;
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 /* Privy dropdown/popover styling */
-[role="dialog"] {
+[role='dialog'] {
   background-color: #000000 !important;
 }
 
-[role="dialog"] * {
+[role='dialog'] * {
   background-color: #000000 !important;
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 /* Privy buttons */
 [data-privy-modal] button {
-  background-color: #FFFFFF !important;
+  background-color: #ffffff !important;
   color: #000000 !important;
-  border-color: #FFFFFF !important;
+  border-color: #ffffff !important;
 }
 
 [data-privy-modal] button:hover {
-  background-color: #E5E5E5 !important;
+  background-color: #e5e5e5 !important;
 }
 
 /* Privy cards/containers */
-[data-privy-modal] [role="group"],
+[data-privy-modal] [role='group'],
 [data-privy-modal] [data-testid],
-[data-privy-modal] div[class*="container"],
-[data-privy-modal] div[class*="card"] {
+[data-privy-modal] div[class*='container'],
+[data-privy-modal] div[class*='card'] {
   background-color: #000000 !important;
   border-color: #374151 !important;
 }
 
 /* Override any light backgrounds */
-[data-privy-modal] *[style*="background"] {
+[data-privy-modal] *[style*='background'] {
   background-color: #000000 !important;
 }
 
 /* Privy text inputs */
 [data-privy-modal] input {
-  background-color: #1E1E1E !important;
-  color: #FFFFFF !important;
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
   border-color: #374151 !important;
 }
 
 /* Privy links */
 [data-privy-modal] a {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 /* Custom Animations for Chat Preview Slider */
 @keyframes subtle-float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(1deg); }
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
 }
 
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-8px) translateX(4px); }
-  50% { transform: translateY(-12px) translateX(0px); }
-  75% { transform: translateY(-8px) translateX(-4px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-8px) translateX(4px);
+  }
+  50% {
+    transform: translateY(-12px) translateX(0px);
+  }
+  75% {
+    transform: translateY(-8px) translateX(-4px);
+  }
 }
 
 @keyframes float-medium {
-  0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
-  33% { transform: translateY(-6px) translateX(3px) scale(1.1); }
-  66% { transform: translateY(-4px) translateX(-3px) scale(0.9); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  33% {
+    transform: translateY(-6px) translateX(3px) scale(1.1);
+  }
+  66% {
+    transform: translateY(-4px) translateX(-3px) scale(0.9);
+  }
 }
 
 @keyframes float-fast {
-  0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
-  20% { transform: translateY(-4px) translateX(2px) rotate(5deg); }
-  40% { transform: translateY(-6px) translateX(-2px) rotate(-3deg); }
-  60% { transform: translateY(-8px) translateX(1px) rotate(2deg); }
-  80% { transform: translateY(-4px) translateX(-1px) rotate(-1deg); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-4px) translateX(2px) rotate(5deg);
+  }
+  40% {
+    transform: translateY(-6px) translateX(-2px) rotate(-3deg);
+  }
+  60% {
+    transform: translateY(-8px) translateX(1px) rotate(2deg);
+  }
+  80% {
+    transform: translateY(-4px) translateX(-1px) rotate(-1deg);
+  }
+}
+
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Animation delay utilities */
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+.animation-delay-2000 {
+  animation-delay: 2000ms;
+}
+.animation-delay-4000 {
+  animation-delay: 4000ms;
 }
 
 /* Font utility classes */
-.font-geist { font-family: var(--font-geist); }
-.font-geist-mono { font-family: var(--font-geist-mono); }
-.font-inter { font-family: var(--font-inter); }
+.font-geist {
+  font-family: var(--font-geist);
+}
+.font-geist-mono {
+  font-family: var(--font-geist-mono);
+}
+.font-inter {
+  font-family: var(--font-inter);
+}
 
+/* Auto-scrolling animation for social mentions */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
 
+.animate-scroll {
+  animation: scroll 120s linear infinite;
+}

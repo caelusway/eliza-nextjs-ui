@@ -1,6 +1,16 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useMemo,
+  useCallback,
+} from 'react';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
+import { cachedAuthenticatedFetch } from '@/lib/request-cache';
 
 interface ChatSession {
   id: string;
@@ -41,92 +51,100 @@ export const SessionsProvider = ({ children, userId }: SessionsProviderProps) =>
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const authenticatedFetch = useAuthenticatedFetch();
+
   // Request deduplication and rate limiting
   const MIN_FETCH_INTERVAL = 2000; // 2 seconds minimum between requests
   const RATE_LIMIT_RETRY_DELAY = 5000; // 5 seconds delay after rate limit
 
-  const fetchSessions = async (force = false) => {
-    if (!userId) return;
+  const fetchSessions = useCallback(
+    async (force = false) => {
+      if (!userId) return;
 
-    // Prevent duplicate requests
-    if (isRefreshing && !force) {
-      console.log('[SessionsProvider] Skipping duplicate request');
-      return;
-    }
-
-    // Rate limiting - don't fetch too frequently
-    const now = Date.now();
-    if (!force && now - lastFetchTime < MIN_FETCH_INTERVAL) {
-      console.log('[SessionsProvider] Skipping request due to rate limiting');
-      return;
-    }
-
-    setIsRefreshing(true);
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/chat-sessions?userId=${encodeURIComponent(userId)}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Handle rate limiting specifically
-        if (response.status === 429) {
-          console.log('[SessionsProvider] Rate limited, will retry in 5 seconds');
-          setError('Too many requests. Retrying in a moment...');
-          
-          // Retry after delay
-          setTimeout(() => {
-            fetchSessions(true);
-          }, RATE_LIMIT_RETRY_DELAY);
-          return;
-        }
-        throw new Error(data.error || 'Failed to fetch chat sessions');
+      // Prevent duplicate requests
+      if (isRefreshing && !force) {
+        console.log('[SessionsProvider] Skipping duplicate request');
+        return;
       }
 
-      setSessions(data.data?.sessions || []);
-      setLastFetchTime(now);
+      // Rate limiting - don't fetch too frequently
+      const now = Date.now();
+      if (!force && now - lastFetchTime < MIN_FETCH_INTERVAL) {
+        console.log('[SessionsProvider] Skipping request due to rate limiting');
+        return;
+      }
+
+      setIsRefreshing(true);
+      setLoading(true);
       setError(null);
-    } catch (err) {
-      console.error('[SessionsProvider] Error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load chat sessions');
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  };
 
-  const getSessionById = (id: string): ChatSession | undefined => {
-    return sessions.find(session => session.id === id);
-  };
+      try {
+        const url = `/api/chat-sessions?userId=${encodeURIComponent(userId)}`;
 
-  const refreshSessions = () => {
+        // Use cached authenticated fetch for proper token handling and caching
+        const data = await cachedAuthenticatedFetch(url, authenticatedFetch, {
+          ttl: force ? 0 : 60000, // Skip cache if forced, otherwise 60s TTL
+          skipCache: force,
+        });
+
+        const sessionsList = data.data?.sessions || [];
+        console.log(`[SessionsProvider] Loaded ${sessionsList.length} sessions for user ${userId}`);
+
+        setSessions(sessionsList);
+        setLastFetchTime(now);
+        setError(null);
+      } catch (err) {
+        console.error('[SessionsProvider] Error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load chat sessions');
+      } finally {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [userId, isRefreshing, lastFetchTime]
+  );
+
+  const getSessionById = useCallback(
+    (id: string): ChatSession | undefined => {
+      const session = sessions.find((session) => session.id === id);
+      console.log(
+        `[SessionsProvider] Looking for session ${id}: ${session ? 'found' : 'not found'} (${sessions.length} total sessions)`
+      );
+      return session;
+    },
+    [sessions]
+  );
+
+  const refreshSessions = useCallback(() => {
     // Only refresh if not already refreshing and enough time has passed
     if (!isRefreshing && Date.now() - lastFetchTime >= MIN_FETCH_INTERVAL) {
-      fetchSessions();
+      fetchSessions(true); // Force refresh when explicitly requested
     } else {
       console.log('[SessionsProvider] Refresh skipped - too frequent or already refreshing');
     }
-  };
+  }, [fetchSessions, isRefreshing, lastFetchTime]);
 
-  const addNewSession = (session: ChatSession) => {
-    setSessions(prev => [session, ...prev]);
-  };
+  const addNewSession = useCallback((session: ChatSession) => {
+    setSessions((prev) => [session, ...prev]);
+  }, []);
 
   useEffect(() => {
     fetchSessions();
   }, [userId]);
 
-  const value: SessionsContextType = {
-    sessions,
-    loading,
-    error,
-    currentSession,
-    setCurrentSession,
-    refreshSessions,
-    getSessionById,
-    addNewSession,
-  };
+  const value: SessionsContextType = useMemo(
+    () => ({
+      sessions,
+      loading,
+      error,
+      currentSession,
+      setCurrentSession,
+      refreshSessions,
+      getSessionById,
+      addNewSession,
+    }),
+    [sessions, loading, error, currentSession, refreshSessions, getSessionById, addNewSession]
+  );
 
   return <SessionsContext.Provider value={value}>{children}</SessionsContext.Provider>;
 };
@@ -137,4 +155,4 @@ export const useSessions = () => {
     throw new Error('useSessions must be used within a SessionsProvider');
   }
   return context;
-}; 
+};

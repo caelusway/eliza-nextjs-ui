@@ -18,7 +18,7 @@ interface FileUploadButtonProps {
 const SUPPORTED_MIME_TYPES = [
   // Text files (all text/* MIME types are supported via UTF-8 decoding)
   'text/plain',
-  'text/markdown', 
+  'text/markdown',
   'text/html',
   'text/csv', // ✅ Supported by document processor (contentType.includes('text/'))
   // Documents
@@ -32,12 +32,12 @@ const SUPPORTED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-export const FileUploadButton = ({ 
-  onFileUpload, 
-  disabled, 
-  className, 
-  isUploading: externalIsUploading, 
-  onUploadStateChange 
+export const FileUploadButton = ({
+  onFileUpload,
+  disabled,
+  className,
+  isUploading: externalIsUploading,
+  onUploadStateChange,
 }: FileUploadButtonProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [internalIsUploading, setInternalIsUploading] = useState(false);
@@ -113,19 +113,18 @@ export const FileUploadButton = ({
       onFileUpload(file, result);
 
       // If upload failed, the parent will handle error display
-      
     } catch (error) {
       console.error('File upload error:', error);
-      
+
       // Create an error result object and pass it to the callback
       const errorResult = {
         success: false,
         error: {
           code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error occurred'
-        }
+          message: error instanceof Error ? error.message : 'Unknown error occurred',
+        },
       };
-      
+
       onFileUpload(file, errorResult);
     } finally {
       // Clear uploading state
@@ -145,23 +144,20 @@ export const FileUploadButton = ({
         disabled={disabled || isUploading}
         aria-label="Upload file"
         className={clsx(
-          'size-10 rounded-lg border focus:outline-none transition-colors duration-200 relative',
+          'size-6 rounded-lg border focus:outline-none transition-colors duration-200 relative',
           isUploading && !disabled
             ? 'bg-brand hover:bg-brand-hover border-brand text-white shadow-md shadow-brand/20'
-            : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+            : 'bg-black hover:bg-black/80 border-white/20 hover:border-white/40 text-[#757575] hover:text-white',
           disabled && 'opacity-50 cursor-not-allowed',
           className
         )}
       >
         {isUploading && !disabled ? (
-          <Loader2 className="!h-5 !w-5 !shrink-0 animate-spin" />
+          <Loader2 className="!h-4 !w-4 !shrink-0 animate-spin" />
         ) : (
-          <PaperClipIcon className={clsx(
-            "!h-5 !w-5 !shrink-0",
-            "text-zinc-400"
-          )} />
+          <PaperClipIcon className={clsx('!h-4 !w-4 !shrink-0', 'text-[#757575]')} />
         )}
-        
+
         {/* Clean upload indicator */}
         {isUploading && !disabled && (
           <div className="absolute -top-1 -right-1 w-2 h-2 bg-brand rounded-full" />
@@ -171,9 +167,7 @@ export const FileUploadButton = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept={[
-          ...SUPPORTED_MIME_TYPES,
-        ].join(',')}
+        accept={[...SUPPORTED_MIME_TYPES].join(',')}
         onChange={handleFileChange}
         className="hidden"
       />

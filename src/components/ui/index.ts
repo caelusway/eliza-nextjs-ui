@@ -18,7 +18,7 @@ export { SpeechToTextButton } from './speech-to-text-button';
 export { FileUploadButton } from './file-upload-button';
 export { DeepResearchButton } from './deep-research-button';
 export { ExamplePrompts } from './example-prompts';
-export { basicSetup, minimalSetup } from './basic-setup'; 
+export { basicSetup, minimalSetup } from './basic-setup';
 export { Accordion, AccordionItem, AccordionTrigger } from './accordion';
 export { Card, CardContent, CardHeader, CardTitle } from './card';
 export { Badge } from './badge';

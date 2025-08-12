@@ -2,14 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { siteConfig } from '@/app/shared/constants';
+import { seo } from '@/config/ui-config';
 import { fontVariables } from '@/app/shared/fonts';
 import '@/app/globals.css';
 import { ProgressBar } from '@/app/core/progress-bar';
 import { Toaster } from '@/app/core/toaster';
-import { ConditionalHeader } from '@/components/layout/conditional-header';
-import { PrivyClientProvider } from './core/privy-client-provider';
-import { AuthWrapper } from '@/components/auth/auth-wrapper';
-import { BugHerdScript } from '@/components/bugherd-script';
 
 
 export const viewport: Viewport = {
@@ -17,7 +14,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#000000',
+  themeColor: seo.themeColor,
 };
 
 export const metadata: Metadata = {
@@ -54,7 +51,7 @@ export const metadata: Metadata = {
   },
   icons: siteConfig.icons,
   twitter: {
-    card: 'summary_large_image',
+    card: seo.twitterCard,
     title: siteConfig.name,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
@@ -71,7 +68,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-
 };
 
 export default function RootLayout({
@@ -82,41 +78,16 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
       <head>
-
-        {/* Feedbug Config Script */}
-        <Script id="feedbug-config" strategy="beforeInteractive">
-          {`
-            window.feedbugConfig = {
-              apiKey: 'fb_wWIU1WLYNWnTGMoAXfsT6euEQsAl3J85',
-              domain: 'https://staging.aubr.ai'
-            };
-          `}
-        </Script>
-
-        {/* Feedbug Widget Loader */}
-        <Script
-          src="https://feedbug.xyz/widget.js"
-          strategy="lazyOnload"
-        />
       </head>
-      <body className="min-h-dvh antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] overscroll-none font-geist">
-        <div className="flex min-h-dvh w-full flex-col grow">
-          <div className="flex grow flex-col size-full min-h-dvh">
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem={false}
-              disableTransitionOnChange
-            >
-              <PrivyClientProvider>
-                <AuthWrapper>
-                  <ConditionalHeader />
-                  {children}
-                </AuthWrapper>
-              </PrivyClientProvider>
-            </ThemeProvider>
-          </div>
-        </div>
+      <body className="antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] font-geist">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
         <ProgressBar />
         <Toaster />
       </body>

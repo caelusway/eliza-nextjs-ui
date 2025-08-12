@@ -3,44 +3,58 @@
 import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { Loader2 } from 'lucide-react';
 import { useState, useRef } from 'react';
-import { Button } from '@/components/ui';
 import { PostHogTracking } from '@/lib/posthog';
+import { cleanTextForAudio } from '@/utils/clean-text-for-audio';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface PlaySoundButtonProps {
   text: string;
   className?: string;
+  onPlay?: () => void;
 }
 
-export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
+export const PlaySoundButton = ({ text, className, onPlay }: PlaySoundButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const authenticatedFetch = useAuthenticatedFetch();
 
   const handlePlay = async () => {
     if (isLoading || isPlaying) return;
 
+    // Call the onPlay callback if provided
+    onPlay?.();
+
     try {
       setIsLoading(true);
 
-      // Clean the text - remove markdown and HTML tags
-      const cleanText = text
-        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-        .replace(/`[^`]*`/g, '') // Remove inline code
-        .replace(/\*\*([^*]*)\*\*/g, '$1') // Remove bold markdown
-        .replace(/\*([^*]*)\*/g, '$1') // Remove italic markdown
-        .replace(/#{1,6}\s+/g, '') // Remove headers
-        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Remove links, keep text
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .trim();
+      // Clean the text - remove citations, links, and other non-speakable content
+      const cleanText = cleanTextForAudio(text);
 
       if (!cleanText) {
         console.warn('[PlaySound] No text to convert after cleaning');
         return;
       }
 
-      console.log(`[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..."`);
+      // Check text length to prevent very long requests
+      if (cleanText.length > 5000) {
+        console.warn('[PlaySound] Text too long for TTS:', cleanText.length);
+        alert(
+          'Text is too long for audio conversion. Please try with shorter text (max 5000 characters).'
+        );
+        return;
+      }
 
-      const response = await fetch('/api/text-to-speech', {
+      console.log(
+        `[PlaySound] Converting text to speech: "${cleanText.substring(0, 100)}..." (${cleanText.length} chars)`
+      );
+
+      // For longer texts, warn user that it might take a while
+      if (cleanText.length > 1000) {
+        console.log('[PlaySound] Long text detected - this may take a moment');
+      }
+
+      const response = await authenticatedFetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +64,12 @@ export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `TTS failed: ${response.status}`);
+        console.error('[PlaySound] TTS API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
+        throw new Error(errorData.error || `TTS failed: ${response.status} ${response.statusText}`);
       }
 
       const audioBlob = await response.blob();
@@ -69,10 +88,10 @@ export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
       audio.onloadstart = () => {
         setIsLoading(false);
         setIsPlaying(true);
-        
+
         // Track TTS usage
         PostHogTracking.getInstance().textToSpeechUsed(cleanText.length);
-        
+
         // Check if this is first time using TTS
         const hasUsedTTS = localStorage.getItem('discovered_text_to_speech');
         if (!hasUsedTTS) {
@@ -113,20 +132,20 @@ export const PlaySoundButton = ({ text, className }: PlaySoundButtonProps) => {
   };
 
   return (
-    <Button
+    <button
       type="button"
       onClick={isPlaying ? handleStop : handlePlay}
       disabled={isLoading}
-      plain
       aria-label={isPlaying ? 'Stop audio' : 'Play audio'}
-      className={`size-6 ${className}`}
+      className={className}
     >
       {isLoading ? (
-        <Loader2 className="!h-3 !w-3 !shrink-0 animate-spin" />
+        <Loader2 className="w-3 h-3 shrink-0 animate-spin" />
       ) : (
-        <SpeakerWaveIcon className={`!h-3 !w-3 !shrink-0 ${isPlaying ? 'text-blue-500' : ''}`} />
+        <SpeakerWaveIcon className={`w-3 h-3 shrink-0 ${isPlaying ? 'text-blue-500' : ''}`} />
       )}
-    </Button>
+      <span>Play audio</span>
+    </button>
   );
 };
 

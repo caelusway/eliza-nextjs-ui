@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUserManager } from '@/lib/user-manager';
 import { usePrivy } from '@privy-io/react-auth';
 import { cn } from '@/lib/utils';
-import { PanelLeftClose, PanelLeft } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, UserPlus, Share2, Search } from 'lucide-react';
 import { SidebarHeader } from './sidebar-header';
 import { NewChatButton } from './new-chat-button';
-import { ChatOptions } from './chat-options';
 import { NavigationMenu } from './navigation-menu';
 import { ChatSessionsList } from './chat-sessions-list';
 import { UserProfile } from './user-profile';
+import { CollapsedUserMenu } from './collapsed-user-menu';
 import { PostHogTracking } from '@/lib/posthog';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
 
 interface AppSidebarProps {
   isCollapsed: boolean;
@@ -20,6 +21,7 @@ interface AppSidebarProps {
   isConnected: boolean;
   isMobileMenuOpen?: boolean;
   onMobileMenuToggle?: () => void;
+  onSearchOpen?: () => void;
 }
 
 export function AppSidebar({
@@ -27,12 +29,16 @@ export function AppSidebar({
   onToggleCollapse,
   isConnected,
   isMobileMenuOpen = false,
-  onMobileMenuToggle
+  onMobileMenuToggle,
+  onSearchOpen,
 }: AppSidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { getUserId, getUserName, isUserAuthenticated } = useUserManager();
   const { logout } = usePrivy();
-  const [currentChannel, setCurrentChannel] = useState<string | null>(null);
+
+  const sidebarConfig = useUIConfigSection('sidebar');
+  const brandingConfig = useUIConfigSection('branding');
 
   const userId = getUserId();
 
@@ -44,25 +50,24 @@ export function AppSidebar({
   }, [logout, router]);
 
   const handleNewPrivateChat = useCallback(() => {
-    setCurrentChannel(`private-${userId}`);
-    router.push('/chat');
     // Close mobile menu when navigating
     if (onMobileMenuToggle) {
       onMobileMenuToggle();
     }
-  }, [userId, router, onMobileMenuToggle]);
 
-  const handlePublicChat = useCallback(() => {
-    setCurrentChannel('public-chat');
     router.push('/chat');
+  }, [router, onMobileMenuToggle]);
+
+  const handleInvitesNavigation = useCallback(() => {
+    router.push('/invites');
     // Close mobile menu when navigating
     if (onMobileMenuToggle) {
       onMobileMenuToggle();
     }
   }, [router, onMobileMenuToggle]);
 
-  const handleInvitesNavigation = useCallback(() => {
-    router.push('/invites');
+  const handleSharedSessionsNavigation = useCallback(() => {
+    router.push('/shared-sessions');
     // Close mobile menu when navigating
     if (onMobileMenuToggle) {
       onMobileMenuToggle();
@@ -74,12 +79,14 @@ export function AppSidebar({
   }
 
   return (
-    <div className={cn(
-      "flex flex-col h-full bg-zinc-50 dark:bg-zinc-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300",
-      // Mobile: always full width, Desktop: respect collapsed state
-      "w-72 sm:w-72 md:w-72",
-      isCollapsed ? "lg:w-16 xl:w-20" : "lg:w-72 xl:w-80"
-    )}>
+    <div
+      className={cn(
+        'flex flex-col h-full bg-black border-r border-white/20 backdrop-blur-sm transition-all duration-300',
+        // Mobile: always full width, Desktop: respect collapsed state
+        'w-72 sm:w-72 md:w-72',
+        isCollapsed ? 'lg:w-16 xl:w-16' : 'lg:w-72 xl:w-80'
+      )}
+    >
       {/* Header */}
       <SidebarHeader
         isCollapsed={isCollapsed}
@@ -93,31 +100,55 @@ export function AppSidebar({
       <div className="flex-1 overflow-y-auto">
         {/* Desktop Collapsed Mode - Icon-only layout */}
         {isCollapsed && (
-          <div className="hidden lg:flex lg:flex-col lg:items-center lg:justify-start lg:space-y-3 lg:px-2 lg:py-4 xl:space-y-4 xl:px-3">
-            {/* New Chat Button */}
-            <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={isCollapsed} />
+          <div className="hidden lg:flex lg:flex-col lg:h-full">
+            {/* Top section with New Chat and navigation icons */}
+            <div className="flex flex-col items-center space-y-3 px-2 py-4">
+              {/* New Chat Button */}
+              <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={isCollapsed} />
 
-            {/* Account Icon */}
-            <button
-              onClick={() => router.push('/account')}
-              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
-              title="Account"
-            >
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </button>
+              {/* Search Icon */}
+              <button
+                onClick={onSearchOpen}
+                className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 transition-colors group"
+                title="Search Chats (⌘K)"
+              >
+                <Search className="w-5 h-5" />
+              </button>
 
-            {/* Invite Icon */}
-            <button
-              onClick={handleInvitesNavigation}
-              className="w-8 h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 flex items-center justify-center transition-colors group"
-              title="Invite Friends"
-            >
-              <svg className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </button>
+              {/* Invite Icon */}
+              <button
+                onClick={handleInvitesNavigation}
+                className={cn(
+                  'w-10 h-10 rounded-lg flex items-center justify-center transition-colors group',
+                  pathname === '/invites'
+                    ? 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800'
+                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                )}
+                title="Invite Friends"
+              >
+                <UserPlus className="w-5 h-5" />
+              </button>
+
+              {/* Shared Sessions Icon */}
+              <button
+                onClick={handleSharedSessionsNavigation}
+                className={cn(
+                  'w-10 h-10 rounded-lg flex items-center justify-center transition-colors group',
+                  pathname === '/shared-sessions'
+                    ? 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800'
+                    : 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                )}
+                title="Shared Sessions"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Bottom section with User Menu */}
+            <div className="mt-auto flex flex-col items-center space-y-3 px-2 py-4 border-t border-white/20">
+              {/* Collapsed User Menu */}
+              <CollapsedUserMenu userName={getUserName()} onLogout={handleLogout} />
+            </div>
           </div>
         )}
 
@@ -129,48 +160,35 @@ export function AppSidebar({
               <NewChatButton onNewChat={handleNewPrivateChat} isCollapsed={false} />
             </div>
 
-            {/* Chat Options and Menu Section */}
+            {/* Menu Section */}
             <div className="mb-1">
-
-              <ChatOptions
-                currentChannel={currentChannel}
-                userId={userId}
-                isConnected={isConnected}
-                onPublicChat={handlePublicChat}
-                onPrivateChat={handleNewPrivateChat}
-              />
-              {/* Divider */}
-              <div className="mx-4 border-t border-gray-200 dark:border-gray-800" />
-              <NavigationMenu
-                onMobileMenuClose={onMobileMenuToggle}
-              />
+              <NavigationMenu onMobileMenuClose={onMobileMenuToggle} onSearchOpen={onSearchOpen} />
             </div>
             {/* Divider */}
-            <div className="mx-4 border-t border-gray-200 dark:border-gray-800" />
+            <div className="mx-4 border-t border-white/20" />
 
             {/* Chat Sessions Section */}
             <div className="mb-4">
               <div className="px-4 pb-2 pt-4">
                 <h3 className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-                  Recent Chats
+                  {sidebarConfig.recentChatsText}
                 </h3>
               </div>
-              <ChatSessionsList
-                userId={userId}
-                onMobileMenuClose={onMobileMenuToggle}
-              />
+              <ChatSessionsList userId={userId} onMobileMenuClose={onMobileMenuToggle} />
             </div>
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <UserProfile
-        isCollapsed={isCollapsed}
-        userName={getUserName()}
-        userId={userId}
-        onLogout={handleLogout}
-      />
+      {/* Footer - Only show in expanded mode */}
+      {!isCollapsed && (
+        <UserProfile
+          isCollapsed={isCollapsed}
+          userName={getUserName()}
+          userId={userId}
+          onLogout={handleLogout}
+        />
+      )}
     </div>
   );
 }

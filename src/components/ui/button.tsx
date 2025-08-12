@@ -153,7 +153,7 @@ export const styles = {
       'text-white [--btn-hover-overlay:var(--color-white)]/10 [--btn-bg:var(--color-rose-500)] [--btn-border:var(--color-rose-600)]/90',
       '[--btn-icon:var(--color-rose-300)] data-active:[--btn-icon:var(--color-rose-200)] data-hover:[--btn-icon:var(--color-rose-200)]',
     ],
-    'brand': [
+    brand: [
       'text-white [--btn-hover-overlay:var(--color-white)]/10 [--btn-bg:#FF6E71] [--btn-border:#E55A5D]/90',
       '[--btn-icon:rgba(255,255,255,0.7)] data-active:[--btn-icon:rgba(255,255,255,0.9)] data-hover:[--btn-icon:rgba(255,255,255,0.9)]',
     ],
@@ -189,7 +189,7 @@ export function Button({
   // Map variant to existing props for backwards compatibility
   const mappedOutline = outline || variant === 'outline';
   const mappedPlain = plain || variant === 'plain' || variant === 'ghost';
-  
+
   const classes = clsx(
     className,
     styles.base,
@@ -233,10 +233,10 @@ export function TouchTarget({ children }: { children: React.ReactNode }) {
 // Export buttonVariants function for compatibility with other components
 export function buttonVariants(props?: { variant?: 'default' | 'outline' | 'plain' | 'ghost' }) {
   const variant = props?.variant || 'default';
-  
+
   return clsx(
     styles.base,
-    variant === 'outline' 
+    variant === 'outline'
       ? styles.outline
       : variant === 'plain'
         ? styles.plain

@@ -4,6 +4,7 @@ import { MicrophoneIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui';
 import clsx from 'clsx';
 import { PostHogTracking } from '@/lib/posthog';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
 
 interface SpeechToTextButtonProps {
   onTranscript: (text: string) => void;
@@ -21,31 +22,35 @@ export default function SpeechToTextButton({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recordingStartTimeRef = useRef<number | null>(null);
+  const authenticatedFetch = useAuthenticatedFetch();
 
-  const transcribeAudio = useCallback(async (audioBlob: Blob) => {
-    setIsTranscribing(true);
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.wav');
+  const transcribeAudio = useCallback(
+    async (audioBlob: Blob) => {
+      setIsTranscribing(true);
+      try {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.wav');
 
-      const res = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
+        const res = await authenticatedFetch('/api/transcribe', {
+          method: 'POST',
+          body: formData,
+        });
 
-      const data = await res.json();
-      const transcript = data.text || data.transcript || '';
-      console.log('Received transcript:', transcript);
+        const data = await res.json();
+        const transcript = data.text || data.transcript || '';
+        console.log('Received transcript:', transcript);
 
-      if (transcript) {
-        onTranscript(transcript);
+        if (transcript) {
+          onTranscript(transcript);
+        }
+      } catch (error) {
+        console.error('Error transcribing audio:', error);
+      } finally {
+        setIsTranscribing(false);
       }
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-    } finally {
-      setIsTranscribing(false);
-    }
-  }, [onTranscript]);
+    },
+    [onTranscript, authenticatedFetch]
+  );
 
   const startRecording = useCallback(async () => {
     try {
@@ -76,16 +81,16 @@ export default function SpeechToTextButton({
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
-      const duration = recordingStartTimeRef.current 
-        ? Date.now() - recordingStartTimeRef.current 
+      const duration = recordingStartTimeRef.current
+        ? Date.now() - recordingStartTimeRef.current
         : 0;
-      
+
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       // Track voice message recording
       PostHogTracking.getInstance().voiceMessageRecorded(duration);
-      
+
       // Check if this is first time using voice feature
       const hasUsedVoice = localStorage.getItem('discovered_voice_recording');
       if (!hasUsedVoice) {
@@ -110,10 +115,10 @@ export default function SpeechToTextButton({
       disabled={disabled || isTranscribing}
       aria-label={isRecording ? 'Stop recording' : 'Start recording'}
       className={clsx(
-        'size-10 rounded-lg border focus:outline-none transition-colors duration-200 relative',
+        'size-6 rounded-lg border focus:outline-none transition-colors duration-200 relative',
         isRecording && !disabled
           ? 'bg-brand hover:bg-brand-hover border-brand text-white shadow-md shadow-brand/20'
-          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300',
+          : 'bg-black hover:bg-black/80 border-white/20 hover:border-white/40 text-[#757575] hover:text-white',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
@@ -125,14 +130,14 @@ export default function SpeechToTextButton({
           <div className="w-1 h-1 bg-current rounded-full" />
         </div>
       ) : (
-        <MicrophoneIcon className={clsx(
-          "!h-5 !w-5 !shrink-0",
-          isRecording && !disabled 
-            ? "text-white" 
-            : "text-zinc-400"
-        )} />
+        <MicrophoneIcon
+          className={clsx(
+            '!h-4 !w-4 !shrink-0',
+            isRecording && !disabled ? 'text-white' : 'text-[#757575]'
+          )}
+        />
       )}
-      
+
       {/* Clean recording indicator */}
       {isRecording && !disabled && (
         <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />

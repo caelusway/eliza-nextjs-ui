@@ -1,9 +1,32 @@
-// Main components index - Re-export all organized components
+// Auth
 export * from './auth';
+
+// Chat
 export * from './chat';
+
+// Dialogs
 export * from './dialogs';
+
+// Forms
 export * from './forms';
+
+// Landing
 export * from './landing';
+
+// Layout
 export * from './layout';
+
+// Login
+export * from './login';
+
+// Sidebar
 export * from './sidebar';
-export * from './ui'; 
+
+// UI
+export * from './ui';
+
+// Shared Sessions
+export * from './shared-sessions';
+
+// Analytics
+export * from './analytics';

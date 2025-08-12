@@ -9,35 +9,35 @@ interface LoadingScreenProps {
   className?: string;
 }
 
-export const LoadingScreen = ({ 
-  message = 'Loading...', 
+export const LoadingScreen = ({
+  message = 'Loading...',
   size = 'md',
   fullScreen = true,
-  className = '' 
+  className = '',
 }: LoadingScreenProps) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    lg: 'h-12 w-12',
   };
 
   const textSizeClasses = {
     sm: 'text-sm',
     md: 'text-sm',
-    lg: 'text-base'
+    lg: 'text-base',
   };
 
-  const containerClasses = fullScreen 
+  const containerClasses = fullScreen
     ? 'h-screen w-full flex items-center justify-center bg-white dark:bg-black'
     : 'flex items-center justify-center p-8';
 
   return (
     <div className={`${containerClasses} ${className}`}>
       <div className="text-center">
-        <div className={`inline-block animate-spin rounded-full ${sizeClasses[size]} border-b-2 border-[#FF6E71] mb-4`}></div>
-        <p className={`text-zinc-600 dark:text-zinc-400 ${textSizeClasses[size]}`}>
-          {message}
-        </p>
+        <div
+          className={`inline-block animate-spin rounded-full ${sizeClasses[size]} border-b-2 border-[#FF6E71] mb-4`}
+        ></div>
+        <p className={`text-zinc-600 dark:text-zinc-400 ${textSizeClasses[size]}`}>{message}</p>
       </div>
     </div>
   );
@@ -48,16 +48,22 @@ export const LoadingSpinner = ({ size = 'sm' }: { size?: 'sm' | 'md' | 'lg' }) =
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
-    lg: 'h-8 w-8'
+    lg: 'h-8 w-8',
   };
 
   return (
-    <div className={`inline-block animate-spin rounded-full ${sizeClasses[size]} border-b-2 border-[#FF6E71]`}></div>
+    <div
+      className={`inline-block animate-spin rounded-full ${sizeClasses[size]} border-b-2 border-[#FF6E71]`}
+    ></div>
   );
 };
 
 // Loading overlay for content
-export const LoadingOverlay = ({ children, isLoading, message = 'Loading...' }: {
+export const LoadingOverlay = ({
+  children,
+  isLoading,
+  message = 'Loading...',
+}: {
   children: ReactNode;
   isLoading: boolean;
   message?: string;
@@ -75,4 +81,4 @@ export const LoadingOverlay = ({ children, isLoading, message = 'Loading...' }: 
       )}
     </div>
   );
-}; 
+};

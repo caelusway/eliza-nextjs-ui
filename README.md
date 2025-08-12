@@ -18,7 +18,7 @@ All customization is done through environment variables in your `.env` file:
 ### Agent Branding
 ```env
 NEXT_PUBLIC_AGENT_NAME="Your Agent Name"
-NEXT_PUBLIC_AGENT_LOGO="/assets/your-logo.png"
+NEXT_PUBLIC_AGENT_LOGO="/assets/your-logo_simple.png"
 NEXT_PUBLIC_AGENT_BANNER_LOGO="/assets/your-banner.png"
 NEXT_PUBLIC_AGENT_SHORT_DESCRIPTION="Brief description of your agent"
 ```

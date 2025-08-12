@@ -3,28 +3,79 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { TextareaWithActions } from '@/components/ui/textarea-with-actions';
+import { SuggestedPromptsSection } from '@/components/chat/suggested-prompts-section';
+import { useUIConfigSection } from '@/hooks/use-ui-config';
+import { useAuthenticatedFetch } from '@/lib/authenticated-fetch';
+import { useSessions } from '@/contexts/SessionsContext';
+import { useCachedPrompts } from '@/hooks/use-cached-prompts';
+import { Logo } from '@/components/ui/logo';
 
 interface NewChatWelcomeProps {
   userId: string;
 }
-
-const SUGGESTED_PROMPTS = [
-  "What drug combinations show synergistic effects for longevity?",
-  "Analyze the latest research on NAD+ precursors",
-  "Design a compound targeting cellular senescence",
-  "Find clinical trials for age-related diseases",
-];
 
 export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   const router = useRouter();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [clickedPrompt, setClickedPrompt] = useState<string | null>(null);
+  const [isFileUploading, setIsFileUploading] = useState(false);
 
+  const chatConfig = useUIConfigSection('chat');
+  const brandingConfig = useUIConfigSection('branding');
+  const authenticatedFetch = useAuthenticatedFetch();
+  const { addNewSession } = useSessions();
+  
+  // Use dynamic prompts with caching, fallback to static prompts silently
+  const { prompts: dynamicPrompts } = useCachedPrompts(userId);
+  
+  // Fall back to static prompts if dynamic ones fail or are loading (silent fallback)
+  const suggestedPrompts = (dynamicPrompts.length > 0) ? dynamicPrompts : chatConfig.suggestedPrompts;
 
+  // Handler for speech-to-text input
+  const handleTranscript = (transcript: string) => {
+    setInput(prev => prev + transcript);
+  };
+
+  // Handler for file upload
+  const handleFileUpload = async (file: File, _uploadResult: any) => {
+    try {
+      // Add file reference to input if needed
+      const fileReference = `[File: ${file.name}]`;
+      setInput(prev => prev ? `${prev}\n\n${fileReference}` : fileReference);
+    } catch (error) {
+      console.error('[NewChatWelcome] File upload error:', error);
+    }
+  };
+
+  // Handler for file upload state changes
+  const handleFileUploadStateChange = (isUploading: boolean) => {
+    setIsFileUploading(isUploading);
+  };
+
+  const createAndAddSession = (sessionData: any, initialMessage: string) => {
+    // Create the session object in the format expected by the context
+    const newSession = {
+      id: sessionData.sessionId,
+      title: initialMessage.length > 50 ? initialMessage.substring(0, 47) + '...' : initialMessage,
+      messageCount: 0, // New session starts with 0 messages
+      lastActivity: sessionData.createdAt || new Date().toISOString(),
+      preview: '', // No preview yet
+      isFromAgent: false,
+      channelId: sessionData.channelId,
+      metadata: {
+        initialMessage: initialMessage,
+      },
+    };
+
+    // Add to context immediately for real-time sidebar update
+    addNewSession(newSession);
+    
+    return newSession;
+  };
 
   const handlePromptClick = async (prompt: string) => {
-    if (!userId || isLoading) return;
+    if (!userId || isLoading || isFileUploading) return;
 
     // Show the prompt in the input box first
     setInput(prompt);
@@ -32,11 +83,8 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat-session/create', {
+      const response = await authenticatedFetch('/api/chat-session/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId,
           initialMessage: prompt,
@@ -49,9 +97,12 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         throw new Error(data.error || 'Failed to create chat session');
       }
 
+      // Add the new session to the context immediately for real-time sidebar update
+      createAndAddSession(data.data, prompt);
+
       // Clean the input box before redirecting
       setInput('');
-      
+
       // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
@@ -64,17 +115,14 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
 
   const handleDirectSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    
-    if (!userId || !input.trim() || isLoading) return;
+
+    if (!userId || !input.trim() || isLoading || isFileUploading) return;
 
     try {
       setIsLoading(true);
-      
-      const response = await fetch('/api/chat-session/create', {
+
+      const response = await authenticatedFetch('/api/chat-session/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId,
           initialMessage: input.trim(),
@@ -87,6 +135,9 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
         throw new Error(data.error || 'Failed to create chat session');
       }
 
+      // Add the new session to the context immediately for real-time sidebar update
+      createAndAddSession(data.data, input.trim());
+
       // Redirect to the new session - tracking happens there
       router.push(`/chat/${data.data.sessionId}`);
     } catch (err) {
@@ -96,82 +147,72 @@ export function NewChatWelcome({ userId }: NewChatWelcomeProps) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-full p-3 sm:p-4 lg:p-8">
-      <div className="w-full max-w-2xl lg:max-w-3xl">
-        <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-zinc-900 dark:text-white mb-3 sm:mb-4 leading-tight">
-            Welcome to <span className="text-brand">AUBRAI</span>
-          </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-zinc-600 dark:text-zinc-400 max-w-sm sm:max-w-md lg:max-w-xl mx-auto px-2 sm:px-0">
-            Your AI research assistant for longevity science and anti-aging research
-          </p>
-        </div>
-
-        <div className="mb-6 sm:mb-8 lg:mb-10">
-          <div className="text-center mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-zinc-900 dark:text-white mb-2 sm:mb-3">
-              Try asking about:
-            </h2>
-            <div className="w-8 sm:w-12 h-0.5 bg-brand mx-auto rounded-full"></div>
-          </div>
+    <div className="flex flex-col items-center justify-center min-h-full px-4 py-12 bg-black">
+      <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-4">
+        {/* Logo Section */}
+        <div className="flex flex-col items-center gap-10 mb-4">
+          <Logo 
+            width={60} 
+            height={40} 
+            className="text-white" 
+            src="/assets/logo_simple.png"
+          />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
-            {SUGGESTED_PROMPTS.map((prompt, index) => {
-              const isPromptLoading = clickedPrompt === prompt;
-              return (
-                <button
-                  key={index}
-                  onClick={() => handlePromptClick(prompt)}
-                  disabled={isLoading}
-                  className={`group relative p-4 sm:p-5 lg:p-6 text-left bg-white dark:bg-zinc-800 rounded-lg sm:rounded-xl  dark:border-zinc-600 transition-all duration-200 cursor-pointer ${
-                    isLoading
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:shadow-md hover:border-brand/30'
-                  } ${
-                    isPromptLoading
-                      ? 'bg-brand/10 border-brand/50 dark:bg-brand/20'
-                      : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-2 sm:gap-3">
-                    <div className="flex-shrink-0 flex items-center justify-center w-4 sm:w-5 h-4 sm:h-5 mt-1">
-                      {isPromptLoading ? (
-                        <div className="w-3 sm:w-4 h-3 sm:h-4 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-brand rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
-                      )}
-                    </div>
-                    <div className="text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white leading-relaxed">
-                      {prompt}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+          {/* Welcome Text */}
+          <div className="flex flex-col items-center gap-3">
+            <h1 className="text-3xl font-normal text-white text-center leading-tight">
+              Welcome
+            </h1>
+            <p className="text-sm text-[#757575] text-center leading-relaxed max-w-md">
+              Your AI research assistant is ready to help
+            </p>
           </div>
         </div>
 
-        <div className="text-center">
-          <div className="mb-4 sm:mb-6">
+        {/* Input Section */}
+        <div className="w-full max-w-[560px] mb-4">
+          <div className="w-full bg-black border border-white/20 rounded-2xl p-6">
             <TextareaWithActions
               input={input}
               onInputChange={(e) => setInput(e.target.value)}
               onSubmit={handleDirectSubmit}
               isLoading={isLoading}
-              placeholder="Ask me anything about longevity research, anti-aging therapies, or health optimization..."
-              disabled={isLoading}
+              placeholder="Ask me anything about research, insights, or analysis..."
+              disabled={isLoading || isFileUploading}
+              onTranscript={handleTranscript}
+              onFileUpload={handleFileUpload}
+              isFileUploading={isFileUploading}
+              onFileUploadStateChange={handleFileUploadStateChange}
             />
           </div>
-          
+
           {/* Loading feedback */}
-          {isLoading && (
-            <div className="flex items-center justify-center gap-2 text-brand text-sm">
-              <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
-              <span>Creating chat session...</span>
+          {(isLoading || isFileUploading) && (
+            <div className="flex items-center justify-center gap-3 mt-4 text-base">
+              <div className="relative">
+                <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                     style={{ borderColor: brandingConfig.primaryColor, borderTopColor: 'transparent' }} />
+                <div className="absolute inset-0 w-5 h-5 border-2 border-transparent rounded-full animate-ping"
+                     style={{ borderTopColor: `${brandingConfig.primaryColor}40` }} />
+              </div>
+              <span className="font-medium" style={{ color: brandingConfig.primaryColor }}>
+                {isFileUploading ? 'Uploading file...' : chatConfig.creatingSessionText}
+              </span>
             </div>
           )}
+        </div>
+
+        {/* Suggested Prompts Section */}
+        <div className="w-full max-w-[940px]">
+          <SuggestedPromptsSection
+            prompts={suggestedPrompts}
+            onPromptClick={handlePromptClick}
+            isLoading={isLoading}
+            isFileUploading={isFileUploading}
+            clickedPrompt={clickedPrompt}
+          />
         </div>
       </div>
     </div>
   );
-} 
+}

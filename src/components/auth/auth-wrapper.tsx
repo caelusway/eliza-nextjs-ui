@@ -14,15 +14,12 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
   const { authenticated, ready, user } = usePrivy();
 
   // Define public routes that don't require authentication
-  const publicRoutes = [
-    '/',
-    '/login',
-    '/privacy',
-    '/terms',
-    '/about'
-  ];
+  const publicRoutes = ['/', '/login', '/privacy', '/terms', '/about', '/dashboard'];
 
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/invite');
+  const isPublicRoute =
+    publicRoutes.includes(pathname) ||
+    pathname.startsWith('/invite') ||
+    pathname.startsWith('/chats/');
 
   useEffect(() => {
     if (!ready) return; // Wait for Privy to initialize
@@ -39,7 +36,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
       // Check URL parameters for returnUrl
       const urlParams = new URLSearchParams(window.location.search);
       const returnUrl = urlParams.get('returnUrl');
-      
+
       if (returnUrl) {
         router.push(decodeURIComponent(returnUrl));
       } else {
@@ -74,4 +71,4 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
   }
 
   return <>{children}</>;
-} 
+}

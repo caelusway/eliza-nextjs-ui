@@ -5,8 +5,6 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 import { Paper } from '@/types/chat-message';
-import { Dialog, DialogTitle, DialogBody, DialogActions } from '@/components/dialogs';
-import { Button } from '@/components/ui';
 
 interface PaperCardProps {
   paper: Paper;
@@ -56,8 +54,8 @@ export function PaperCard({ paper, className }: PaperCardProps) {
         className={clsx(
           'w-full text-left p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer',
           'hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800',
-          'transition-colors duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900',
+          'transition-all duration-200',
+          'focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 focus:shadow-sm',
           className
         )}
       >
@@ -71,79 +69,116 @@ export function PaperCard({ paper, className }: PaperCardProps) {
         )}
       </button>
 
-      <Dialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        size="2xl"
-        className="px-4 py-2"
-      >
-        <div className="relative">
-          {/* Close button */}
-          <button
-            onClick={() => setIsDialogOpen(false)}
-            className="absolute top-0 right-0 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
+      {isDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-[#1a1a1a] rounded-xl max-w-2xl w-full p-8 shadow-2xl border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-white tracking-tight">
+                    Research Paper
+                  </h2>
+                  <p className="text-sm text-gray-400">Paper details and abstract</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDialogOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-800/50"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
 
-          <DialogTitle>Paper Details</DialogTitle>
-
-          <DialogBody>
-            <div className="space-y-4">
-              {/* Title */}
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  TITLE
-                </h3>
-                <p className="text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-300">Title</label>
+                <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white border border-gray-600 dark:border-gray-600">
                   {paper.title}
-                </p>
+                </div>
               </div>
 
-              {/* DOI */}
               {paper.doi && (
-                <div>
-                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    DOI
-                  </h3>
-                  <p className="text-sm text-zinc-900 dark:text-zinc-100 font-mono break-all">
-                    {paper.doi}
-                  </p>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-300">DOI</label>
+                  {canViewPaper ? (
+                    <a
+                      href={paperUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] hover:bg-[#333] dark:hover:bg-[#333] rounded-xl text-blue-400 hover:text-blue-300 border border-gray-600 dark:border-gray-600 font-mono text-sm break-all transition-all duration-200 cursor-pointer"
+                    >
+                      {paper.doi}
+                    </a>
+                  ) : (
+                    <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-gray-300 border border-gray-600 dark:border-gray-600 font-mono text-sm break-all">
+                      {paper.doi}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Abstract */}
               {paper.abstract && (
-                <div>
-                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                    ABSTRACT
-                  </h3>
-                  <p className="text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed">
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-300">Abstract</label>
+                  <div className="w-full px-4 py-3 bg-[#2a2a2a] dark:bg-[#2a2a2a] rounded-xl text-white border border-gray-600 dark:border-gray-600 leading-relaxed max-h-48 overflow-y-auto">
                     {paper.abstract}
-                  </p>
+                  </div>
                 </div>
               )}
             </div>
-          </DialogBody>
 
-          <DialogActions>
-            <div className="w-full flex justify-center">
+            <div className="flex gap-4 pt-6">
+              <div className="flex-1 text-sm text-gray-400">Access the full research paper</div>
               {canViewPaper ? (
-                <Button
-                  color="blue"
+                <button
                   onClick={() => window.open(paperUrl, '_blank', 'noopener,noreferrer')}
+                  className="bg-[#FF6E71] hover:bg-[#FF6E71]/90 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
                   View Paper
-                </Button>
+                </button>
               ) : (
-                <Button color="zinc" disabled>
-                  View Paper
-                </Button>
+                <button
+                  disabled
+                  className="bg-gray-700 text-gray-400 px-6 py-3 rounded-xl text-sm font-medium cursor-not-allowed flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Unavailable
+                </button>
               )}
             </div>
-          </DialogActions>
+          </div>
         </div>
-      </Dialog>
+      )}
     </>
   );
 }

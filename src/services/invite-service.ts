@@ -39,7 +39,7 @@ export interface UserInviteStats {
 export async function validateInviteCode(code: string): Promise<InviteValidationResult> {
   try {
     console.log('🔍 [InviteService] Validating invite code:', code);
-    
+
     // Use case-insensitive search and handle multiple results - force fresh data
     const { data: invites, error } = await supabase
       .from('invites')
@@ -84,7 +84,7 @@ export async function validateInviteCode(code: string): Promise<InviteValidation
 export async function redeemInviteCode(code: string, userId: string): Promise<boolean> {
   try {
     console.log('🔄 [InviteService] redeemInviteCode called with:', { code, userId });
-    
+
     const { data: invites, error: fetchError } = await supabase
       .from('invites')
       .select('*')
@@ -138,10 +138,10 @@ export async function redeemInviteCode(code: string, userId: string): Promise<bo
     // Update user's invited_by field AND store the invite code used
     const { error: userUpdateError } = await supabase
       .from('users')
-      .update({ 
+      .update({
         invited_by: invite.created_by,
         used_invite_code: code, // Store the actual invite code used
-        has_completed_invite_flow: true // Mark as completed
+        has_completed_invite_flow: true, // Mark as completed
       })
       .eq('id', userRecord.id); // Use internal UUID for the WHERE clause too
 
@@ -149,10 +149,10 @@ export async function redeemInviteCode(code: string, userId: string): Promise<bo
       console.error('Error updating user invited_by and used_invite_code:', userUpdateError);
       // Don't fail the whole operation for this
     } else {
-      console.log('Successfully updated user with invite relationship:', { 
-        userId: userRecord.id, 
-        invitedBy: invite.created_by, 
-        usedCode: code 
+      console.log('Successfully updated user with invite relationship:', {
+        userId: userRecord.id,
+        invitedBy: invite.created_by,
+        usedCode: code,
       });
     }
 
@@ -178,7 +178,10 @@ export function generateInviteCode(): string {
 /**
  * Create invite codes for a user
  */
-export async function createInviteCodesForUser(userId: string, count: number = 3): Promise<Invite[]> {
+export async function createInviteCodesForUser(
+  userId: string,
+  count: number = 3
+): Promise<Invite[]> {
   try {
     // Get user's row ID first
     const { data: user, error: userError } = await supabase
@@ -199,29 +202,29 @@ export async function createInviteCodesForUser(userId: string, count: number = 3
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
       let code = generateInviteCode();
-      
+
       // Ensure uniqueness
       while (codes.includes(code)) {
         code = generateInviteCode();
       }
-      
+
       // Check against database for uniqueness
       const { data: existing } = await supabase
         .from('invites')
         .select('id')
         .eq('code', code)
         .single();
-      
+
       if (existing) {
         i--; // Retry this iteration
         continue;
       }
-      
+
       codes.push(code);
     }
 
     // Create invites
-    const inviteData = codes.map(code => ({
+    const inviteData = codes.map((code) => ({
       code,
       created_by: user.id,
       status: 'pending' as const,
@@ -263,7 +266,7 @@ export async function createInviteCodesForUser(userId: string, count: number = 3
 export async function getUserInviteStats(userId: string): Promise<UserInviteStats> {
   try {
     console.log('Getting invite stats for userId:', userId);
-    
+
     // Get user's row ID first
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -302,10 +305,18 @@ export async function getUserInviteStats(userId: string): Promise<UserInviteStat
       console.error('Error fetching invited users:', invitedError);
     }
 
+    // Calculate actual remaining codes based on unused invites
+    const unusedInvites = (invites || []).filter(
+      (invite) =>
+        invite.status !== 'accepted' &&
+        invite.current_uses < invite.max_uses &&
+        new Date(invite.expires_at) > new Date()
+    );
+
     return {
       invites: invites as Invite[],
-      remaining_codes: user.invite_codes_remaining,
-      invited_users: (invitedUsers || []).map(u => ({
+      remaining_codes: unusedInvites.length,
+      invited_users: (invitedUsers || []).map((u) => ({
         username: u.username,
         email: u.email,
         joined_at: u.created_at,
@@ -323,7 +334,7 @@ export async function getUserInviteStats(userId: string): Promise<UserInviteStat
 export async function generateInitialInviteCodes(userId: string): Promise<void> {
   try {
     console.log('generateInitialInviteCodes called with userId:', userId);
-    
+
     // Get user's Supabase row ID and existing invite count
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -363,19 +374,19 @@ export async function generateInitialInviteCodes(userId: string): Promise<void> 
     const codes: string[] = [];
     for (let i = 0; i < codesToGenerate; i++) {
       let code = generateInviteCode();
-      
+
       // Ensure uniqueness
       while (codes.includes(code)) {
         code = generateInviteCode();
       }
-      
+
       codes.push(code);
     }
 
     console.log('Generated codes:', codes);
 
     // Create invites
-    const inviteData = codes.map(code => ({
+    const inviteData = codes.map((code) => ({
       code,
       created_by: user.id,
       status: 'pending' as const,
@@ -412,7 +423,7 @@ export async function generateInitialInviteCodes(userId: string): Promise<void> 
 export async function sendInviteEmail({
   code,
   email,
-  senderName = 'Someone'
+  senderName = 'Someone',
 }: {
   code: string;
   email: string;
@@ -420,7 +431,7 @@ export async function sendInviteEmail({
 }): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('🔍 [InviteService] Sending invite email:', { code, email, senderName });
-    
+
     // First validate the invite code
     const validation = await validateInviteCode(code);
     if (!validation.valid || !validation.invite) {
@@ -432,13 +443,19 @@ export async function sendInviteEmail({
       return { success: false, error: 'Invite code already used' };
     }
 
+    // Check if this specific invite code has already been sent via email
+    if (validation.invite.email_sent_to && validation.invite.email_sent_at) {
+      console.log('This invite code has already been sent via email:', validation.invite);
+      return { success: false, error: 'This invite code has already been sent via email' };
+    }
+
     // Update invite status to email_sent
     const { error: updateError } = await supabase
       .from('invites')
       .update({
         email_sent_to: email,
         email_sent_at: new Date().toISOString(),
-        status: 'email_sent'
+        status: 'email_sent',
       })
       .eq('id', validation.invite.id);
 
@@ -447,31 +464,94 @@ export async function sendInviteEmail({
       return { success: false, error: 'Failed to update invite status' };
     }
 
-    // Here you would integrate with your email service (e.g., Resend, SendGrid, etc.)
-    // For now, we'll just simulate sending the email
-    console.log('📧 [InviteService] Email would be sent to:', email);
-    console.log('📧 [InviteService] Invite code:', code);
-    console.log('📧 [InviteService] Sender name:', senderName);
+    // Send email using Resend
+    try {
+      const { Resend } = await import('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // TODO: Implement actual email sending
-    // Example with Resend:
-    /*
-    const emailResult = await resend.emails.send({
-      from: 'noreply@aubr.ai',
-      to: email,
-      subject: `${senderName} invited you to join AUBRAI`,
-      html: `
-        <h2>You've been invited to join AUBRAI!</h2>
-        <p>${senderName} has invited you to join AUBRAI, your longevity co-pilot.</p>
-        <p>Use this invite code to get started: <strong>${code}</strong></p>
-        <p>Or click this link: <a href="${process.env.NEXT_PUBLIC_APP_URL}/login?invite=${code}">Join AUBRAI</a></p>
-      `
-    });
-    */
+      if (!process.env.RESEND_API_KEY) {
+        console.error('RESEND_API_KEY not configured');
+        return { success: false, error: 'Email service not configured' };
+      }
 
-    return { success: true };
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://aubr.ai';
+      const inviteUrl = `${appUrl}/login?invite=${code}`;
+
+      console.log('📧 [InviteService] Sending email via Resend to:', email);
+
+      const emailResult = await resend.emails.send({
+        from: 'AUBRAI <noreply@aubr.ai>',
+        to: [email],
+        subject: `${senderName} invited you to join AUBRAI`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>You're invited to AUBRAI</title>
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">You're invited to AUBRAI!</h1>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="font-size: 18px; margin: 0 0 15px 0;"><strong>${senderName}</strong> has invited you to join AUBRAI, your AI-powered longevity co-pilot.</p>
+                <p style="margin: 0; color: #666;">AUBRAI helps you optimize your health, track biomarkers, and make informed decisions about your longevity journey.</p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <div style="background: #1a1a1a; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <p style="margin: 0 0 10px 0; font-size: 14px; color: #ccc;">Your invite code:</p>
+                  <p style="font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 0; color: #FF6E71;">${code}</p>
+                </div>
+                
+                <a href="${inviteUrl}" style="display: inline-block; background: #FF6E71; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 10px 0;">Join AUBRAI Now</a>
+              </div>
+
+              <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
+                <p style="margin: 0 0 10px 0;">Can't click the button? Copy and paste this link:</p>
+                <p style="word-break: break-all; margin: 0;">${inviteUrl}</p>
+              </div>
+
+              <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #999;">
+                <p style="margin: 0;">This invitation expires in 30 days. If you didn't expect this invitation, you can safely ignore this email.</p>
+              </div>
+            </body>
+          </html>
+        `,
+        text: `
+${senderName} invited you to join AUBRAI!
+
+${senderName} has invited you to join AUBRAI, your AI-powered longevity co-pilot.
+
+Your invite code: ${code}
+
+Join now: ${inviteUrl}
+
+If you can't click the link, copy and paste it into your browser.
+
+This invitation expires in 30 days.
+        `.trim(),
+      });
+
+      console.log('📧 [InviteService] Resend response:', emailResult);
+
+      if (emailResult.error) {
+        console.error('Resend email error:', emailResult.error);
+        return { success: false, error: 'Failed to send email' };
+      }
+
+      console.log('✅ [InviteService] Email sent successfully, ID:', emailResult.data?.id);
+      return { success: true };
+
+    } catch (emailError) {
+      console.error('Error sending email via Resend:', emailError);
+      return { success: false, error: 'Failed to send invitation email' };
+    }
   } catch (error) {
     console.error('Error sending invite email:', error);
     return { success: false, error: 'Failed to send invite email' };
   }
-} 
+}

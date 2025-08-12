@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, getSecurityHeaders, type AuthenticatedUser } from '@/lib/auth-middleware';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -9,14 +10,29 @@ interface RouteParams {
   }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+async function getChatSessionHandler(
+  request: NextRequest,
+  user: AuthenticatedUser,
+  { params }: RouteParams
+) {
   try {
     const { sessionId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json({ error: 'userId parameter is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId parameter is required' },
+        { status: 400, headers: getSecurityHeaders() }
+      );
+    }
+
+    // Validate user can only access their own sessions
+    if (userId !== user.userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - cannot access session for different user' },
+        { status: 403, headers: getSecurityHeaders() }
+      );
     }
 
     if (!AGENT_ID) {
@@ -80,12 +96,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     let messages: any[] = [];
     let messageCount = 0;
 
+    // Build headers for ElizaOS server including Privy JWT
+    const elizaHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-User-ID': user.userId,
+      'X-User-Email': user.email,
+    };
+
+    // Forward the original Authorization header (Privy JWT) to ElizaOS
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader) {
+      elizaHeaders['Authorization'] = authHeader;
+    }
+
     try {
       const messagesResponse = await fetch(
         `${API_BASE_URL}/api/messaging/central-channels/${sessionChannel.id}/messages?limit=100`,
         {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
+          headers: elizaHeaders,
         }
       );
 
@@ -119,10 +148,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       metadata: sessionChannel.metadata,
     };
 
-    return NextResponse.json({
-      success: true,
-      data: sessionData,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: sessionData,
+      },
+      { headers: getSecurityHeaders() }
+    );
   } catch (error) {
     console.error(`[API] Error fetching session:`, error);
     return NextResponse.json(
@@ -130,7 +162,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         error: 'Failed to fetch session',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500, headers: getSecurityHeaders() }
     );
   }
 }
+
+export const GET = withAuth(getChatSessionHandler);
