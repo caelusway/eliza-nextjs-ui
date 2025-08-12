@@ -8,6 +8,7 @@ import '@/app/globals.css';
 import { ProgressBar } from '@/app/core/progress-bar';
 import { Toaster } from '@/app/core/toaster';
 
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -77,11 +78,6 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en" className={`${fontVariables} dark`}>
       <head>
-        <script
-          type="text/javascript"
-          src="https://www.bugherd.com/sidebarv2.js?apikey=eueujerg3pkawdagajobfq"
-          async={true}
-        />
       </head>
       <body className="antialiased bg-[#171717] text-white scheme-dark selection:!bg-[#3d2b15] font-geist">
         <ThemeProvider
