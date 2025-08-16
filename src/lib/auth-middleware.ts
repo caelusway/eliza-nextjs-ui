@@ -287,6 +287,7 @@ export function validateOrigin(request: NextRequest): boolean {
     'https://localhost:4000',
     'https://staging.aubr.ai', // Add staging environment
     'http://dev.aubr.ai',
+    'https://aubr.ai',
     // Add any additional Vercel preview URLs dynamically
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ].filter(Boolean);

@@ -68,3 +68,4 @@ src/components/chat/new-chat-welcome.tsx
 .claude
 
 .env.dickdao
+env2.example
